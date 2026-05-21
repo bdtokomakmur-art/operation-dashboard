@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCO Monitor — Toko Makmur</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root{
+  --bg:#0a0e17;--bg2:#111827;--bg3:#1a2236;--bg4:#1f2d45;
+  --border:#243047;--border2:#2d3d5c;
+  --text:#e2e8f4;--text2:#7a8ba8;--text3:#4a5e7a;
+  --green:#22d3a0;--yellow:#f5a623;--red:#ff5370;
+  --blue:#4d9fff;--purple:#a78bfa;--accent:#4d9fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:13px;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ═══ HEADER ═══ */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;flex-shrink:0;background:var(--bg2);border-bottom:1px solid var(--border);z-index:50}
+.hdr-brand{display:flex;align-items:center;gap:10px}
+.hdr-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#4d9fff,#a78bfa);display:grid;place-items:center;font-size:16px}
+.hdr-name{font-weight:800;font-size:15px;letter-spacing:-.3px}
+.hdr-name em{color:var(--accent);font-style:normal}
+.hdr-sub{font-size:10px;color:var(--text2);letter-spacing:.5px;margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.p-live{background:rgba(34,211,160,.1);color:var(--green);border:1px solid rgba(34,211,160,.25)}
+.p-warn{background:rgba(245,166,35,.1);color:var(--yellow);border:1px solid rgba(245,166,35,.25)}
+.p-err{background:rgba(255,83,112,.1);color:var(--red);border:1px solid rgba(255,83,112,.25)}
+.p-load{background:rgba(77,159,255,.1);color:var(--blue);border:1px solid rgba(77,159,255,.25)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dg{background:var(--green);animation:blink 1.5s infinite}
+.dy{background:var(--yellow);animation:blink 2s infinite}
+.dr{background:var(--red)}
+.db{background:var(--blue);animation:spin2 1s linear infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin2{to{transform:rotate(360deg)}}
+.clock{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)}
+
+/* ── REFRESH PROGRESS BAR ── */
+.refresh-bar{height:2px;background:var(--bg3);position:relative;flex-shrink:0}
+.refresh-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--purple));transition:width .5s linear;width:0%}
+
+/* ═══ SIDEBAR ═══ */
+.body-wrap{display:flex;flex:1;overflow:hidden}
+.sidebar{width:188px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sb-sect{padding:14px 10px 6px;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3)}
+.nav{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;margin:1px 6px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:500;border-left:2px solid transparent;transition:all .15s}
+.nav:hover{background:var(--bg3);color:var(--text)}
+.nav.active{background:rgba(77,159,255,.12);color:var(--blue);border-left-color:var(--blue);font-weight:600}
+.nav-ico{font-size:14px;flex-shrink:0}
+.nb{margin-left:auto;padding:1px 6px;border-radius:10px;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);color:var(--text2)}
+.nav.active .nb{background:rgba(77,159,255,.2);color:var(--blue)}
+.sb-div{margin:8px 14px;border:none;border-top:1px solid var(--border)}
+
+/* ── Refresh controls in sidebar ── */
+.sb-refresh{margin:10px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px}
+.sb-r-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.sb-r-select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:5px 8px;font-size:11px;outline:none;font-family:'Plus Jakarta Sans',sans-serif}
+.sb-r-btn{width:100%;margin-top:6px;background:rgba(77,159,255,.15);border:1px solid rgba(77,159,255,.3);color:var(--blue);border-radius:5px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+.sb-r-btn:hover{background:rgba(77,159,255,.25)}
+.sb-countdown{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px;text-align:center}
+
+/* ═══ MAIN ═══ */
+.main{flex:1;overflow-y:auto;overflow-x:hidden;padding:18px 20px;background:var(--bg)}
+.fbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.fbar select,.fbar input{background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;outline:none}
+.fbar select:focus,.fbar input:focus{border-color:var(--accent)}
+.fbar select option{background:var(--bg2)}
+.btn-r{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+.btn-r:hover{border-color:var(--accent);color:var(--accent)}
+.btn-form{background:rgba(34,211,160,.12);border:1px solid rgba(34,211,160,.3);color:var(--green);border-radius:7px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.btn-form:hover{background:rgba(34,211,160,.22)}
+.fbar-r{margin-left:auto;font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+
+/* ═══ KPI ═══ */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 15px;position:relative;overflow:hidden;transition:border-color .2s}
+.kpi:hover{border-color:var(--border2)}
+.kpi::after{content:'';position:absolute;inset:0 0 auto 0;height:2px}
+.kpi.cg::after{background:var(--green)}.kpi.cy::after{background:var(--yellow)}.kpi.cr::after{background:var(--red)}.kpi.cb::after{background:var(--blue)}.kpi.cp::after{background:var(--purple)}
+.ki{position:absolute;right:12px;top:12px;font-size:20px;opacity:.2}
+.kl{font-size:10px;font-weight:700;letter-spacing:.4px;color:var(--text2);margin-bottom:6px}
+.kv{font-size:26px;font-weight:800;letter-spacing:-1px;line-height:1}
+.kv.cg{color:var(--green)}.kv.cy{color:var(--yellow)}.kv.cr{color:var(--red)}.kv.cb{color:var(--blue)}.kv.cp{color:var(--purple)}
+.ks{font-size:10px;color:var(--text2);margin-top:5px}
+
+/* ═══ PANELS ═══ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.ph-t{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.ph-a{font-size:11px;color:var(--accent);cursor:pointer}.ph-a:hover{text-decoration:underline}
+.pb{padding:14px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;cursor:pointer;user-select:none}
+th:hover{color:var(--text)}
+td{padding:8px 10px;font-size:11px;border-bottom:1px solid rgba(36,48,71,.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.018)}
+
+/* ═══ COMPONENTS ═══ */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.bg{background:rgba(34,211,160,.12);color:var(--green);border:1px solid rgba(34,211,160,.25)}
+.by{background:rgba(245,166,35,.12);color:var(--yellow);border:1px solid rgba(245,166,35,.25)}
+.br{background:rgba(255,83,112,.12);color:var(--red);border:1px solid rgba(255,83,112,.25)}
+.bb{background:rgba(77,159,255,.12);color:var(--blue);border:1px solid rgba(77,159,255,.25)}
+.bgr{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.bp{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
+.sbar{display:flex;align-items:center;gap:6px;min-width:100px}
+.st{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.sf{height:100%;border-radius:3px}
+.sv{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;min-width:32px;text-align:right}
+.ai{display:flex;gap:10px;padding:10px 12px;border-radius:7px;margin-bottom:7px;border:1px solid}
+.ai.ir{background:rgba(255,83,112,.08);border-color:rgba(255,83,112,.25)}
+.ai.iy{background:rgba(245,166,35,.08);border-color:rgba(245,166,35,.25)}
+.ai-t{font-size:12px;font-weight:700}.ai-d{font-size:10px;color:var(--text2);margin-top:2px}.ai-m{font-size:9px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.ri{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(36,48,71,.5)}
+.ri:last-child{border-bottom:none}
+.rn{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);min-width:18px}
+.rin{flex:1;min-width:0}.rna{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rsu{font-size:9px;color:var(--text2)}
+.rsc{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700}
+.hmc{height:26px;border-radius:4px;display:grid;place-items:center;font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:600;cursor:default;transition:transform .1s}
+.hmc:hover{transform:scale(1.06)}
+.hmh{font-size:9px;color:var(--text2);text-align:center;padding:3px 0;font-weight:600}
+.hml{font-size:10px;color:var(--text2);display:flex;align-items:center;padding-right:8px;white-space:nowrap}
+.issue{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid var(--border)}
+.issue.ir{border-left-color:var(--red)}.issue.iy{border-left-color:var(--yellow)}
+.ish{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap}
+.isn{font-size:12px;font-weight:700}.isb{font-size:10px;color:var(--text2);line-height:1.5}
+.isf{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.ism{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.stitle{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+.page{display:none}.page.active{display:block}
+.empty{text-align:center;padding:40px 20px;color:var(--text2)}
+.sr{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.sp{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 11px;font-size:11px;display:flex;align-items:center;gap:4px}
+.sp b{font-weight:700}
+.apb{margin-bottom:12px}
+.apb-t{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.apb-tr{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.apb-f{height:100%;border-radius:3px}
+.ci-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(36,48,71,.4)}
+.ci-row:last-child{border-bottom:none}
+.ci-n{flex:1;font-size:11px;color:var(--text2)}
+.ci-b{width:80px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.ci-p{font-size:10px;font-family:'JetBrains Mono',monospace;min-width:35px;text-align:right}
+
+/* ─ Master Toko card row ─ */
+.mt-kota-hdr{font-size:11px;font-weight:800;letter-spacing:.3px;padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.mt-kota-pill{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(77,159,255,.15);color:var(--blue);font-weight:700}
+
+/* ─ NEW DATA FLASH ─ */
+@keyframes flashNew{0%{background:rgba(34,211,160,.25)}100%{background:transparent}}
+.new-row td{animation:flashNew 2s ease-out}
+
+/* ─ Toast ─ */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:12px;font-weight:600;z-index:300;display:flex;align-items:center;gap:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(100px);transition:transform .3s;pointer-events:none}
+.toast.show{transform:translateY(0)}
+.toast.t-green{border-left:3px solid var(--green);color:var(--green)}
+.toast.t-blue{border-left:3px solid var(--blue);color:var(--blue)}
+.toast.t-red{border-left:3px solid var(--red);color:var(--red)}
+
+/* ─ Config page ─ */
+.cfg-input{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;margin-bottom:8px}
+.cfg-input:focus{border-color:var(--accent)}
+.cfg-lbl{font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px}
+.cfg-url{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg3);padding:8px 12px;border-radius:6px;color:var(--green);margin-bottom:8px;word-break:break-all;cursor:pointer;border:1px solid var(--border);line-height:1.6}
+.cfg-url:hover{border-color:var(--accent)}
+.cfg-url-lbl{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;margin-top:10px}
+
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.g3,.g2{grid-template-columns:1fr}}
+@media(max-width:760px){.sidebar{display:none}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-logo">📊</div>
+    <div>
+      <div class="hdr-name">ARCO <em>Monitor</em></div>
+      <div class="hdr-sub">PT. MAKMUR SEJAHTERA RETAIL — REAL-TIME DASHBOARD</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="pill p-load" id="statusPill">
+      <div class="dot db" id="statusDot"></div>
+      <span id="statusLabel">Memuat data...</span>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)" id="rowCount">—</div>
+    <div class="clock" id="clockEl">--:--:--</div>
+    <button class="btn-r" onclick="manualRefresh()" style="padding:4px 10px;font-size:11px">↻</button>
+  </div>
+</div>
+<div class="refresh-bar"><div class="refresh-fill" id="refreshFill"></div></div>
+
+<!-- ═══ BODY ═══ -->
+<div class="body-wrap">
+<div class="sidebar">
+  <div class="sb-sect">Dashboard</div>
+  <div class="nav active" onclick="goPage('overview')"><span class="nav-ico">🏠</span>Overview</div>
+  <div class="nav" onclick="goPage('kunjungan')"><span class="nav-ico">📋</span>Kunjungan<span class="nb" id="nb1">0</span></div>
+  <div class="nav" onclick="goPage('skor')"><span class="nav-ico">🎯</span>Skor & Ranking</div>
+  <div class="nav" onclick="goPage('checklist')"><span class="nav-ico">✅</span>Item Checklist</div>
+  <div class="nav" onclick="goPage('temuan')"><span class="nav-ico">⚠️</span>Temuan<span class="nb" id="nb2">0</span></div>
+  <div class="nav" onclick="goPage('heatmap')"><span class="nav-ico">🗺️</span>Heatmap</div>
+  <div class="nav" onclick="goPage('master')"><span class="nav-ico">🏪</span>Master Toko<span class="nb" id="nb3">33</span></div>
+  <hr class="sb-div">
+
+  <!-- Auto Refresh Control -->
+  <div class="sb-refresh">
+    <div class="sb-r-label">⚡ Auto Refresh</div>
+    <select class="sb-r-select" id="refreshInterval" onchange="setRefreshInterval()">
+      <option value="30">Setiap 30 detik</option>
+      <option value="60" selected>Setiap 1 menit</option>
+      <option value="120">Setiap 2 menit</option>
+      <option value="300">Setiap 5 menit</option>
+      <option value="0">Matikan auto-refresh</option>
+    </select>
+    <button class="sb-r-btn" onclick="manualRefresh()">↻ Refresh Sekarang</button>
+    <div class="sb-countdown" id="countdown">—</div>
+  </div>
+
+  <hr class="sb-div">
+  <div class="sb-sect">Pengaturan</div>
+  <div class="nav" onclick="goPage('config')"><span class="nav-ico">⚙️</span>Konfigurasi</div>
+  <div class="nav" onclick="window.open(CONFIG.checklist_form_url,'_blank')"><span class="nav-ico">📱</span>Form Input ARCO</div>
+</div>
+
+<div class="main" id="mainEl">
+
+<!-- ─── OVERVIEW ─── -->
+<div class="page active" id="page-overview">
+  <div class="fbar">
+    <select id="fp" onchange="applyFilters()"><option value="7">7 Hari</option><option value="14">14 Hari</option><option value="30" selected>30 Hari</option><option value="all">Semua</option></select>
+    <select id="fa" onchange="applyFilters()"><option value="">Semua Kota</option></select>
+    <select id="fklas" onchange="applyFilters()"><option value="">Semua Kelas</option></select>
+    <select id="fc" onchange="applyFilters()"><option value="">Semua ARCO</option></select>
+    <select id="fk" onchange="applyFilters()"><option value="">Semua Kondisi</option><option value="Normal">Normal</option><option value="Perlu Perhatian">Perlu Perhatian</option><option value="Kritis">Kritis</option></select>
+    <div class="fbar-r" id="luEl">—</div>
+  </div>
+  <div class="kpi-grid" id="kpiGrid"></div>
+  <div class="g3">
+    <div class="panel"><div class="ph"><div class="ph-t">📈 Tren Skor & Kunjungan (14 Hari)</div></div><div class="pb"><div style="height:175px"><canvas id="cTren"></canvas></div></div></div>
+    <div class="panel"><div class="ph"><div class="ph-t">🔵 Kondisi Toko</div></div><div class="pb"><div style="height:140px"><canvas id="cKond"></canvas></div><div id="kondLeg" style="margin-top:10px"></div></div></div>
+  </div>
+  <div class="g2">
+    <div class="panel"><div class="ph"><div class="ph-t">🚨 Alert Perlu Perhatian</div><div class="ph-a" onclick="goPage('temuan')">Semua →</div></div><div class="pb" style="max-height:240px;overflow-y:auto" id="alertPnl"></div></div>
+    <div class="panel"><div class="ph"><div class="ph-t">🏆 Ranking Toko</div><div class="ph-a" onclick="goPage('skor')">Semua →</div></div><div class="pb" style="max-height:240px;overflow-y:auto" id="rankPnl"></div></div>
+  </div>
+  <div class="panel"><div class="ph"><div class="ph-t">🗓️ Kunjungan Terbaru</div><div class="ph-a" onclick="goPage('kunjungan')">Semua →</div></div>
+    <div class="pb"><div class="tw"><table><thead><tr><th>Tanggal</th><th>Toko</th><th>Kota</th><th>Kelas</th><th>ARCO</th><th>Store Leader</th><th>Skor</th><th>Kondisi</th><th>Temuan</th></tr></thead><tbody id="tblRec"></tbody></table></div></div>
+  </div>
+</div>
+
+<!-- ─── KUNJUNGAN ─── -->
+<div class="page" id="page-kunjungan">
+  <div class="stitle">📋 Riwayat Semua Kunjungan</div>
+  <div class="fbar">
+    <input type="text" id="qk" placeholder="🔍 Cari toko / ARCO..." oninput="renderKunj()" style="width:180px">
+    <select id="fkk" onchange="renderKunj()"><option value="">Semua Kondisi</option><option value="Normal">Normal</option><option value="Perlu Perhatian">Perlu Perhatian</option><option value="Kritis">Kritis</option></select>
+    <select id="fkt" onchange="renderKunj()"><option value="">Semua Tindakan</option><option value="Selesai">Selesai</option><option value="Dalam Proses">Dalam Proses</option><option value="Belum Ditindaklanjuti">Belum</option></select>
+    <a class="btn-form" href="#" onclick="window.open(CONFIG.checklist_form_url,'_blank');return false">📱 Buka Form Input</a>
+  </div>
+  <div class="sr" id="kStat"></div>
+  <div class="panel"><div class="pb"><div class="tw"><table>
+    <thead><tr><th onclick="sortBy('tanggal')">Tanggal ↕</th><th onclick="sortBy('toko')">Toko ↕</th><th>Kota</th><th>Kelas</th><th onclick="sortBy('arco')">ARCO ↕</th><th>Store Leader</th><th onclick="sortBy('skorPct')">Skor ↕</th><th>Kondisi</th><th>Temuan</th><th>Tindakan</th><th>Selisih SKU</th></tr></thead>
+    <tbody id="tblKunj"></tbody>
+  </table></div></div></div>
+</div>
+
+<!-- ─── SKOR ─── -->
+<div class="page" id="page-skor">
+  <div class="stitle">🎯 Skor & Ranking</div>
+  <div class="g2">
+    <div class="panel"><div class="ph"><div class="ph-t">📊 Avg Skor per Toko</div></div><div class="pb"><div style="height:320px"><canvas id="cSkor"></canvas></div></div></div>
+    <div class="panel"><div class="ph"><div class="ph-t">👤 Performa per ARCO</div></div><div class="pb" id="arcoPnl"></div></div>
+  </div>
+  <div class="g2">
+    <div class="panel"><div class="ph"><div class="ph-t">📉 Distribusi Skor</div></div><div class="pb"><div style="height:180px"><canvas id="cDist"></canvas></div></div></div>
+    <div class="panel"><div class="ph"><div class="ph-t">📦 Selisih SKU per Toko</div></div><div class="pb" style="max-height:220px;overflow-y:auto" id="skuPnl"></div></div>
+  </div>
+  <div class="panel"><div class="ph"><div class="ph-t">🏅 Ranking Lengkap</div></div><div class="pb"><div class="tw"><table>
+    <thead><tr><th>#</th><th>Toko</th><th>Kota</th><th>Kelas</th><th>Kunjungan</th><th>Avg Skor</th><th>Skor Terakhir</th><th>Kondisi</th><th>Selisih SKU</th><th>Trend</th></tr></thead>
+    <tbody id="tblRank"></tbody>
+  </table></div></div></div>
+</div>
+
+<!-- ─── CHECKLIST ─── -->
+<div class="page" id="page-checklist">
+  <div class="stitle">✅ Analisis Per Item Checklist</div>
+  <div class="g2">
+    <div class="panel"><div class="ph"><div class="ph-t">⚠️ Item Paling Sering Tidak Terpenuhi</div></div><div class="pb"><div style="height:300px"><canvas id="cItems"></canvas></div></div></div>
+    <div class="panel"><div class="ph"><div class="ph-t">📋 Compliance Rate per Item</div></div><div class="pb" style="max-height:320px;overflow-y:auto" id="itemPnl"></div></div>
+  </div>
+  <div class="panel"><div class="ph"><div class="ph-t">📊 Skor per Kategori</div></div><div class="pb"><div style="height:180px"><canvas id="cKat"></canvas></div></div></div>
+</div>
+
+<!-- ─── TEMUAN ─── -->
+<div class="page" id="page-temuan">
+  <div class="stitle">⚠️ Log Temuan Kendala Lapangan</div>
+  <div class="fbar">
+    <select id="ftk" onchange="renderTemuan()"><option value="">Semua Kondisi</option><option value="Kritis">Kritis</option><option value="Perlu Perhatian">Perlu Perhatian</option></select>
+    <select id="ftt" onchange="renderTemuan()"><option value="">Semua Status</option><option value="Selesai">Selesai</option><option value="Dalam Proses">Dalam Proses</option><option value="Belum Ditindaklanjuti">Belum</option></select>
+    <input type="text" id="qt" placeholder="🔍 Cari temuan..." oninput="renderTemuan()" style="width:180px">
+  </div>
+  <div id="temuanFeed"></div>
+</div>
+
+<!-- ─── HEATMAP ─── -->
+<div class="page" id="page-heatmap">
+  <div class="stitle">🗺️ Heatmap Skor — Toko × Tanggal (14 Hari)</div>
+  <div style="display:flex;gap:16px;align-items:center;font-size:11px;color:var(--text2);margin-bottom:12px;flex-wrap:wrap">
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:rgba(34,211,160,.8);border-radius:2px;display:inline-block"></span>≥ 90%</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:rgba(245,166,35,.8);border-radius:2px;display:inline-block"></span>70–89%</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:rgba(255,83,112,.8);border-radius:2px;display:inline-block"></span>&lt; 70%</span>
+  </div>
+  <div class="panel"><div class="pb"><div style="overflow-x:auto" id="hmCont"></div></div></div>
+</div>
+
+<!-- ─── MASTER TOKO ─── -->
+<div class="page" id="page-master">
+  <div class="stitle">🏪 Master Database Toko</div>
+  <div class="fbar" style="margin-bottom:12px">
+    <input type="text" id="qm" placeholder="🔍 Cari toko / kode / ARCO..." oninput="renderMasterToko()" style="width:210px">
+    <select id="fmkota" onchange="renderMasterToko()">
+      <option value="">Semua Kota</option>
+      <option>SURABAYA</option><option>SIDOARJO</option><option>GRESIK</option>
+    </select>
+    <select id="fmklas" onchange="renderMasterToko()">
+      <option value="">Semua Kelas</option>
+      <option>A</option><option>B+</option><option>B</option><option>C</option>
+    </select>
+    <select id="fmarco" onchange="renderMasterToko()"><option value="">Semua ARCO</option></select>
+  </div>
+  <!-- Summary pills -->
+  <div class="sr" id="masterStat"></div>
+  <!-- Table container -->
+  <div id="masterTokoBody"></div>
+</div>
+
+<!-- ─── CONFIG ─── -->
+<div class="page" id="page-config">
+  <div class="stitle">⚙️ Konfigurasi Sumber Data</div>
+  <div class="panel" style="max-width:720px;margin-bottom:14px">
+    <div class="ph"><div class="ph-t">📡 Google Sheets CSV — Aktif</div></div>
+    <div class="pb">
+      <p style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.7">Dashboard membaca data langsung dari Google Sheets yang dipublikasikan sebagai CSV. Klik link untuk membuka spreadsheet.</p>
+      <div id="cfgSheetList"></div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <label class="cfg-lbl">Kolom Terdeteksi dari Sheet Checklist</label>
+        <div id="cfgCols" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);line-height:2;background:var(--bg3);padding:10px;border-radius:6px">—</div>
+      </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <label class="cfg-lbl">Statistik Refresh</label>
+        <div id="cfgStats" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);line-height:2;background:var(--bg3);padding:10px;border-radius:6px">—</div>
+      </div>
+      <button style="margin-top:14px;background:var(--accent);color:#0a0e17;border:none;border-radius:7px;padding:8px 20px;font-weight:800;font-size:12px;cursor:pointer" onclick="manualRefresh()">↻ Reload Data Sekarang</button>
+    </div>
+  </div>
+  <div class="panel" style="max-width:720px">
+    <div class="ph"><div class="ph-t">🏪 Ringkasan Master Toko</div></div>
+    <div class="pb">
+      <div id="cfgMasterSummary" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);line-height:2;background:var(--bg3);padding:10px;border-radius:6px">—</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /body-wrap -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// ═══ KONFIGURASI — Edit bagian ini jika perlu ═══
+// ═══════════════════════════════════════════════════════════
+const CONFIG = {
+  nama_perusahaan: "PT. Makmur Sejahtera Retail",
+  checklist_form_url: "https://bdtokomakmur-art.github.io/makmuropr-forms/checklist-kunjungan.html",
+  google_sheets: {
+    master_toko:         "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqCdUN9flDg-TpmJBmGpVhfFWL5yBmeAOOe1ZiQyxKt1S6ejPxj8995KMwvNWcdz3BEnblwdR4D8vx/pub?gid=0&single=true&output=csv",
+    kunjungan:           "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqCdUN9flDg-TpmJBmGpVhfFWL5yBmeAOOe1ZiQyxKt1S6ejPxj8995KMwvNWcdz3BEnblwdR4D8vx/pub?gid=750018040&single=true&output=csv",
+    daily_task:          "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqCdUN9flDg-TpmJBmGpVhfFWL5yBmeAOOe1ZiQyxKt1S6ejPxj8995KMwvNWcdz3BEnblwdR4D8vx/pub?gid=612150226&single=true&output=csv",
+    setoran:             "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqCdUN9flDg-TpmJBmGpVhfFWL5yBmeAOOe1ZiQyxKt1S6ejPxj8995KMwvNWcdz3BEnblwdR4D8vx/pub?gid=758218194&single=true&output=csv",
+    absensi:             "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqCdUN9flDg-TpmJBmGpVhfFWL5yBmeAOOe1ZiQyxKt1S6ejPxj8995KMwvNWcdz3BEnblwdR4D8vx/pub?gid=1730016363&single=true&output=csv",
+    log_harian:          "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqCdUN9flDg-TpmJBmGpVhfFWL5yBmeAOOe1ZiQyxKt1S6ejPxj8995KMwvNWcdz3BEnblwdR4D8vx/pub?gid=1912533535&single=true&output=csv",
+    checklist_kunjungan: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqCdUN9flDg-TpmJBmGpVhfFWL5yBmeAOOe1ZiQyxKt1S6ejPxj8995KMwvNWcdz3BEnblwdR4D8vx/pub?gid=459532689&single=true&output=csv",
+    sku_sampling:        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqCdUN9flDg-TpmJBmGpVhfFWL5yBmeAOOe1ZiQyxKt1S6ejPxj8995KMwvNWcdz3BEnblwdR4D8vx/pub?gid=395910339&single=true&output=csv"
+  },
+  refresh_interval_secs: 60,
+  // ARCO bertugas per toko (dari master database)
+  // Diupdate otomatis saat sheet master_toko berhasil dimuat
+};
+
+// ═══════════════════════════════════════════════════════════
+// ═══ MASTER DATA TOKO (33 Toko) — dari Database ═══
+// ═══════════════════════════════════════════════════════════
+const MASTER_EMBED = {
+  M01:{nama_toko:'MAKMUR TAMBAHREJO',area:'C',kota:'SURABAYA',om:'RICHARD',arco:'NIA',sl:'Tsalits H. Rohmaniyati'},
+  M02:{nama_toko:'MAKMUR KAPAS KRAMPUNG 75E',area:'B',kota:'SURABAYA',om:'RICHARD',arco:'NIA',sl:'Vika Anjana'},
+  M03:{nama_toko:'MAKMUR USMAN SADAR',area:'B',kota:'GRESIK',om:'RICHARD',arco:'ARI',sl:'Kamilia'},
+  M04:{nama_toko:'MAKMUR KALIMANTAN GRS',area:'B',kota:'GRESIK',om:'RICHARD',arco:'ARI',sl:'Musdatul Umroh'},
+  M05:{nama_toko:'MAKMUR TAMBAHREJO',area:'B',kota:'SURABAYA',om:'RICHARD',arco:'NIA',sl:'Safira A. Widjaya'},
+  M06:{nama_toko:'MAKMUR PUCANG ANOM',area:'B+',kota:'SURABAYA',om:'RICHARD',arco:'HARTONO',sl:'Nita Wahyuni'},
+  M07:{nama_toko:'MAKMUR PACUAN KUDA',area:'B+',kota:'SURABAYA',om:'RICHARD',arco:'ALI',sl:'Eliska F. Fransiska'},
+  M08:{nama_toko:'MAKMUR KAPAS KRAMPUNG 138A',area:'A',kota:'SURABAYA',om:'RICHARD',arco:'HARTONO',sl:'Maryati'},
+  M09:{nama_toko:'MAKMUR BRATANG GEDE',area:'A',kota:'SURABAYA',om:'RICHARD',arco:'HARTONO',sl:'Silfiana'},
+  M10:{nama_toko:'MAKMUR PANDEGILING',area:'B+',kota:'SURABAYA',om:'RICHARD',arco:'TONI',sl:'Toni Ariyanto'},
+  M11:{nama_toko:'MAKMUR RAYA LONTAR',area:'C',kota:'SURABAYA',om:'RICHARD',arco:'CIPTO',sl:'Dewi P. Alwani'},
+  M12:{nama_toko:'MAKMUR SIDOMULYO',area:'A',kota:'SURABAYA',om:'RICHARD',arco:'CIPTO',sl:'Aisyah A. Shalsabila'},
+  M13:{nama_toko:'MAKMUR WIGUNA TENGAH',area:'B',kota:'SURABAYA',om:'RICHARD',arco:'VACANT',sl:'Asyahnur P. Utami'},
+  M14:{nama_toko:'MAKMUR RAYA MULYOSARI',area:'A',kota:'SURABAYA',om:'RICHARD',arco:'AYU',sl:'Nurillah'},
+  M15:{nama_toko:'MAKMUR DUKUH KUPANG',area:'B',kota:'SURABAYA',om:'RICHARD',arco:'ALI',sl:'Siti Khodijah'},
+  M16:{nama_toko:'MAKMUR RUNGKUT MENANGGAL',area:'B+',kota:'SURABAYA',om:'RICHARD',arco:'VACANT',sl:'Sinta Nuriyah'},
+  M17:{nama_toko:'MAKMUR KARANG ASEM',area:'C',kota:'SIDOARJO',om:'RICHARD',arco:'NIA',sl:'Anis Fadillah'},
+  M18:{nama_toko:'MAKMUR GARUDA BETRO',area:'A',kota:'SURABAYA',om:'RICHARD',arco:'VACANT',sl:'Virda N. Seviani'},
+  M19:{nama_toko:'MAKMUR RAYA KETINTANG',area:'B+',kota:'SURABAYA',om:'RICHARD',arco:'NORA',sl:'VACANT'},
+  M20:{nama_toko:'MAKMUR RAYA TENGGILIS',area:'B',kota:'SIDOARJO',om:'RICHARD',arco:'VACANT',sl:'Retno Lukiyana'},
+  M21:{nama_toko:'MAKMUR DELTA SARI',area:'B+',kota:'SIDOARJO',om:'RICHARD',arco:'NORA',sl:'VACANT'},
+  M22:{nama_toko:'MAKMUR PONDOK JATI',area:'A',kota:'SIDOARJO',om:'RICHARD',arco:'DEWI',sl:'Deviana Ardianti'},
+  M23:{nama_toko:'MAKMUR TAMAN PINANG',area:'B+',kota:'SURABAYA',om:'RICHARD',arco:'DEWI',sl:'Oktaviani L. Jannah'},
+  M24:{nama_toko:'MAKMUR SEMOLOWARU',area:'A',kota:'SURABAYA',om:'RICHARD',arco:'ALI',sl:'Alfiyah'},
+  M25:{nama_toko:'MAKMUR MANUKAN TENGAH',area:'B+',kota:'SURABAYA',om:'RICHARD',arco:'CIPTO',sl:'VACANT'},
+  M26:{nama_toko:'MAKMUR KEPUTIH TEGAL',area:'B',kota:'SURABAYA',om:'RICHARD',arco:'AYU',sl:'Abdiniati'},
+  M27:{nama_toko:'MAKMUR LIDAH WETAN',area:'A',kota:'SURABAYA',om:'RICHARD',arco:'CIPTO',sl:'Vivi Urviyanti'},
+  M28:{nama_toko:'MAKMUR ARYO BEBANGAH',area:'B+',kota:'SIDOARJO',om:'RICHARD',arco:'ALI',sl:'Ayu W. Safitri'},
+  M29:{nama_toko:'MAKMUR RAYA SUKODONO',area:'B',kota:'SIDOARJO',om:'RICHARD',arco:'ALI',sl:'Rosiana S. Zulaika'},
+  M30:{nama_toko:'MAKMUR KEMENDUNG',area:'A',kota:'SIDOARJO',om:'RICHARD',arco:'DEWI',sl:'Nadiya I. Safitri'},
+  M31:{nama_toko:'MAKMUR RAYA TROPODO',area:'A',kota:'SURABAYA',om:'RICHARD',arco:'VACANT',sl:'Sabbrina Cahyani'},
+  M32:{nama_toko:'MAKMUR GRAHA KOTA',area:'C',kota:'SIDOARJO',om:'RICHARD',arco:'DEWI',sl:'Nuna S. Ikhwan'},
+  M33:{nama_toko:'MAKMUR CITRALAND',area:'B',kota:'SURABAYA',om:'RICHARD',arco:'CIPTO',sl:'Riska D. Amalia'},
+};
+
+let MASTER_DATA = {...MASTER_EMBED};
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+const TOTAL_CL = 22;
+let rawData = [], filtData = [], charts = {};
+let sortSt = { col: 'tanggal', asc: false };
+let refreshTimer = null, countdownTimer = null;
+let refreshSecs = 60, countdownLeft = 60;
+let totalRefreshes = 0, lastRefreshTime = null;
+let COL = {};
+
+function getMaster(kode) {
+  return MASTER_DATA[(kode || '').trim().toUpperCase()] || null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CSV FETCH (PapaParse)
+// ═══════════════════════════════════════════════════════════
+function fetchCSV(url) {
+  return new Promise((resolve, reject) => {
+    Papa.parse(url, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: results => resolve(results),
+      error: err => reject(new Error(err.message || 'Gagal fetch CSV'))
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOAD ALL DATA
+// ═══════════════════════════════════════════════════════════
+async function loadAllData(silent = false) {
+  if (!silent) setStatus('load', 'Memuat data...');
+  try {
+    // 1. Load master toko dari sheet (update MASTER_DATA)
+    try {
+      const mr = await fetchCSV(CONFIG.google_sheets.master_toko);
+      if (mr.data && mr.data.length > 0) {
+        const newMaster = {};
+        mr.data.forEach(row => {
+          const kode = (row.kode_toko || '').trim().toUpperCase();
+          if (!kode) return;
+          newMaster[kode] = {
+            nama_toko: (row.nama_toko || '').trim(),
+            area:      (row.area || '').trim(),
+            kota:      (row.kota || '').trim().toUpperCase(),
+            om:        (row.operation_manager || '').trim(),
+            arco:      (row.arco || '').trim(),
+            sl:        (row.store_leader || '').trim()
+          };
+        });
+        if (Object.keys(newMaster).length > 0) MASTER_DATA = newMaster;
+      }
+    } catch(e) {
+      // Gunakan MASTER_EMBED sebagai fallback — tidak perlu hentikan proses
+    }
+
+    // 2. Load checklist_kunjungan (sumber data utama dashboard)
+    const cr = await fetchCSV(CONFIG.google_sheets.checklist_kunjungan);
+
+    if (!cr.data || cr.data.length === 0) {
+      // Data masih kosong — mungkin belum ada kunjungan
+      rawData = [];
+      filtData = [];
+      document.getElementById('rowCount').textContent = '0 baris';
+      document.getElementById('luEl').textContent = 'Update: ' + new Date().toLocaleTimeString('id-ID');
+      populateFilters();
+      renderAll();
+      updateBadges();
+      setStatus('warn', 'Data checklist kosong');
+      updateCfgStats();
+      return;
+    }
+
+    const headers = cr.meta.fields || [];
+    autoDetect(headers);
+
+    const prevCount = rawData.length;
+    const parsed = cr.data.map(parseRow).filter(r => r.tanggal && r.toko && r.toko !== '—');
+    parsed.sort((a, b) => b.tanggal.localeCompare(a.tanggal));
+    rawData = parsed;
+    filtData = [...rawData];
+
+    totalRefreshes++;
+    lastRefreshTime = new Date();
+
+    const newRows = rawData.length - prevCount;
+    if (newRows > 0 && prevCount > 0 && !silent) {
+      showToast('🆕 ' + newRows + ' data baru masuk!', 'green');
+      highlightNewRows(newRows);
+    }
+
+    document.getElementById('rowCount').textContent = rawData.length + ' baris';
+    document.getElementById('luEl').textContent = 'Update: ' + new Date().toLocaleTimeString('id-ID');
+
+    populateFilters();
+    renderAll();
+    updateBadges();
+    setStatus('live', 'LIVE · ' + rawData.length + ' baris');
+    updateCfgStats();
+
+  } catch(e) {
+    setStatus('err', 'Error: ' + e.message.substring(0, 35));
+    if (!silent) showToast('❌ Gagal memuat: ' + e.message, 'red');
+    populateFilters(); // tetap isi filter dari MASTER_DATA walau fetch gagal
+  }
+}
+
+function manualRefresh() {
+  resetCountdown();
+  loadAllData(false);
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTO REFRESH
+// ═══════════════════════════════════════════════════════════
+function setRefreshInterval() {
+  refreshSecs = parseInt(document.getElementById('refreshInterval').value);
+  startAutoRefresh();
+}
+
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  if (countdownTimer) clearInterval(countdownTimer);
+  if (refreshSecs === 0) {
+    document.getElementById('countdown').textContent = 'Auto-refresh: OFF';
+    document.getElementById('refreshFill').style.width = '0%';
+    return;
+  }
+  countdownLeft = refreshSecs;
+  refreshTimer = setInterval(() => { loadAllData(true); resetCountdown(); }, refreshSecs * 1000);
+  countdownTimer = setInterval(tickCountdown, 1000);
+  tickCountdown();
+}
+
+function resetCountdown() {
+  countdownLeft = refreshSecs;
+  if (refreshSecs > 0) tickCountdown();
+}
+
+function tickCountdown() {
+  if (refreshSecs === 0) return;
+  const pct = ((refreshSecs - countdownLeft) / refreshSecs) * 100;
+  document.getElementById('refreshFill').style.width = pct + '%';
+  const m = Math.floor(countdownLeft / 60), s = countdownLeft % 60;
+  document.getElementById('countdown').textContent = 'Refresh: ' + (m > 0 ? m + 'm ' : '') + s + 'd';
+  if (countdownLeft > 0) countdownLeft--;
+}
+
+// ═══════════════════════════════════════════════════════════
+// STATUS PILL
+// ═══════════════════════════════════════════════════════════
+function setStatus(type, label) {
+  const pill = document.getElementById('statusPill');
+  const dot  = document.getElementById('statusDot');
+  const lbl  = document.getElementById('statusLabel');
+  const map  = {live:['p-live','dg'],load:['p-load','db'],err:['p-err','dr'],warn:['p-warn','dy']};
+  pill.className = 'pill ' + (map[type]?.[0] || 'p-warn');
+  dot.className  = 'dot '  + (map[type]?.[1] || 'dy');
+  lbl.textContent = label;
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTO DETECT COLUMNS
+// ═══════════════════════════════════════════════════════════
+const KW = {
+  tanggal:  ['timestamp','tanggal','date','client_ts','waktu','jam'],
+  arco:     ['nama_arco','arco','nama arco','petugas','supervisor'],
+  toko:     ['nama_toko','toko','store','nama toko','cabang'],
+  kodeToko: ['kode_toko','kode toko','kode'],
+  sl:       ['nama_sl','store leader','sl yang','sl ditemui','leader'],
+  skor:     ['skor_checklist','skor','score','nilai total','total skor'],
+  kondisi:  ['kondisi_toko','kondisi','status toko','status kondisi'],
+  temuan:   ['temuan_deskripsi','temuan','deskripsi temuan','kendala'],
+  tindakan: ['status_tindakan','tindakan perbaikan','tindakan','status tindakan'],
+  sku:      ['sku_data','selisih sku','rekap selisih','selisih stok'],
+  catatan:  ['catatan_penutup','catatan penutup','catatan'],
+};
+
+function autoDetect(headers) {
+  COL = {};
+  const h = headers.map(x => x.toLowerCase().trim());
+  for (const [f, kws] of Object.entries(KW)) {
+    for (let i = 0; i < h.length; i++) {
+      if (kws.some(kw => h[i].includes(kw))) { COL[f] = headers[i]; break; }
+    }
+  }
+  const known = Object.values(COL).filter(Boolean);
+  // Deteksi kolom item checklist individual
+  COL.clCols = headers.filter(hdr => {
+    const l = hdr.toLowerCase();
+    if (known.includes(hdr)) return false;
+    return (
+      /^status_/.test(l) ||       // status_xxx dari form checklist
+      l.includes('display')   || l.includes('planogram') || l.includes('kebersih') ||
+      l.includes('stok')      || l.includes('harga')     || l.includes('seragam')  ||
+      l.includes('kasir')     || l.includes('promo')     || l.includes('rak')      ||
+      /^\d+\./.test(hdr)      || /^item/i.test(hdr)
+    );
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// PARSE ROW
+// ═══════════════════════════════════════════════════════════
+function parseRow(row) {
+  const g = f => (row[COL[f]] || '').toString().trim();
+
+  const tgl      = parseTgl(g('tanggal'));
+  const kodeToko = g('kodeToko').toUpperCase();
+  const master   = getMaster(kodeToko);
+
+  // Skor — skor_checklist sudah dalam % (0–100)
+  const sr  = g('skor');
+  let skor  = parseFloat(sr) || 0;
+  if (sr.includes('/')) skor = parseFloat(sr.split('/')[0]) || 0;
+  let pct   = (skor <= TOTAL_CL && skor > 0 && !sr.includes('%'))
+    ? Math.round(skor / TOTAL_CL * 100)
+    : Math.min(100, Math.round(skor));
+
+  // Kondisi
+  let kond = g('kondisi');
+  if (!kond || kond.length < 3) kond = pct >= 90 ? 'Normal' : pct >= 70 ? 'Perlu Perhatian' : 'Kritis';
+  if (/normal/i.test(kond))             kond = 'Normal';
+  else if (/perlu|attention/i.test(kond)) kond = 'Perlu Perhatian';
+  else if (/kritis|critical/i.test(kond)) kond = 'Kritis';
+
+  // Selisih SKU dari sku_data (JSON array dari form)
+  let selisihSku = 0;
+  const skuStr = g('sku');
+  if (skuStr) {
+    try {
+      const arr = JSON.parse(skuStr);
+      if (Array.isArray(arr)) selisihSku = arr.reduce((s, r) => s + Math.abs(Number(r.selisih) || 0), 0);
+    } catch(e) { selisihSku = parseInt(skuStr) || 0; }
+  }
+
+  // Item checklist individual
+  const items = {};
+  (COL.clCols || []).forEach(c => {
+    const v = (row[c] || '').toString().trim().toLowerCase();
+    items[c] = v === 'ok' || v === '1' || v === 'ya' || v === 'yes' || v === 'selesai' || v === 'true' || v === '✓';
+  });
+
+  // Gunakan master untuk nama toko, kota, kelas, arco (lebih reliable)
+  const tokoName = master?.nama_toko || g('toko') || '—';
+  const arcoName = master?.arco      || g('arco')  || '—';
+  const kota     = master?.kota      || inferKota(tokoName);
+  const klas     = master?.area      || '';
+  const slName   = g('sl')           || master?.sl  || '—';
+
+  return {
+    tanggal:      tgl,
+    kode_toko:    kodeToko,
+    toko:         tokoName,
+    arco:         arcoName,
+    arco_form:    g('arco'),   // nama ARCO dari form (mungkin nama lengkap)
+    kota,
+    klas,
+    area:         kota,        // backward compat
+    sl:           slName,
+    skor:         pct,
+    skorPct:      pct,
+    kondisi:      kond,
+    temuan:       g('temuan'),
+    tindakan:     normTind(g('tindakan')),
+    selisihSku,
+    catatan:      g('catatan'),
+    items
+  };
+}
+
+function normTind(t) {
+  if (!t) return '';
+  if (/selesai|done|selesai_tempat/i.test(t))     return 'Selesai';
+  if (/proses|progress|follow|follow_up/i.test(t)) return 'Dalam Proses';
+  if (/belum|pending|eskalasi/i.test(t))           return 'Belum Ditindaklanjuti';
+  return t;
+}
+
+function inferKota(t) {
+  if (/sidoarjo|waru|gedangan|taman pinang|delta sari|pondok jati|kemendung|aryo|tropodo|sukodono|tenggilis/i.test(t)) return 'SIDOARJO';
+  if (/gresik|manyar|kebomas|usman sadar|kalimantan grs/i.test(t)) return 'GRESIK';
+  return 'SURABAYA';
+}
+
+function parseTgl(s) {
+  if (!s) return '';
+  try { const d = new Date(s); if (!isNaN(d.getTime())) return d.toISOString().split('T')[0]; } catch(e) {}
+  const m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return s.split(' ')[0];
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════════════
+function populateFilters() {
+  // Selalu gunakan MASTER_DATA sebagai sumber utama supaya dropdown
+  // tetap terisi meski belum ada data kunjungan (rawData kosong)
+  const kotas = [...new Set([
+    ...Object.values(MASTER_DATA).map(m=>m.kota),
+    ...rawData.map(r=>r.kota)
+  ].filter(Boolean))].sort();
+
+  const klasses = ['A','B+','B','C'].filter(k =>
+    Object.values(MASTER_DATA).some(m=>m.area===k) || rawData.some(r=>r.klas===k));
+
+  const arcos = [...new Set([
+    ...Object.values(MASTER_DATA).map(m=>m.arco),
+    ...rawData.map(r=>r.arco)
+  ].filter(x=>x&&x!=='—'&&x!=='VACANT'))].sort();
+
+  setOpts('fa',    kotas,  'Semua Kota');
+  setOpts('fklas', klasses,'Semua Kelas');
+  setOpts('fc',    arcos,  'Semua ARCO');
+
+  // Populate master toko ARCO filter
+  setOpts('fmarco', arcos, 'Semua ARCO');
+
+  // Config page — master summary
+  const byKota  = {};
+  const byKlas  = {};
+  const byArco  = {};
+  Object.values(MASTER_DATA).forEach(m=>{
+    byKota[m.kota]=(byKota[m.kota]||0)+1;
+    byKlas[m.area]=(byKlas[m.area]||0)+1;
+    if(m.arco&&m.arco!=='VACANT') byArco[m.arco]=(byArco[m.arco]||0)+1;
+  });
+  document.getElementById('cfgMasterSummary').innerHTML =
+    `<span style="color:var(--green)">Total Toko: ${Object.keys(MASTER_DATA).length}</span>\n` +
+    Object.entries(byKota).sort().map(([k,v])=>`  ${k.padEnd(12)}: ${v} toko`).join('\n') + '\n\n' +
+    `Kelas Toko:\n` +
+    ['A','B+','B','C'].map(k=>`  Kelas ${k.padEnd(4)}: ${byKlas[k]||0} toko`).join('\n') + '\n\n' +
+    `ARCO Aktif:\n` +
+    Object.entries(byArco).sort().map(([a,v])=>`  ${a.padEnd(10)}: ${v} toko`).join('\n');
+
+  document.getElementById('nb3').textContent = Object.keys(MASTER_DATA).length;
+}
+
+function setOpts(id, items, placeholder) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const prev = el.value;
+  el.innerHTML = `<option value="">${placeholder}</option>` +
+    items.map(x=>`<option${x===prev?' selected':''}>${x}</option>`).join('');
+}
+
+function applyFilters() {
+  const days = document.getElementById('fp').value;
+  const kota = document.getElementById('fa').value;
+  const klas = document.getElementById('fklas')?.value || '';
+  const arco = document.getElementById('fc').value;
+  const kond = document.getElementById('fk').value;
+  const cut  = new Date();
+  if (days !== 'all') cut.setDate(cut.getDate() - parseInt(days));
+  filtData = rawData.filter(r => {
+    if (days !== 'all' && r.tanggal < cut.toISOString().split('T')[0]) return false;
+    if (kota && r.kota  !== kota) return false;
+    if (klas && r.klas  !== klas) return false;
+    if (arco && r.arco  !== arco) return false;
+    if (kond && r.kondisi !== kond) return false;
+    return true;
+  });
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════════
+function renderAll() {
+  renderKPI(); renderTren(); renderKondisi(); renderAlert();
+  renderRanking(); renderRecent(); renderKunj(); renderSkor();
+  renderCL(); renderTemuan(); renderHM(); renderMasterToko();
+  renderConfigSheets();
+}
+
+// ─── KPI ───
+function renderKPI() {
+  const d = filtData, tot = d.length;
+  const avg  = tot ? Math.round(d.reduce((s,r)=>s+r.skorPct,0)/tot) : 0;
+  const tokoU= new Set(d.map(r=>r.toko)).size;
+  const krit = d.filter(r=>r.kondisi==='Kritis').length;
+  const warn = d.filter(r=>r.kondisi==='Perlu Perhatian').length;
+  const tOpen= d.filter(r=>r.temuan&&r.tindakan!=='Selesai').length;
+  const totSku=d.reduce((s,r)=>s+r.selisihSku, 0);
+  const ac   = avg>=90?'g':avg>=70?'y':'r';
+  document.getElementById('kpiGrid').innerHTML =
+    `<div class="kpi cb"><div class="ki">📋</div><div class="kl">TOTAL KUNJUNGAN</div><div class="kv cb">${tot}</div><div class="ks">${tokoU} toko dikunjungi</div></div>` +
+    `<div class="kpi c${ac}"><div class="ki">🎯</div><div class="kl">RATA-RATA SKOR</div><div class="kv c${ac}">${avg}%</div><div class="ks">dari ${TOTAL_CL} item checklist</div></div>` +
+    `<div class="kpi c${krit>0?'r':'y'}"><div class="ki">🚨</div><div class="kl">KONDISI KRITIS</div><div class="kv c${krit>0?'r':'y'}">${krit}</div><div class="ks">${warn} perlu perhatian</div></div>` +
+    `<div class="kpi c${tOpen>3?'y':'g'}"><div class="ki">⚠️</div><div class="kl">TEMUAN OPEN</div><div class="kv c${tOpen>3?'y':'g'}">${tOpen}</div><div class="ks">belum ditindaklanjuti</div></div>` +
+    `<div class="kpi cp"><div class="ki">📦</div><div class="kl">SELISIH SKU</div><div class="kv cp">${totSku}</div><div class="ks">total akumulasi</div></div>`;
+}
+
+// ─── TREN ───
+function renderTren() {
+  const today=new Date(),labels=[],scores=[],counts=[];
+  for(let i=13;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const key=d.toISOString().split('T')[0];const day=filtData.filter(r=>r.tanggal===key);labels.push(d.toLocaleDateString('id-ID',{day:'numeric',month:'short'}));scores.push(day.length?Math.round(day.reduce((s,r)=>s+r.skorPct,0)/day.length):null);counts.push(day.length);}
+  if(charts.tren)charts.tren.destroy();
+  charts.tren=new Chart(document.getElementById('cTren'),{data:{labels,datasets:[{type:'line',label:'Avg Skor (%)',data:scores,borderColor:'#4d9fff',backgroundColor:'rgba(77,159,255,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:scores.map(s=>s>=90?'#22d3a0':s>=70?'#f5a623':'#ff5370'),yAxisID:'y1'},{type:'bar',label:'Kunjungan',data:counts,backgroundColor:'rgba(77,159,255,.15)',borderColor:'rgba(77,159,255,.3)',borderWidth:1,yAxisID:'y2',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a8ba8',font:{size:10}}}},scales:{x:{ticks:{color:'#7a8ba8',font:{size:9}},grid:{color:'rgba(36,48,71,.5)'}},y1:{position:'left',min:0,max:100,ticks:{color:'#7a8ba8',font:{size:9}},grid:{color:'rgba(36,48,71,.5)'}},y2:{position:'right',ticks:{color:'#7a8ba8',font:{size:9}},grid:{display:false}}}}});
+}
+
+// ─── KONDISI DONUT ───
+function renderKondisi() {
+  const n=filtData.filter(r=>r.kondisi==='Normal').length,w=filtData.filter(r=>r.kondisi==='Perlu Perhatian').length,k=filtData.filter(r=>r.kondisi==='Kritis').length,tot=filtData.length||1;
+  if(charts.kond)charts.kond.destroy();
+  charts.kond=new Chart(document.getElementById('cKond'),{type:'doughnut',data:{labels:['Normal','Perlu Perhatian','Kritis'],datasets:[{data:[n,w,k],backgroundColor:['#22d3a0','#f5a623','#ff5370'],borderWidth:0,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'68%'}});
+  document.getElementById('kondLeg').innerHTML=[['Normal','#22d3a0',n],['Perlu Perhatian','#f5a623',w],['Kritis','#ff5370',k]].map(([l,c,v])=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:11px"><span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;background:${c};border-radius:2px;display:inline-block"></span><span style="color:var(--text2)">${l}</span></span><span style="font-weight:700;font-family:'JetBrains Mono',monospace">${v} <span style="color:var(--text2);font-weight:400">(${Math.round(v/tot*100)}%)</span></span></div>`).join('');
+}
+
+// ─── ALERT ───
+function renderAlert() {
+  const items=filtData.filter(r=>r.kondisi==='Kritis'||r.kondisi==='Perlu Perhatian').slice(0,8);
+  document.getElementById('alertPnl').innerHTML=items.length?items.map(r=>`<div class="ai ${r.kondisi==='Kritis'?'ir':'iy'}"><span style="font-size:15px">${r.kondisi==='Kritis'?'🔴':'🟡'}</span><div><div class="ai-t">${r.toko} <span style="font-weight:400;color:var(--text2)">— ${r.kota}</span> <span class="badge ${klasBadge(r.klas)}" style="font-size:9px">${r.klas||'?'}</span></div><div class="ai-d">${r.temuan||'Skor rendah: '+r.skorPct+'%'}</div><div class="ai-m">${r.tanggal} · ARCO: ${r.arco} · ${r.skorPct}%</div></div></div>`).join(''):'<div class="empty">✅ Tidak ada alert</div>';
+}
+
+// ─── RANKING ───
+function grpToko(data) {
+  const m={};
+  data.forEach(r=>{if(!m[r.toko])m[r.toko]={tot:0,cnt:0,kota:r.kota,klas:r.klas,last:r,sku:0};m[r.toko].tot+=r.skorPct;m[r.toko].cnt++;m[r.toko].sku+=r.selisihSku;if(r.tanggal>m[r.toko].last.tanggal)m[r.toko].last=r;});
+  Object.values(m).forEach(v=>v.avg=Math.round(v.tot/v.cnt));
+  return m;
+}
+
+function renderRanking() {
+  const bt=grpToko(filtData),sorted=Object.entries(bt).map(([t,d])=>({toko:t,...d})).sort((a,b)=>b.avg-a.avg).slice(0,10);
+  document.getElementById('rankPnl').innerHTML=sorted.map((r,i)=>{const c=r.avg>=90?'var(--green)':r.avg>=70?'var(--yellow)':'var(--red)';return`<div class="ri"><div class="rn" style="color:${i<3?'var(--yellow)':'var(--text3)'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div><div class="rin"><div class="rna">${r.toko}</div><div class="rsu">${r.kota||''} · Kelas ${r.klas||'?'} · ${r.cnt}x</div></div><div class="rsc" style="color:${c}">${r.avg}%</div></div>`;}).join('');
+}
+
+// ─── RECENT TABLE ───
+function renderRecent() {
+  document.getElementById('tblRec').innerHTML=filtData.slice(0,12).map(r=>`<tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px;white-space:nowrap">${r.tanggal}</td><td style="font-weight:600">${r.toko}</td><td style="color:var(--text2)">${r.kota}</td><td><span class="badge ${klasBadge(r.klas)}">${r.klas||'?'}</span></td><td>${r.arco}</td><td style="color:var(--text2)">${r.sl}</td><td>${sbarH(r.skorPct)}</td><td>${bKond(r.kondisi)}</td><td style="color:var(--text2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px">${r.temuan||'—'}</td></tr>`).join('');
+}
+
+function highlightNewRows(count) {
+  setTimeout(()=>{const rows=document.getElementById('tblRec').querySelectorAll('tr');for(let i=0;i<Math.min(count,rows.length);i++)rows[i].classList.add('new-row');},200);
+}
+
+// ─── KUNJUNGAN TABLE ───
+function renderKunj() {
+  const q=(document.getElementById('qk')?.value||'').toLowerCase(),fk=document.getElementById('fkk')?.value||'',ft=document.getElementById('fkt')?.value||'';
+  let data=[...filtData];
+  if(q) data=data.filter(r=>r.toko.toLowerCase().includes(q)||r.arco.toLowerCase().includes(q));
+  if(fk) data=data.filter(r=>r.kondisi===fk);
+  if(ft) data=data.filter(r=>r.tindakan===ft);
+  data.sort((a,b)=>{let va=a[sortSt.col]??'',vb=b[sortSt.col]??'';if(typeof va==='number')return sortSt.asc?va-vb:vb-va;return sortSt.asc?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));});
+  const tot=data.length,avg=tot?Math.round(data.reduce((s,r)=>s+r.skorPct,0)/tot):0;
+  document.getElementById('kStat').innerHTML=`<div class="sp">Total: <b>${tot}</b></div><div class="sp" style="color:var(--green)">Normal: <b>${data.filter(r=>r.kondisi==='Normal').length}</b></div><div class="sp" style="color:var(--yellow)">Perlu Perhatian: <b>${data.filter(r=>r.kondisi==='Perlu Perhatian').length}</b></div><div class="sp" style="color:var(--red)">Kritis: <b>${data.filter(r=>r.kondisi==='Kritis').length}</b></div><div class="sp">Avg Skor: <b>${avg}%</b></div><div class="sp" style="color:var(--purple)">SKU: <b>${data.reduce((s,r)=>s+r.selisihSku,0)}</b></div>`;
+  document.getElementById('tblKunj').innerHTML=data.map(r=>`<tr><td style="font-family:'JetBrains Mono',monospace;white-space:nowrap;font-size:10px">${r.tanggal}</td><td style="font-weight:600">${r.toko}</td><td style="color:var(--text2)">${r.kota}</td><td><span class="badge ${klasBadge(r.klas)}">${r.klas||'?'}</span></td><td>${r.arco}</td><td style="color:var(--text2)">${r.sl}</td><td>${sbarH(r.skorPct)}</td><td>${bKond(r.kondisi)}</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2);font-size:10px">${r.temuan||'—'}</td><td>${r.tindakan?bTind(r.tindakan):'<span style="color:var(--text3)">—</span>'}</td><td style="font-family:'JetBrains Mono',monospace;color:${r.selisihSku>0?'var(--purple)':'var(--text3)'};font-weight:${r.selisihSku>0?700:400}">${r.selisihSku||'—'}</td></tr>`).join('');
+}
+
+function sortBy(col){if(sortSt.col===col)sortSt.asc=!sortSt.asc;else{sortSt.col=col;sortSt.asc=false;}renderKunj();}
+
+// ─── SKOR PAGE ───
+function renderSkor() {
+  const bt=grpToko(filtData),sorted=Object.entries(bt).map(([t,d])=>({toko:t,...d})).sort((a,b)=>b.avg-a.avg);
+  if(charts.skor)charts.skor.destroy();
+  charts.skor=new Chart(document.getElementById('cSkor'),{type:'bar',data:{labels:sorted.map(r=>r.toko),datasets:[{label:'Avg Skor (%)',data:sorted.map(r=>r.avg),backgroundColor:sorted.map(r=>r.avg>=90?'rgba(34,211,160,.7)':r.avg>=70?'rgba(245,166,35,.7)':'rgba(255,83,112,.7)'),borderColor:sorted.map(r=>r.avg>=90?'#22d3a0':r.avg>=70?'#f5a623':'#ff5370'),borderWidth:1,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#7a8ba8',font:{size:9}},grid:{color:'rgba(36,48,71,.5)'}},y:{ticks:{color:'#e2e8f4',font:{size:10}},grid:{display:false}}}}});
+
+  const byArco={};filtData.forEach(r=>{if(!byArco[r.arco])byArco[r.arco]={tot:0,cnt:0};byArco[r.arco].tot+=r.skorPct;byArco[r.arco].cnt++;});
+  document.getElementById('arcoPnl').innerHTML=Object.entries(byArco).map(([a,d])=>({a,avg:Math.round(d.tot/d.cnt),cnt:d.cnt})).sort((x,y)=>y.avg-x.avg).map(({a,avg,cnt})=>{const c=avg>=90?'var(--green)':avg>=70?'var(--yellow)':'var(--red)';return`<div class="apb"><div class="apb-t"><span style="font-weight:600">${a}</span><span style="font-family:'JetBrains Mono',monospace;color:${c};font-weight:700">${avg}% <span style="color:var(--text2);font-weight:400;font-size:10px">(${cnt}x)</span></span></div><div class="apb-tr"><div class="apb-f" style="width:${avg}%;background:${c}"></div></div></div>`;}).join('');
+
+  const bins={'<70':0,'70-79':0,'80-89':0,'≥90':0};filtData.forEach(r=>{if(r.skorPct<70)bins['<70']++;else if(r.skorPct<80)bins['70-79']++;else if(r.skorPct<90)bins['80-89']++;else bins['≥90']++;});
+  if(charts.dist)charts.dist.destroy();
+  charts.dist=new Chart(document.getElementById('cDist'),{type:'bar',data:{labels:Object.keys(bins),datasets:[{data:Object.values(bins),backgroundColor:['rgba(255,83,112,.7)','rgba(245,166,35,.7)','rgba(77,159,255,.7)','rgba(34,211,160,.7)'],borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#7a8ba8',font:{size:9}},grid:{color:'rgba(36,48,71,.5)'}},y:{ticks:{color:'#7a8ba8',font:{size:9}},grid:{color:'rgba(36,48,71,.5)'}}}}});
+
+  document.getElementById('skuPnl').innerHTML=sorted.filter(r=>r.sku>0).sort((a,b)=>b.sku-a.sku).map(r=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(36,48,71,.4)"><div style="flex:1;font-size:11px;font-weight:600">${r.toko}</div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--purple)">${r.sku}</div></div>`).join('')||'<div class="empty" style="padding:16px;font-size:11px">Tidak ada selisih SKU</div>';
+
+  document.getElementById('tblRank').innerHTML=sorted.map((r,i)=>{
+    const c=r.avg>=90?'var(--green)':r.avg>=70?'var(--yellow)':'var(--red)';
+    const scrs=filtData.filter(x=>x.toko===r.toko).map(x=>x.skorPct);
+    const tr=scrs.length>1?(scrs[0]>scrs[scrs.length-1]?'↑':scrs[0]<scrs[scrs.length-1]?'↓':'→'):'→';
+    const tc=tr==='↑'?'var(--green)':tr==='↓'?'var(--red)':'var(--text2)';
+    return`<tr><td style="font-weight:700;color:${i<3?'var(--yellow)':'var(--text2)'}">${i+1}</td><td style="font-weight:600">${r.toko}</td><td style="color:var(--text2)">${r.kota||''}</td><td><span class="badge ${klasBadge(r.klas)}">${r.klas||'?'}</span></td><td style="font-family:'JetBrains Mono',monospace">${r.cnt}x</td><td>${sbarH(r.avg)}</td><td style="font-family:'JetBrains Mono',monospace;color:${c};font-weight:700">${r.last?.skor||0}%</td><td>${bKond(r.last?.kondisi||'')}</td><td style="font-family:'JetBrains Mono',monospace;color:var(--purple);font-weight:${r.sku>0?700:400}">${r.sku||'—'}</td><td style="font-size:18px;font-weight:700;color:${tc}">${tr}</td></tr>`;
+  }).join('');
+}
+
+// ─── CHECKLIST ITEMS ───
+function renderCL() {
+  if(!COL.clCols||!COL.clCols.length){['cItems','cKat'].forEach(id=>{const el=document.getElementById(id);if(el)el.parentElement.innerHTML='<div class="empty" style="padding:24px;font-size:11px">📋 Kolom item checklist belum terdeteksi — pastikan sheet memiliki kolom status_xxx</div>';});document.getElementById('itemPnl').innerHTML='<div class="empty" style="font-size:11px">Tidak ada data item</div>';return;}
+  const stats=COL.clCols.map(col=>{const tot=filtData.length,ok=filtData.filter(r=>r.items&&r.items[col]).length;return{col,ok,tot,pct:tot?Math.round(ok/tot*100):0};}).sort((a,b)=>a.pct-b.pct);
+  if(charts.items)charts.items.destroy();
+  charts.items=new Chart(document.getElementById('cItems'),{type:'bar',data:{labels:stats.slice(0,10).map(i=>i.col.replace(/^status_/,'').substring(0,35)),datasets:[{label:'Compliance (%)',data:stats.slice(0,10).map(i=>i.pct),backgroundColor:stats.slice(0,10).map(i=>i.pct>=80?'rgba(34,211,160,.7)':i.pct>=60?'rgba(245,166,35,.7)':'rgba(255,83,112,.7)'),borderRadius:4,borderWidth:0}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#7a8ba8',font:{size:9}},grid:{color:'rgba(36,48,71,.5)'}},y:{ticks:{color:'#e2e8f4',font:{size:9}},grid:{display:false}}}}});
+  document.getElementById('itemPnl').innerHTML=stats.map(item=>{const c=item.pct>=80?'var(--green)':item.pct>=60?'var(--yellow)':'var(--red)';return`<div class="ci-row"><div class="ci-n">${item.col.replace(/^status_/,'')}</div><div class="ci-b"><div style="width:${item.pct}%;height:100%;background:${c};border-radius:3px"></div></div><div class="ci-p" style="color:${c}">${item.pct}%</div></div>`;}).join('');
+  const katMap={'Display/Planogram':stats.filter(i=>/display|planogram|gondola|rak/i.test(i.col)),'Kebersihan':stats.filter(i=>/kebersih|lantai|halaman|toilet|gudang|keranjang|kb_/i.test(i.col)),'Stok/SKU':stats.filter(i=>/stok|sku|produk|terima|akurasi|order/i.test(i.col)),'SDM':stats.filter(i=>/sdm|seragam|karyawan|absensi|spg|coaching|sl/i.test(i.col)),'Operasional':stats.filter(i=>/kas|display|verif/i.test(i.col))};
+  const matched=Object.values(katMap).flat().map(i=>i.col);katMap['Lainnya']=stats.filter(i=>!matched.includes(i.col));
+  const kl=[],ka=[];for(const[k,items]of Object.entries(katMap)){if(items.length){kl.push(k);ka.push(Math.round(items.reduce((s,i)=>s+i.pct,0)/items.length));}}
+  if(charts.kat)charts.kat.destroy();
+  charts.kat=new Chart(document.getElementById('cKat'),{type:'radar',data:{labels:kl,datasets:[{label:'Compliance %',data:ka,borderColor:'#4d9fff',backgroundColor:'rgba(77,159,255,.15)',pointBackgroundColor:'#4d9fff',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:100,ticks:{color:'#7a8ba8',backdropColor:'transparent',font:{size:9}},grid:{color:'rgba(36,48,71,.8)'},pointLabels:{color:'#7a8ba8',font:{size:10}}}},plugins:{legend:{display:false}}}});
+}
+
+// ─── TEMUAN ───
+function renderTemuan() {
+  const fk=document.getElementById('ftk')?.value||'',ft=document.getElementById('ftt')?.value||'',q=(document.getElementById('qt')?.value||'').toLowerCase();
+  let data=filtData.filter(r=>r.temuan);
+  if(fk)data=data.filter(r=>r.kondisi===fk);if(ft)data=data.filter(r=>r.tindakan===ft);if(q)data=data.filter(r=>r.temuan.toLowerCase().includes(q));
+  data.sort((a,b)=>{const o={'Kritis':0,'Perlu Perhatian':1,'Normal':2};return(o[a.kondisi]||2)-(o[b.kondisi]||2);});
+  document.getElementById('temuanFeed').innerHTML=data.length?data.map(r=>`<div class="issue ${r.kondisi==='Kritis'?'ir':r.kondisi==='Perlu Perhatian'?'iy':''}"><div class="ish">${bKond(r.kondisi)}<span class="isn">${r.toko}</span><span class="badge ${klasBadge(r.klas)}" style="font-size:9px">${r.klas||'?'}</span><span style="color:var(--text2);font-size:10px">— ${r.kota}</span></div><div class="isb">📌 ${r.temuan}</div><div class="isf">${r.tindakan?bTind(r.tindakan):''}<span class="ism">${r.tanggal} · ARCO: ${r.arco} · SL: ${r.sl}</span><span class="ism" style="margin-left:auto">Skor: ${r.skorPct}%${r.selisihSku>0?' · SKU: '+r.selisihSku:''}</span></div></div>`).join(''):'<div class="empty">✅ Tidak ada temuan</div>';
+}
+
+// ─── HEATMAP ───
+function renderHM() {
+  const today=new Date(),dates=[];
+  for(let i=13;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);dates.push(d.toISOString().split('T')[0]);}
+  const tm={};filtData.forEach(r=>{if(!tm[r.toko])tm[r.toko]={kota:r.kota,klas:r.klas,v:{}};if(!tm[r.toko].v[r.tanggal])tm[r.toko].v[r.tanggal]=[];tm[r.toko].v[r.tanggal].push(r.skorPct);});
+  const tl=Object.keys(tm).sort((a,b)=>(tm[a].kota||'').localeCompare(tm[b].kota||'')||(tm[a].klas||'').localeCompare(tm[b].klas||''));
+  let html=`<div style="display:grid;grid-template-columns:170px repeat(${dates.length},1fr);gap:3px;min-width:700px">`;
+  html+=`<div class="hmh" style="text-align:left;font-size:9px;color:var(--text3)">TOKO</div>`;
+  dates.forEach(d=>{const dd=new Date(d);html+=`<div class="hmh">${dd.getDate()}/${dd.getMonth()+1}</div>`;});
+  tl.forEach(toko=>{html+=`<div class="hml"><div><div style="font-size:10px;font-weight:600">${toko}</div><div style="font-size:9px;color:var(--text3)">${tm[toko].kota||''} · ${tm[toko].klas||''}</div></div></div>`;dates.forEach(d=>{const vs=tm[toko].v[d];if(!vs){html+=`<div class="hmc" style="background:var(--bg3);border:1px solid var(--border)"></div>`;return;}const avg=Math.round(vs.reduce((s,v)=>s+v,0)/vs.length);const bg=avg>=90?'rgba(34,211,160,.75)':avg>=70?'rgba(245,166,35,.75)':'rgba(255,83,112,.75)';html+=`<div class="hmc" style="background:${bg};color:#0a0e17" title="${toko} — ${d}: ${avg}%">${avg}%</div>`;});});
+  html+='</div>';document.getElementById('hmCont').innerHTML=html;
+}
+
+// ─── MASTER TOKO ───
+function renderMasterToko() {
+  const q    = (document.getElementById('qm')?.value||'').toLowerCase();
+  const fmk  = document.getElementById('fmkota')?.value||'';
+  const fmkl = document.getElementById('fmklas')?.value||'';
+  const fma  = document.getElementById('fmarco')?.value||'';
+
+  // Buat lookup kunjungan dari rawData
+  const visitMap = {};
+  rawData.forEach(r=>{
+    if(!visitMap[r.kode_toko])visitMap[r.kode_toko]={cnt:0,last:null,avgSkor:0,tot:0};
+    visitMap[r.kode_toko].cnt++;
+    visitMap[r.kode_toko].tot+=r.skorPct;
+    if(!visitMap[r.kode_toko].last||r.tanggal>visitMap[r.kode_toko].last)visitMap[r.kode_toko].last=r.tanggal;
+  });
+  Object.values(visitMap).forEach(v=>{if(v.cnt>0)v.avgSkor=Math.round(v.tot/v.cnt);});
+
+  // Group by kota
+  const byKota = {};
+  Object.entries(MASTER_DATA).forEach(([kode,m])=>{
+    if(fmk  && m.kota!==fmk)  return;
+    if(fmkl && m.area!==fmkl) return;
+    if(fma  && m.arco!==fma)  return;
+    if(q && !kode.toLowerCase().includes(q) && !m.nama_toko.toLowerCase().includes(q) && !m.arco.toLowerCase().includes(q)) return;
+    if(!byKota[m.kota])byKota[m.kota]=[];
+    byKota[m.kota].push({kode,...m});
+  });
+
+  // Stats pills
+  const totalShown = Object.values(byKota).reduce((s,arr)=>s+arr.length,0);
+  const withVisit  = Object.entries(byKota).reduce((s,[,arr])=>s+arr.filter(s=>visitMap[s.kode]?.cnt>0).length,0);
+  document.getElementById('masterStat').innerHTML =
+    `<div class="sp">Tampil: <b>${totalShown}</b> toko</div>` +
+    `<div class="sp" style="color:var(--green)">Sudah dikunjungi: <b>${withVisit}</b></div>` +
+    `<div class="sp" style="color:var(--yellow)">Belum dikunjungi: <b>${totalShown-withVisit}</b></div>`;
+
+  if(totalShown===0){document.getElementById('masterTokoBody').innerHTML='<div class="empty">Tidak ada toko yang sesuai filter</div>';return;}
+
+  let html='';
+  Object.entries(byKota).sort().forEach(([kota,stores])=>{
+    html += `<div class="panel" style="margin-bottom:14px">` +
+      `<div class="mt-kota-hdr">📍 ${kota} <span class="mt-kota-pill">${stores.length} toko</span></div>` +
+      `<div class="pb"><div class="tw"><table>` +
+      `<thead><tr><th>Kode</th><th>Nama Toko</th><th>Kelas</th><th>ARCO</th><th>Store Leader</th><th>Kunjungan</th><th>Terakhir</th><th>Avg Skor</th></tr></thead><tbody>`;
+
+    stores.sort((a,b)=>a.kode.localeCompare(b.kode)).forEach(s=>{
+      const v = visitMap[s.kode];
+      const slVal = s.sl==='VACANT'?`<span style="color:var(--text3);font-style:italic">Kosong</span>`:s.sl;
+      const arcoVal= s.arco==='VACANT'?`<span style="color:var(--text3);font-style:italic">Kosong</span>`:s.arco;
+      html += `<tr>` +
+        `<td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent)">${s.kode}</td>` +
+        `<td style="font-weight:600;font-size:11px">${s.nama_toko}</td>` +
+        `<td><span class="badge ${klasBadge(s.area)}">${s.area}</span></td>` +
+        `<td style="font-weight:600">${arcoVal}</td>` +
+        `<td style="color:var(--text2);font-size:11px">${slVal}</td>` +
+        `<td style="font-family:'JetBrains Mono',monospace;text-align:center">${v?v.cnt:0}x</td>` +
+        `<td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${v?.last?'var(--text)':'var(--text3)'}">${v?.last||'Belum'}</td>` +
+        `<td>${v?.cnt>0?sbarH(v.avgSkor):'<span style="color:var(--text3)">—</span>'}</td>` +
+        `</tr>`;
+    });
+    html += `</tbody></table></div></div></div>`;
+  });
+
+  document.getElementById('masterTokoBody').innerHTML = html;
+}
+
+// ─── CONFIG PAGE: Sheet list ───
+function renderConfigSheets() {
+  const sheets = [
+    {key:'checklist_kunjungan',label:'✅ Checklist Kunjungan ARCO (Sumber Utama)'},
+    {key:'master_toko',        label:'🏪 Master Toko'},
+    {key:'kunjungan',          label:'📋 Kunjungan Supervisi'},
+    {key:'daily_task',         label:'📝 Daily Task'},
+    {key:'setoran',            label:'💰 Setoran'},
+    {key:'absensi',            label:'⏰ Absensi'},
+    {key:'log_harian',         label:'📖 Log Harian'},
+    {key:'sku_sampling',       label:'📦 SKU Sampling'},
+  ];
+  const el = document.getElementById('cfgSheetList');
+  if (!el) return;
+  el.innerHTML = sheets.map(s=>`
+    <div class="cfg-url-lbl">${s.label}</div>
+    <div class="cfg-url" onclick="copyText('${CONFIG.google_sheets[s.key]}')" title="Klik untuk copy URL">
+      ${CONFIG.google_sheets[s.key]}
+    </div>
+  `).join('');
+
+  // Update detected columns
+  const colLines = Object.entries(COL).filter(([k,v])=>v&&k!=='clCols').map(([k,v])=>`${k.padEnd(12)} → "${v}"`);
+  if (COL.clCols?.length) colLines.push('\nChecklist items: ' + COL.clCols.length + ' kolom terdeteksi');
+  document.getElementById('cfgCols').textContent = colLines.join('\n') || 'Belum ada data — klik Reload';
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function sbarH(pct){const c=pct>=90?'var(--green)':pct>=70?'var(--yellow)':'var(--red)';return`<div class="sbar"><div class="st"><div class="sf" style="width:${pct}%;background:${c}"></div></div><div class="sv" style="color:${c}">${pct}%</div></div>`;}
+function bKond(k){if(k==='Normal')return`<span class="badge bg">🟢 Normal</span>`;if(k==='Perlu Perhatian')return`<span class="badge by">🟡 Perlu Perhatian</span>`;if(k==='Kritis')return`<span class="badge br">🔴 Kritis</span>`;return`<span style="color:var(--text3)">—</span>`;}
+function bTind(t){if(t==='Selesai')return`<span class="badge bg">✅ Selesai</span>`;if(t==='Dalam Proses')return`<span class="badge by">⏳ Dalam Proses</span>`;return`<span class="badge bgr">⏸ ${t||'Belum'}</span>`;}
+function klasBadge(k){return k==='A'?'bg':k==='B+'?'bb':k==='B'?'bgr':k==='C'?'br':'bgr';}
+function updateBadges(){document.getElementById('nb1').textContent=filtData.length;document.getElementById('nb2').textContent=filtData.filter(r=>r.temuan&&r.tindakan!=='Selesai').length;}
+function goPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');document.querySelectorAll('.nav').forEach(n=>{if(n.getAttribute('onclick')===`goPage('${id}')`)n.classList.add('active');});}
+function copyText(t){navigator.clipboard?.writeText(t);showToast('📋 URL disalin!','blue');}
+
+function updateCfgStats(){
+  document.getElementById('cfgStats').textContent =
+    `Total refresh   : ${totalRefreshes}x\n` +
+    `Terakhir refresh: ${lastRefreshTime?lastRefreshTime.toLocaleString('id-ID'):'—'}\n` +
+    `Total baris data: ${rawData.length}\n` +
+    `Interval refresh: ${refreshSecs===0?'OFF':refreshSecs+'d'}\n` +
+    `Master toko     : ${Object.keys(MASTER_DATA).length} toko`;
+}
+
+// ─ Toast ─
+let toastTimer;
+function showToast(msg,type='blue'){const t=document.getElementById('toast');t.className=`toast t-${type} show`;t.innerHTML=msg;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),4000);}
+
+// ─ Clock ─
+setInterval(()=>{document.getElementById('clockEl').textContent=new Date().toLocaleTimeString('id-ID');},1000);
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  setStatus('load', 'Memuat data...');
+  // Isi dropdown dari MASTER_DATA dulu — supaya filter langsung muncul
+  // sebelum data kunjungan selesai di-load dari Google Sheets
+  populateFilters();
+  await loadAllData(false);
+  startAutoRefresh();
+});
+</script>
+</body>
+</html>
