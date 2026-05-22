@@ -749,50 +749,40 @@ tbody td{padding:9px 12px;white-space:nowrap;color:var(--text);}
 
 <!-- ══════════════ CONFIG ══════════════ -->
 <div class="tab-content" id="tab-config">
-  <div class="section-title">⚙️ Konfigurasi Google Sheets</div>
+  <div class="section-title">⚙️ Konfigurasi Koneksi Data</div>
   <div class="card" style="max-width:680px">
-    <div class="cfg-field">
-      <label class="cfg-label">MASTER_TOKO — CSV URL</label>
-      <input class="cfg-input" id="cfg-master" placeholder="https://docs.google.com/spreadsheets/d/{ID}/gviz/tq?tqx=out:csv&sheet=MASTER_TOKO">
+
+    <!-- Apps Script Mode (primary) -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="background:var(--green);color:#000;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px">DIREKOMENDASIKAN</span>
+      <span style="font-size:12px;color:var(--text-muted)">Via Google Apps Script — tidak perlu publish CSV, lebih stabil</span>
     </div>
     <div class="cfg-field">
-      <label class="cfg-label">SALES_DAILY — CSV URL</label>
-      <input class="cfg-input" id="cfg-sales" placeholder="https://docs.google.com/spreadsheets/d/{ID}/gviz/tq?tqx=out:csv&sheet=SALES_DAILY">
+      <label class="cfg-label">Apps Script Web App URL</label>
+      <input class="cfg-input" id="cfg-appscript"
+        placeholder="https://script.google.com/macros/s/XXXXXX/exec"
+        style="font-size:11px">
     </div>
-    <div class="cfg-field">
-      <label class="cfg-label">SALES_TARGET — CSV URL</label>
-      <input class="cfg-input" id="cfg-target" placeholder="https://docs.google.com/spreadsheets/d/{ID}/gviz/tq?tqx=out:csv&sheet=SALES_TARGET">
-    </div>
-    <div style="display:flex;gap:10px;margin-top:4px">
-      <button class="btn btn-gold" onclick="loadFromSheets()">🔗 Hubungkan Google Sheets</button>
-      <button class="btn btn-ghost" onclick="verifyUrls()">✔ Cek URL</button>
-      <button class="btn btn-ghost" onclick="loadDemo()">🔬 Demo</button>
+    <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+      <button class="btn btn-gold" onclick="loadFromAppsScript()">⚡ Hubungkan via Apps Script</button>
+      <button class="btn btn-ghost" onclick="loadDemo()">🔬 Mode Demo</button>
     </div>
 
     <!-- Status koneksi -->
     <div id="cfg-status" style="display:none;margin-top:12px;padding:12px;border-radius:8px;font-size:12px;line-height:1.8"></div>
 
-    <!-- Checklist -->
-    <div style="margin-top:14px;padding:14px;background:var(--bg-card2);border:1px solid var(--border);border-radius:8px;font-size:12px;line-height:2;">
-      <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">✅ Checklist Sebelum Menghubungkan</div>
-      <div>☐ &nbsp;Google Sheets sudah dibuka publik: <b>Klik di Sheets → kanan atas "Share" → Anyone with link → Viewer</b></div>
-      <div>☐ &nbsp;Sheet sudah di-publish: <b>File → Share → Publish to web → pilih sheet → CSV → Publish</b></div>
-      <div>☐ &nbsp;URL mengandung <code style="color:var(--gold);background:var(--bg);padding:1px 5px;border-radius:3px">pub?output=csv</code> atau <code style="color:var(--gold);background:var(--bg);padding:1px 5px;border-radius:3px">gviz/tq?tqx=out:csv</code></div>
-      <div>☐ &nbsp;Ketiga URL sudah diisi (MASTER_TOKO, SALES_DAILY, SALES_TARGET)</div>
-    </div>
-
-    <div class="cfg-hint">
-      <strong>Kolom MASTER_TOKO:</strong>
-      kode_toko, nama_toko, area, kota, cluster, operation_manager, arco, store_leader
-      <br><br>
-      <strong>Kolom SALES_DAILY:</strong>
-      tanggal (YYYY-MM-DD), kode_toko, uang_masuk_total, transaksi_total, setoran_tunai, debit_bca, kk_bca, qr_bca, debit_mandiri, kk_mandiri, qris_mandiri, debit_bri, kk_bri, qris_bri, qr_shopee, mds, gm, selisih_kasir, selisih_mds_gm
-      <br><br>
-      <strong>Kolom SALES_TARGET:</strong>
-      kode_toko, bulan (YYYY-MM, opsional), target_sales_harian — angka Rp tanpa titik/koma pemisah ribuan
-      <br><span style="color:var(--gold)">Dashboard juga mendeteksi otomatis kolom: target_sales_rp · target_harian · target_rp · target</span>
-      <br><br>
-      <strong>Cara publish ke CSV:</strong> Google Sheets → File → Share → Publish to web → Pilih sheet → Format CSV → Publish → Copy URL
+    <!-- Panduan Apps Script -->
+    <div style="margin-top:16px;padding:14px;background:var(--bg-card2);border:1px solid var(--border);border-radius:8px;font-size:12px;line-height:1.9">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">📋 Cara Setup Apps Script (sekali saja)</div>
+      <div><b style="color:var(--gold)">1.</b> &nbsp;Buka Google Sheets → menu <b>Extensions → Apps Script</b></div>
+      <div><b style="color:var(--gold)">2.</b> &nbsp;Hapus semua kode yang ada, paste isi file <code style="color:var(--gold);background:var(--bg);padding:1px 5px;border-radius:3px">Code.gs</code></div>
+      <div><b style="color:var(--gold)">3.</b> &nbsp;Klik <b>Deploy → New deployment → Web app</b></div>
+      <div><b style="color:var(--gold)">4.</b> &nbsp;Execute as: <b>Me</b> &nbsp;|&nbsp; Who has access: <b>Anyone</b></div>
+      <div><b style="color:var(--gold)">5.</b> &nbsp;Klik <b>Deploy</b> → izinkan akses → salin URL yang muncul</div>
+      <div><b style="color:var(--gold)">6.</b> &nbsp;Paste URL ke kolom di atas → klik <b>Hubungkan</b></div>
+      <div style="margin-top:8px;padding:8px;background:rgba(201,168,76,0.08);border-radius:6px;color:var(--text-muted)">
+        💡 URL hanya perlu diisi sekali — tersimpan otomatis di browser. Selanjutnya cukup buka dashboard, data langsung tampil.
+      </div>
     </div>
   </div>
 </div>
@@ -1663,206 +1653,184 @@ function populateTokoDropdown(){
 // ══════════════════════════════════════════════════
 //  URL VERIFIER
 // ══════════════════════════════════════════════════
-function verifyUrls(){
-  const urls={
-    'MASTER_TOKO': document.getElementById('cfg-master').value.trim(),
-    'SALES_DAILY': document.getElementById('cfg-sales').value.trim(),
-    'SALES_TARGET': document.getElementById('cfg-target').value.trim()
-  };
-  const el=document.getElementById('cfg-status');
-  el.style.display='block';
-  el.style.background='rgba(79,156,249,0.08)';
-  el.style.border='1px solid rgba(79,156,249,0.25)';
-  el.style.color='var(--text)';
+// ══════════════════════════════════════════════════
+//  APPS SCRIPT LOADER  (primary connection method)
+// ══════════════════════════════════════════════════
 
-  let html='<b style="color:var(--blue)">Hasil Pengecekan URL:</b><br>';
-  let ok=true;
-  for(const[name,url] of Object.entries(urls)){
-    if(!url){
-      html+=`⚠️ <b>${name}</b>: <span style="color:var(--yellow)">URL belum diisi</span><br>`;
-      ok=false; continue;
-    }
-    const hasPub = url.includes('/pub?')&&url.includes('output=csv');
-    const hasGviz= url.includes('/gviz/tq')&&url.includes('tqx=out:csv');
-    const hasGid = url.includes('gid=');
-    const isGSheet= url.includes('docs.google.com/spreadsheets');
-    if(!isGSheet){
-      html+=`❌ <b>${name}</b>: <span style="color:var(--red)">Bukan URL Google Sheets</span><br>`;
-      ok=false;
-    } else if(!hasPub&&!hasGviz){
-      html+=`⚠️ <b>${name}</b>: <span style="color:var(--yellow)">Format URL mungkin salah — harus mengandung <code>pub?output=csv</code> atau <code>gviz/tq?tqx=out:csv</code></span><br>`;
-      ok=false;
-    } else {
-      html+=`✅ <b>${name}</b>: <span style="color:var(--green)">Format URL OK</span>${hasPub?'':' (gviz format)'}<br>`;
-    }
+const LS_KEY = 'makmur_appscript_url';
+
+// Auto-connect on load if URL saved in localStorage
+function autoConnect() {
+  const saved = localStorage.getItem(LS_KEY);
+  if (saved) {
+    document.getElementById('cfg-appscript').value = saved;
+    loadFromAppsScript(true); // silent=true: no alert on success
+  } else {
+    loadDemo();
   }
-  if(ok) html+='<br>✅ Semua URL valid — klik <b>Hubungkan Google Sheets</b>';
-  else    html+='<br>⚠️ Perbaiki URL di atas sebelum menghubungkan.';
-  el.innerHTML=html;
 }
 
-// ══════════════════════════════════════════════════
-//  CORS-SAFE FETCH HELPER
-// ══════════════════════════════════════════════════
-async function fetchCsv(url) {
-  // Coba direct fetch dulu (berhasil jika buka via web server / hosting)
+async function loadFromAppsScript(silent) {
+  const url = document.getElementById('cfg-appscript').value.trim();
+  if (!url) { alert('Masukkan URL Apps Script terlebih dahulu.'); return; }
+  if (!url.startsWith('https://script.google.com/')) {
+    alert('URL harus diawali https://script.google.com/\nPastikan URL berasal dari Deploy Apps Script.'); return;
+  }
+
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('loading-msg').textContent = 'Menghubungkan ke Google Sheets via Apps Script...';
+  const cfgSt = document.getElementById('cfg-status');
+
   try {
-    const r = await fetch(url, {mode:'cors', credentials:'omit'});
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    const txt = await r.text();
-    if (txt.trim().startsWith('<!')) throw new Error('Bukan CSV — mungkin halaman login Google');
-    return txt;
-  } catch(e1) {
-    // Fallback 1: corsproxy.io
-    try {
-      document.getElementById('loading-msg').textContent='Direct gagal, mencoba via proxy...';
-      const r2 = await fetch('https://corsproxy.io/?'+encodeURIComponent(url));
-      if (!r2.ok) throw new Error('proxy1 HTTP '+r2.status);
-      const txt2 = await r2.text();
-      if (txt2.trim().startsWith('<!')) throw new Error('Proxy mengembalikan HTML');
-      return txt2;
-    } catch(e2) {
-      // Fallback 2: allorigins
-      const r3 = await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url));
-      if (!r3.ok) throw new Error('proxy2 HTTP '+r3.status);
-      const txt3 = await r3.text();
-      if (txt3.trim().startsWith('<!')) throw new Error('Proxy mengembalikan HTML');
-      return txt3;
-    }
-  }
-}
+    const res = await fetch(url, { redirect: 'follow' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
 
-// ══════════════════════════════════════════════════
-//  GOOGLE SHEETS LOADER
-// ══════════════════════════════════════════════════
-async function loadFromSheets(){
-  const mu=document.getElementById('cfg-master').value.trim();
-  const su=document.getElementById('cfg-sales').value.trim();
-  const tu=document.getElementById('cfg-target').value.trim();
-  if(!mu||!su||!tu){alert('Lengkapi semua URL Google Sheets.');return;}
-  document.getElementById('loading').style.display='flex';
-  document.getElementById('loading-msg').textContent='Menghubungkan ke Google Sheets...';
-  try{
-    const [mCsv,sCsv,tCsv]=await Promise.all([fetchCsv(mu),fetchCsv(su),fetchCsv(tu)]);
-    const master=Papa.parse(mCsv,{header:true,skipEmptyLines:true}).data;
-    const sales=Papa.parse(sCsv,{header:true,skipEmptyLines:true}).data;
-    const targets=Papa.parse(tCsv,{header:true,skipEmptyLines:true}).data;
+    if (!json.ok) throw new Error(json.error || 'Apps Script mengembalikan error');
 
-    ALL_STORES=master.map(r=>({kode:r.kode_toko,nama:r.nama_toko,area:r.area,cluster:r.cluster||'B',arco:r.arco||'—',sl:r.store_leader||'—'}));
-    // ── Parse target dengan fallback nama kolom & bersihkan format angka ──
-    TARGET_DATA={};
-    const tgtCols=['target_sales_harian','target_sales_rp','target_harian','target_rp','target','sales_target','target_omset'];
-    let tgtColUsed='';
-    if(targets.length>0){
-      const firstRow=targets[0];
-      tgtColUsed=tgtCols.find(c=>firstRow[c]!==undefined&&firstRow[c]!=='') || '';
-      if(!tgtColUsed){
-        // Fallback: cari kolom numerik pertama selain kode_toko & bulan
-        const keys=Object.keys(firstRow).filter(k=>k!=='kode_toko'&&k!=='bulan'&&k!=='kode'&&k!=='nama_toko');
-        tgtColUsed=keys.find(k=>!isNaN(parseFloat((firstRow[k]||'').toString().replace(/[.,]/g,'').trim()))) || keys[0] || '';
+    // ── Parse MASTER_TOKO ──
+    const master = json.MASTER_TOKO || [];
+    ALL_STORES = master.map(r => ({
+      kode    : (r.kode_toko || r.kode || '').toString().trim(),
+      nama    : r.nama_toko  || r.nama || '',
+      area    : r.area       || '',
+      cluster : r.cluster    || 'B',
+      arco    : r.arco       || '—',
+      sl      : r.store_leader || r.sl || '—'
+    })).filter(s => s.kode);
+
+    // ── Parse SALES_TARGET ──
+    const targets = json.SALES_TARGET || [];
+    TARGET_DATA = {};
+    const tgtCols = ['target_sales_harian','target_sales_rp','target_harian','target_rp','target','sales_target','target_omset'];
+    let tgtColUsed = '';
+    if (targets.length > 0) {
+      const firstRow = targets[0];
+      tgtColUsed = tgtCols.find(c => firstRow[c] !== undefined && firstRow[c] !== '') || '';
+      if (!tgtColUsed) {
+        const keys = Object.keys(firstRow).filter(k => !['kode_toko','bulan','kode','nama_toko'].includes(k));
+        tgtColUsed = keys.find(k => !isNaN(parseFloat((firstRow[k]||'').toString().replace(/[.,]/g,'').trim()))) || keys[0] || '';
       }
     }
-    // Filter per bulan jika kolom bulan ada — ambil bulan paling baru
-    const hasBulan=targets.length>0&&targets[0]['bulan']!==undefined;
-    let tgtRows=targets;
-    if(hasBulan){
-      const bulanList=[...new Set(targets.map(r=>r.bulan||''))].filter(Boolean).sort();
-      const latestBulan=bulanList[bulanList.length-1];
-      tgtRows=targets.filter(r=>r.bulan===latestBulan);
-      if(tgtRows.length===0) tgtRows=targets; // fallback semua baris
+    const hasBulan = targets.length > 0 && targets[0]['bulan'] !== undefined;
+    let tgtRows = targets;
+    if (hasBulan) {
+      const bulanList = [...new Set(targets.map(r => r.bulan||''))].filter(Boolean).sort();
+      const latestBulan = bulanList[bulanList.length - 1];
+      tgtRows = targets.filter(r => r.bulan === latestBulan);
+      if (tgtRows.length === 0) tgtRows = targets;
     }
-    const cleanNum=v=>{
-      if(v===undefined||v===null||v==='')return 0;
-      // Bersihkan format: "9.000.000" → 9000000, "9,000,000" → 9000000
-      const s=v.toString().trim().replace(/[Rp\s]/gi,'');
-      const cleaned=s.replace(/\./g,'').replace(/,/g,'');
-      return parseFloat(cleaned)||0;
+    const cleanNum = v => {
+      if (v === undefined || v === null || v === '') return 0;
+      if (typeof v === 'number') return v;
+      const s = v.toString().trim().replace(/[Rp\s]/gi, '').replace(/\./g,'').replace(/,/g,'');
+      return parseFloat(s) || 0;
     };
-    let tgtLoaded=0;
-    tgtRows.forEach(r=>{
-      const kode=(r.kode_toko||r.kode||'').trim();
-      if(!kode)return;
-      const val=tgtColUsed?cleanNum(r[tgtColUsed]):0;
-      if(val>0){TARGET_DATA[kode]=val;tgtLoaded++;}
+    let tgtLoaded = 0;
+    tgtRows.forEach(r => {
+      const kode = (r.kode_toko || r.kode || '').toString().trim();
+      if (!kode) return;
+      const val = tgtColUsed ? cleanNum(r[tgtColUsed]) : 0;
+      if (val > 0) { TARGET_DATA[kode] = val; tgtLoaded++; }
     });
-    // Simpan info diagnostik untuk ditampilkan
-    window._tgtDiag={col:tgtColUsed,loaded:tgtLoaded,total:targets.length,hasBulan,sample:tgtRows.slice(0,3).map(r=>({kode:r.kode_toko||r.kode,val:tgtColUsed?r[tgtColUsed]:'?'}))};
-    console.log('[Target Diagnostik]',window._tgtDiag);
-    DAILY_DATA={};DETAIL_DATA={};IS_DEMO=false;
-    sales.forEach(r=>{
-      const tgl=r.tanggal,kd=r.kode_toko;
-      if(!DAILY_DATA[tgl])DAILY_DATA[tgl]={};
-      if(!DETAIL_DATA[tgl])DETAIL_DATA[tgl]={};
-      DAILY_DATA[tgl][kd]={
-        s:parseFloat(r.transaksi_total)||0,
-        u:parseFloat(r.uang_masuk_total)||0,
-        st:parseFloat(r.setoran_tunai)||0
-      };
-      DETAIL_DATA[tgl][kd]={
-        debit_bca:parseFloat(r.debit_bca)||0,
-        kk_bca:parseFloat(r.kk_bca)||0,
-        qr_bca:parseFloat(r.qr_bca)||0,
-        debit_mandiri:parseFloat(r.debit_mandiri)||0,
-        kk_mandiri:parseFloat(r.kk_mandiri)||0,
-        qris_mandiri:parseFloat(r.qris_mandiri)||0,
-        debit_bri:parseFloat(r.debit_bri)||0,
-        kk_bri:parseFloat(r.kk_bri)||0,
-        qris_bri:parseFloat(r.qris_bri)||0,
-        qr_shopee:parseFloat(r.qr_shopee)||0,
-        mds:parseFloat(r.mds)||0,
-        gm:parseFloat(r.gm)||0,
-        selisih_kasir:parseFloat(r.selisih_kasir)||0,
-        selisih_mds_gm:parseFloat(r.selisih_mds_gm)||0
-      };
-    });
-    populateTokoDropdown();
-    document.getElementById('data-mode').textContent='LIVE';
-    document.getElementById('data-mode').style.color='var(--green)';
-    document.getElementById('last-updated').textContent='Google Sheets — '+new Date().toLocaleTimeString('id-ID');
-    document.getElementById('loading').style.display='none';
 
-    // ── Tampilkan hasil diagnostik di panel Setup ──
-    const diag=window._tgtDiag||{};
-    const salesDates=Object.keys(DAILY_DATA).length;
-    const salesRows=Object.values(DAILY_DATA).reduce((n,d)=>n+Object.keys(d).length,0);
-    const cfgSt=document.getElementById('cfg-status');
-    if(cfgSt){
-      let tgtWarn='';
-      if(diag.loaded===0){
-        tgtWarn=`<br>⚠️ <b style="color:var(--red)">Target 0 toko berhasil dibaca!</b> Kemungkinan nama kolom di sheet tidak cocok. Kolom terdeteksi: <code>${diag.col||'tidak ditemukan'}</code>`;
-      } else if(diag.loaded<(ALL_STORES.length/2)){
-        tgtWarn=`<br>⚠️ Target hanya terbaca untuk ${diag.loaded} toko — pastikan kode_toko di sheet target sama persis dengan master toko.`;
-      }
-      cfgSt.style.display='block';
-      cfgSt.style.background='rgba(30,200,106,0.07)';
-      cfgSt.style.border='1px solid rgba(30,200,106,0.25)';
-      cfgSt.innerHTML=`
+    // ── Parse SALES_DAILY ──
+    const sales = json.SALES_DAILY || [];
+    DAILY_DATA = {}; DETAIL_DATA = {}; IS_DEMO = false;
+    sales.forEach(r => {
+      const tgl = (r.tanggal || '').toString().slice(0, 10);
+      const kd  = (r.kode_toko || '').toString().trim();
+      if (!tgl || !kd) return;
+      if (!DAILY_DATA[tgl])  DAILY_DATA[tgl]  = {};
+      if (!DETAIL_DATA[tgl]) DETAIL_DATA[tgl] = {};
+      DAILY_DATA[tgl][kd] = {
+        s  : cleanNum(r.transaksi_total),
+        u  : cleanNum(r.uang_masuk_total),
+        st : cleanNum(r.setoran_tunai)
+      };
+      DETAIL_DATA[tgl][kd] = {
+        debit_bca     : cleanNum(r.debit_bca),
+        kk_bca        : cleanNum(r.kk_bca),
+        qr_bca        : cleanNum(r.qr_bca),
+        debit_mandiri : cleanNum(r.debit_mandiri),
+        kk_mandiri    : cleanNum(r.kk_mandiri),
+        qris_mandiri  : cleanNum(r.qris_mandiri),
+        debit_bri     : cleanNum(r.debit_bri),
+        kk_bri        : cleanNum(r.kk_bri),
+        qris_bri      : cleanNum(r.qris_bri),
+        qr_shopee     : cleanNum(r.qr_shopee),
+        mds           : cleanNum(r.mds),
+        gm            : cleanNum(r.gm),
+        selisih_kasir  : cleanNum(r.selisih_kasir),
+        selisih_mds_gm : cleanNum(r.selisih_mds_gm)
+      };
+    });
+
+    // ── Save URL to localStorage ──
+    localStorage.setItem(LS_KEY, url);
+
+    populateTokoDropdown();
+    document.getElementById('data-mode').textContent = 'LIVE';
+    document.getElementById('data-mode').style.color = 'var(--green)';
+    document.getElementById('last-updated').textContent = 'Google Sheets — ' + new Date().toLocaleTimeString('id-ID');
+    document.getElementById('loading').style.display = 'none';
+
+    // ── Status panel ──
+    const salesDates = Object.keys(DAILY_DATA).length;
+    const salesRows  = Object.values(DAILY_DATA).reduce((n, d) => n + Object.keys(d).length, 0);
+    window._tgtDiag  = { col: tgtColUsed, loaded: tgtLoaded, total: targets.length, hasBulan,
+      sample: tgtRows.slice(0, 3).map(r => ({ kode: r.kode_toko||r.kode, val: tgtColUsed ? r[tgtColUsed] : '?' })) };
+
+    let tgtWarn = '';
+    if (tgtLoaded === 0) {
+      tgtWarn = `<br>⚠️ <b style="color:var(--red)">Target 0 toko terbaca!</b> Kolom terdeteksi: <code>${tgtColUsed||'tidak ditemukan'}</code>`;
+    } else if (tgtLoaded < ALL_STORES.length / 2) {
+      tgtWarn = `<br>⚠️ Target hanya terbaca untuk ${tgtLoaded} toko.`;
+    }
+    if (cfgSt) {
+      cfgSt.style.display = 'block';
+      cfgSt.style.background = 'rgba(30,200,106,0.07)';
+      cfgSt.style.border = '1px solid rgba(30,200,106,0.25)';
+      cfgSt.innerHTML = `
         <b style="color:var(--green)">✅ Koneksi Berhasil — ${new Date().toLocaleTimeString('id-ID')}</b><br>
-        📋 Master Toko: <b>${ALL_STORES.length} toko</b> dimuat<br>
+        📋 Master Toko: <b>${ALL_STORES.length} toko</b><br>
         📊 Sales Daily: <b>${salesRows} baris</b> dari <b>${salesDates} hari</b><br>
-        🎯 Target: <b>${diag.loaded||0} toko</b> dimuat
-          ${diag.col?`— kolom "<code>${diag.col}</code>" digunakan`:'— <span style="color:var(--red)">kolom target tidak ditemukan</span>'}
-          ${diag.hasBulan?' (filter bulan aktif)':''}
+        🎯 Target: <b>${tgtLoaded} toko</b>${tgtColUsed ? ` — kolom <code>${tgtColUsed}</code>` : ''}${hasBulan?' (filter bulan aktif)':''}
         ${tgtWarn}
-        ${diag.loaded===0?`<br><br>💡 <b>Solusi:</b> Pastikan header kolom target di sheet persis bernama <code>target_sales_harian</code> dan angkanya tanpa titik/koma pemisah ribuan.`:''}
-        <br><small style="color:var(--text-dim)">Contoh 3 baris target: ${JSON.stringify(diag.sample||[])}</small>
+        <br><small style="color:var(--text-dim)">🕐 Update: ${json.timestamp||'-'}</small>
+        <br><small style="color:var(--text-dim)">💾 URL tersimpan — dashboard akan auto-connect saat dibuka kembali</small>
       `;
     }
-    showTab('overview');
-  }catch(e){
-    document.getElementById('loading').style.display='none';
-    const msg = e.message||'';
+    if (!silent) showTab('overview');
+    else scheduleRefresh();
+
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    const msg = e.message || '';
     let hint = '';
-    if(msg.includes('fetch')||msg.includes('network')||msg.includes('CORS')||msg.includes('Failed')){
-      hint = '\n\n🔍 KEMUNGKINAN PENYEBAB:\n① Sheet Google belum di-publish (File → Share → Publish to web → CSV)\n② Koneksi internet terputus\n③ URL yang di-paste salah format\n\n💡 TIPS: Pastikan URL mengandung "pub?output=csv" atau "gviz/tq?tqx=out:csv"';
-    } else if(msg.includes('HTML')||msg.includes('login')){
-      hint = '\n\n🔍 PENYEBAB: Google Sheets masih private.\nSheet harus di-set "Anyone with the link can view" dan di-publish via File → Publish to web.';
-    } else if(msg.includes('HTTP')){
-      hint = '\n\n🔍 PENYEBAB: URL tidak dapat diakses ('+msg+').\nCek apakah URL masih valid dan sheet masih aktif.';
+    if (msg.includes('fetch') || msg.includes('Failed') || msg.includes('NetworkError')) {
+      hint = '\n\n💡 SOLUSI:\n① Pastikan Apps Script sudah di-deploy sebagai Web App\n② Who has access: "Anyone" (bukan "Anyone with Google Account")\n③ Coba buka URL-nya di browser — harus tampil JSON, bukan halaman error';
+    } else if (msg.includes('JSON') || msg.includes('Unexpected token')) {
+      hint = '\n\n💡 KEMUNGKINAN: Apps Script mengembalikan HTML (halaman error Google).\nBuka URL di browser, cek apakah ada pesan error Apps Script.';
     }
-    alert('❌ Gagal memuat data dari Google Sheets.\n\nDetail: '+msg+hint);
+    if (cfgSt) {
+      cfgSt.style.display = 'block';
+      cfgSt.style.background = 'rgba(255,71,87,0.07)';
+      cfgSt.style.border = '1px solid rgba(255,71,87,0.3)';
+      cfgSt.innerHTML = `<b style="color:var(--red)">❌ Koneksi Gagal</b><br>${msg}${hint.replace(/\n/g,'<br>')}`;
+    }
+    if (!silent) alert('❌ Gagal terhubung.\n\nDetail: ' + msg + hint);
+    else loadDemo(); // fallback ke demo jika auto-connect gagal
   }
 }
+
+// Legacy fetchCsv & loadFromSheets — tidak dipakai lagi, dijaga agar tidak error
+async function fetchCsv(url) { throw new Error('Gunakan Apps Script mode'); }
+function verifyUrls() {
+  alert('Mode CSV tidak aktif. Gunakan Apps Script URL di atas untuk koneksi data live.');
+}
+function loadFromSheets() { loadFromAppsScript(false); }
+
 
 function loadDemo(){
   document.getElementById('loading').style.display='flex';
@@ -2125,7 +2093,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // 5-minute auto-refresh for live data
   setInterval(() => { if (!IS_DEMO) scheduleRefresh(); }, 5 * 60 * 1000);
 
-  loadDemo();
+  autoConnect(); // auto-connect via localStorage jika URL tersimpan, else demo
 });
 </script>
 </body>
