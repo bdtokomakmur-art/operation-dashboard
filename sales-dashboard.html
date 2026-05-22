@@ -506,8 +506,15 @@ tbody td{padding:9px 12px;white-space:nowrap;color:var(--text);}
 
 <!-- FILTER BAR -->
 <div class="filter-bar">
-  <span class="fb-label">Tgl</span>
-  <input type="date" id="f-date" class="fb-input">
+  <span class="fb-label">Periode</span>
+  <div class="metric-toggle" id="dt-mode-tog">
+    <button class="m-btn active" onclick="setDateMode('single',this)" title="Satu hari">Harian</button>
+    <button class="m-btn" onclick="setDateMode('mtd',this)"   title="Awal bulan s/d tanggal terpilih">1 s/d Tgl</button>
+    <button class="m-btn" onclick="setDateMode('range',this)" title="Rentang bebas">Bebas</button>
+  </div>
+  <input type="date" id="f-date-from" class="fb-input" style="display:none" title="Dari tanggal">
+  <span id="f-date-sep" style="color:var(--text-muted);font-size:13px;display:none">→</span>
+  <input type="date" id="f-date" class="fb-input" title="Hingga tanggal">
 
   <span class="fb-label">Area</span>
   <select id="f-area" class="fb-select">
@@ -538,8 +545,12 @@ tbody td{padding:9px 12px;white-space:nowrap;color:var(--text);}
   <span class="fb-label">Toko</span>
   <select id="f-toko" class="fb-select"><option value="">Semua Toko</option></select>
 
-  <button class="btn btn-gold" onclick="applyFilters()">↻ Refresh</button>
   <div class="fb-spacer"></div>
+  <span id="period-badge" style="
+    font-size:10px;font-weight:700;color:var(--gold);
+    background:var(--gold-glow);border:1px solid var(--border-g);
+    padding:3px 10px;border-radius:99px;white-space:nowrap;
+  ">—</span>
   <span class="fb-updated" id="last-updated">—</span>
 </div>
 
@@ -583,7 +594,7 @@ tbody td{padding:9px 12px;white-space:nowrap;color:var(--text);}
 <div class="tab-content" id="tab-daily">
   <div class="kpi-grid" id="dy-kpi"></div>
   <div class="card" style="margin-bottom:16px">
-    <div class="card-title">Actual vs Target per Area — Hari Ini
+    <div class="card-title">Actual vs Target per Area — <span id="dy-period-lbl" style="color:var(--text-muted);font-size:11px;text-transform:none;font-weight:400"></span>
       <div class="metric-toggle">
         <button class="m-btn active" onclick="setMet('daily','sales',this)">Sales Rp</button>
         <button class="m-btn" onclick="setMet('daily','uang',this)">Uang Masuk</button>
@@ -778,7 +789,8 @@ tbody td{padding:9px 12px;white-space:nowrap;color:var(--text);}
       tanggal (YYYY-MM-DD), kode_toko, uang_masuk_total, transaksi_total, setoran_tunai, debit_bca, kk_bca, qr_bca, debit_mandiri, kk_mandiri, qris_mandiri, debit_bri, kk_bri, qris_bri, qr_shopee, mds, gm, selisih_kasir, selisih_mds_gm
       <br><br>
       <strong>Kolom SALES_TARGET:</strong>
-      kode_toko, target_sales_harian (Sales Rp per hari)
+      kode_toko, bulan (YYYY-MM, opsional), target_sales_harian — angka Rp tanpa titik/koma pemisah ribuan
+      <br><span style="color:var(--gold)">Dashboard juga mendeteksi otomatis kolom: target_sales_rp · target_harian · target_rp · target</span>
       <br><br>
       <strong>Cara publish ke CSV:</strong> Google Sheets → File → Share → Publish to web → Pilih sheet → Format CSV → Publish → Copy URL
     </div>
@@ -875,7 +887,9 @@ let DETAIL_DATA = {};     // date -> kode -> full breakdown (payment methods)
 let TARGET_DATA = {};     // kode -> daily target
 let IS_DEMO = true;       // track if synthetic breakdown is shown
 
-let selDate    = '2026-05-05';
+let selDate    = '2026-05-05';   // end/reference date (used by Monthly/YTD/L3M)
+let selDateFrom= '2026-05-05';   // start date for range modes
+let selDateMode= 'single';       // 'single' | 'mtd' | 'range'
 let selArea    = '';
 let selCluster = '';
 let selArco    = '';
@@ -976,10 +990,98 @@ function filteredStores(){
 }
 
 // ══════════════════════════════════════════════════
-//  FILTER APPLY
+//  DATE MODE TOGGLE
 // ══════════════════════════════════════════════════
+function setDateMode(mode, btn) {
+  selDateMode = mode;
+  document.querySelectorAll('#dt-mode-tog .m-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const fromEl = document.getElementById('f-date-from');
+  const sepEl  = document.getElementById('f-date-sep');
+  const toEl   = document.getElementById('f-date');
+  if (mode === 'single') {
+    fromEl.style.display = 'none';
+    sepEl.style.display  = 'none';
+    toEl.style.display   = '';
+  } else if (mode === 'mtd') {
+    fromEl.style.display = 'none';
+    sepEl.style.display  = 'none';
+    toEl.style.display   = '';
+  } else {
+    fromEl.style.display = '';
+    sepEl.style.display  = '';
+    toEl.style.display   = '';
+    // default: from = awal bulan ini
+    if (!fromEl.value) fromEl.value = selDate.slice(0,8) + '01';
+  }
+  applyFilters();
+}
+
+// ══════════════════════════════════════════════════
+//  DATE RANGE HELPER
+// ══════════════════════════════════════════════════
+function getDateRange() {
+  if (selDateMode === 'single') return [selDate];
+  let from, to = new Date(selDate);
+  if (selDateMode === 'mtd') {
+    from = new Date(to.getFullYear(), to.getMonth(), 1);
+  } else {
+    from = new Date(selDateFrom || selDate);
+  }
+  if (from > to) [from, to] = [to, from]; // swap jika terbalik
+  const dates = [];
+  const cur = new Date(from);
+  while (cur <= to) {
+    dates.push(cur.toISOString().slice(0,10));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+}
+
+function updatePeriodBadge(dates) {
+  const el = document.getElementById('period-badge');
+  if (!el) return;
+  if (selDateMode === 'single') {
+    el.textContent = selDate;
+  } else {
+    const fmt = d => {
+      const [y,m,dd] = d.split('-');
+      return `${dd}/${m}/${y.slice(2)}`;
+    };
+    el.textContent = `${fmt(dates[0])} – ${fmt(dates[dates.length-1])} (${dates.length} hari)`;
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  AGGREGATE DATA ACROSS DATE RANGE
+// ══════════════════════════════════════════════════
+function getAggData(stores, dates) {
+  const agg = {};
+  stores.forEach(s => { agg[s.kode] = {s:0, u:0, st:0, days:0}; });
+  dates.forEach(dt => {
+    const dd = DAILY_DATA[dt] || {};
+    stores.forEach(s => {
+      const v = dd[s.kode];
+      if (v && v.s > 0) {
+        agg[s.kode].s  += v.s  || 0;
+        agg[s.kode].u  += v.u  || 0;
+        agg[s.kode].st += v.st || 0;
+        agg[s.kode].days++;
+      }
+    });
+  });
+  return agg;
+}
+
+// ══════════════════════════════════════════════════
+//  FILTER APPLY (auto-refresh on every change)
+// ══════════════════════════════════════════════════
+let _filterTimer = null;
 function applyFilters(){
-  selDate    = document.getElementById('f-date').value||selDate;
+  const dateVal  = document.getElementById('f-date').value;
+  const fromVal  = document.getElementById('f-date-from').value;
+  if (dateVal)  selDate     = dateVal;
+  if (fromVal)  selDateFrom = fromVal;
   selArea    = document.getElementById('f-area').value;
   selCluster = document.getElementById('f-cluster').value;
   selArco    = document.getElementById('f-arco').value;
@@ -987,6 +1089,11 @@ function applyFilters(){
   const activeTab=['overview','daily','monthly','ytd','l3m','ranking','config'];
   const idx=[...document.querySelectorAll('.tab')].findIndex(t=>t.classList.contains('active'));
   showTab(activeTab[idx]||'overview');
+}
+
+function scheduleRefresh() {
+  clearTimeout(_filterTimer);
+  _filterTimer = setTimeout(applyFilters, 120); // 120ms debounce
 }
 
 // ══════════════════════════════════════════════════
@@ -1009,7 +1116,7 @@ function setMet(tab,m,btn){
   if(tab==='l3m')    metL3m=m;
   document.querySelectorAll(`#tab-${tab} .m-btn`).forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  const renders={daily:()=>renderDailyAreaChart(),monthly:renderMonthly,ytd:renderYtd,l3m:renderL3m};
+  const renders={daily:renderDaily,monthly:renderMonthly,ytd:renderYtd,l3m:renderL3m};
   renders[tab]?.();
 }
 
@@ -1037,30 +1144,36 @@ function srt(tid,col){
 // ══════════════════════════════════════════════════
 function renderOverview(){
   const stores=filteredStores();
-  const dd=DAILY_DATA[selDate]||{};
-  document.getElementById('ov-date-lbl').textContent=selDate;
+  const dates=getDateRange();
+  updatePeriodBadge(dates);
+  const agg=getAggData(stores,dates);
+  const nDays=dates.length;
+
+  document.getElementById('ov-date-lbl').textContent=
+    nDays===1?selDate:`${dates[0]} → ${dates[dates.length-1]}`;
 
   let totTgtS=0,totActS=0,totActU=0,totActSt=0;
   const below=[],top=[];
 
   stores.forEach(s=>{
-    const act=dd[s.kode]||{s:0,u:0,st:0};
-    const tgt=TARGET_DATA[s.kode]||0;
+    const act=agg[s.kode]||{s:0,u:0,st:0,days:0};
+    const tgt=(TARGET_DATA[s.kode]||0)*nDays;   // target disesuaikan jumlah hari
     totTgtS+=tgt; totActS+=act.s; totActU+=act.u; totActSt+=act.st;
     const pct=tgt>0?act.s/tgt*100:0;
     const entry={...s,pct,actS:act.s,actU:act.u,actSt:act.st,tgt};
-    if(pct<80) below.push(entry);
-    top.push(entry);
+    if(pct<80&&act.s>0) below.push(entry);
+    if(act.s>0)         top.push(entry);
   });
   below.sort((a,b)=>a.pct-b.pct);
   top.sort((a,b)=>b.pct-a.pct);
 
   const achPct=totTgtS>0?totActS/totTgtS*100:0;
-  const activeStores=stores.filter(s=>dd[s.kode]?.s>0).length;
+  const activeStores=stores.filter(s=>(agg[s.kode]?.s||0)>0).length;
+  const periodeLabel=nDays===1?`Tgl ${selDate}`:`${nDays} hari`;
 
   document.getElementById('ov-kpi').innerHTML=`
     <div class="kpi-card ${achPct>=100?'c-green':achPct>=90?'c-gold':achPct>=80?'c-yellow':'c-red'}">
-      <div class="kpi-label">Total Sales Hari Ini</div>
+      <div class="kpi-label">Total Sales ${periodeLabel}</div>
       <div class="kpi-value">${fmtRp(totActS)}</div>
       <div class="kpi-sub">Target: ${fmtRp(totTgtS)}</div>
       ${achBadge(achPct)}
@@ -1068,7 +1181,7 @@ function renderOverview(){
     <div class="kpi-card c-blue">
       <div class="kpi-label">Uang Masuk</div>
       <div class="kpi-value">${fmtRp(totActU)}</div>
-      <div class="kpi-sub">Selisih: ${fmtRp(totActS-totActU)}</div>
+      <div class="kpi-sub">Selisih: ${fmtRp(Math.abs(totActS-totActU))}</div>
       <span class="kpi-badge bg-blue">💰 Cash</span>
     </div>
     <div class="kpi-card c-gold">
@@ -1092,8 +1205,8 @@ function renderOverview(){
 
   // Area chart
   const areas=['SURABAYA','SIDOARJO','GRESIK'];
-  const areaAct=areas.map(a=>stores.filter(s=>s.area===a).reduce((sum,s)=>sum+(dd[s.kode]?.s||0),0));
-  const areaTgt=areas.map(a=>stores.filter(s=>s.area===a).reduce((sum,s)=>sum+(TARGET_DATA[s.kode]||0),0));
+  const areaAct=areas.map(a=>stores.filter(s=>s.area===a).reduce((sum,s)=>sum+(agg[s.kode]?.s||0),0));
+  const areaTgt=areas.map(a=>stores.filter(s=>s.area===a).reduce((sum,s)=>sum+(TARGET_DATA[s.kode]||0)*nDays,0));
   mkChart('ch-area',{
     type:'bar',
     data:{labels:areas,datasets:[
@@ -1111,8 +1224,8 @@ function renderOverview(){
   const clAch=cls.map(cl=>{
     const clS=stores.filter(s=>s.cluster===cl);
     if(!clS.length)return 0;
-    const act=clS.reduce((s,st)=>s+(dd[st.kode]?.s||0),0);
-    const tgt=clS.reduce((s,st)=>s+(TARGET_DATA[st.kode]||0),0);
+    const act=clS.reduce((s,st)=>s+(agg[st.kode]?.s||0),0);
+    const tgt=clS.reduce((s,st)=>s+(TARGET_DATA[st.kode]||0)*nDays,0);
     return tgt>0?+(act/tgt*100).toFixed(1):0;
   });
   const clColors=['rgba(201,168,76,0.85)','rgba(79,156,249,0.85)','rgba(30,200,106,0.85)','rgba(122,122,144,0.85)'];
@@ -1124,10 +1237,10 @@ function renderOverview(){
               x:{ticks:{color:'#e8c96b',font:{weight:'700'}},grid:{display:false}}}}
   });
 
-  // Alerts
+  // Alerts & Top 5
   const alertEl=document.getElementById('ov-alerts');
   alertEl.innerHTML=below.length===0
-    ?`<div class="alert-item ai-green"><div class="ai-icon">✅</div><div class="ai-text"><strong>Semua Toko ≥ 80%</strong>Performa solid hari ini.</div></div>`
+    ?`<div class="alert-item ai-green"><div class="ai-icon">✅</div><div class="ai-text"><strong>Semua Toko ≥ 80%</strong>Performa solid pada periode ini.</div></div>`
     :below.slice(0,10).map(s=>`
       <div class="alert-item ${s.pct<70?'ai-red':'ai-yellow'}">
         <div class="ai-icon">${s.pct<70?'🚨':'⚠️'}</div>
@@ -1137,7 +1250,6 @@ function renderOverview(){
         </div>
       </div>`).join('');
 
-  // Top 5
   document.getElementById('ov-top5').innerHTML=top.slice(0,5).map((s,i)=>`
     <div class="alert-item ai-green">
       <div class="ai-icon"><span class="rank rk-${i<3?i+1:'n'}">${i+1}</span></div>
@@ -1149,16 +1261,22 @@ function renderOverview(){
 }
 
 // ══════════════════════════════════════════════════
-//  DAILY
+//  DAILY vs TARGET
 // ══════════════════════════════════════════════════
 function renderDaily(){
   const stores=filteredStores();
-  const dd=DAILY_DATA[selDate]||{};
+  const dates=getDateRange();
+  const nDays=dates.length;
+  const agg=getAggData(stores,dates);
+  updatePeriodBadge(dates);
+  const periodeLabel=nDays===1?selDate:`${nDays} hari`;
+  const dyLbl=document.getElementById('dy-period-lbl');
+  if(dyLbl) dyLbl.textContent = nDays===1 ? selDate : `${dates[0]} → ${dates[dates.length-1]} (${nDays} hari)`;
 
   let totTgt=0,totAct=0,totU=0,totSt=0;
   const rows=stores.map(s=>{
-    const act=dd[s.kode]||{s:0,u:0,st:0};
-    const tgt=TARGET_DATA[s.kode]||0;
+    const act=agg[s.kode]||{s:0,u:0,st:0};
+    const tgt=(TARGET_DATA[s.kode]||0)*nDays;
     const pct=tgt>0?act.s/tgt*100:0;
     const selisih=act.s-act.u;
     totTgt+=tgt;totAct+=act.s;totU+=act.u;totSt+=act.st;
@@ -1186,7 +1304,7 @@ function renderDaily(){
 
   document.getElementById('dy-kpi').innerHTML=`
     <div class="kpi-card ${totPct>=100?'c-green':totPct>=90?'c-gold':totPct>=80?'c-yellow':'c-red'}">
-      <div class="kpi-label">Achievement Sales</div>
+      <div class="kpi-label">Achievement — ${periodeLabel}</div>
       <div class="kpi-value">${fmtPct(totPct)}</div>
       <div class="kpi-sub">${fmtRp(totAct)} / ${fmtRp(totTgt)}</div>
     </div>
@@ -1202,19 +1320,24 @@ function renderDaily(){
     </div>
     <div class="kpi-card c-blue">
       <div class="kpi-label">Toko Melapor</div>
-      <div class="kpi-value">${stores.filter(s=>dd[s.kode]?.s>0).length}</div>
+      <div class="kpi-value">${stores.filter(s=>(agg[s.kode]?.s||0)>0).length}</div>
       <div class="kpi-sub">dari ${stores.length} toko aktif</div>
     </div>`;
-  renderDailyAreaChart();
+  renderDailyAreaChart(agg, nDays);
 }
-function renderDailyAreaChart(){
+
+function renderDailyAreaChart(agg, nDays){
   const stores=filteredStores();
-  const dd=DAILY_DATA[selDate]||{};
+  if(!agg){
+    const dates=getDateRange();
+    nDays=dates.length;
+    agg=getAggData(stores,dates);
+  }
   const areas=['SURABAYA','SIDOARJO','GRESIK'];
   const m=metDaily;
   const fld=m==='uang'?'u':m==='setor'?'st':'s';
-  const act=areas.map(a=>stores.filter(s=>s.area===a).reduce((sum,s)=>sum+(dd[s.kode]?.[fld]||0),0));
-  const tgt=areas.map(a=>stores.filter(s=>s.area===a).reduce((sum,s)=>sum+(TARGET_DATA[s.kode]||0),0));
+  const act=areas.map(a=>stores.filter(s=>s.area===a).reduce((sum,s)=>sum+(agg[s.kode]?.[fld]||0),0));
+  const tgt=areas.map(a=>stores.filter(s=>s.area===a).reduce((sum,s)=>sum+(TARGET_DATA[s.kode]||0)*(nDays||1),0));
   mkChart('ch-daily-area',{
     type:'bar',
     data:{labels:areas,datasets:[
@@ -1626,8 +1749,45 @@ async function loadFromSheets(){
     const targets=Papa.parse(tCsv,{header:true,skipEmptyLines:true}).data;
 
     ALL_STORES=master.map(r=>({kode:r.kode_toko,nama:r.nama_toko,area:r.area,cluster:r.cluster||'B',arco:r.arco||'—',sl:r.store_leader||'—'}));
+    // ── Parse target dengan fallback nama kolom & bersihkan format angka ──
     TARGET_DATA={};
-    targets.forEach(r=>{TARGET_DATA[r.kode_toko]=parseFloat(r.target_sales_harian)||0;});
+    const tgtCols=['target_sales_harian','target_sales_rp','target_harian','target_rp','target','sales_target','target_omset'];
+    let tgtColUsed='';
+    if(targets.length>0){
+      const firstRow=targets[0];
+      tgtColUsed=tgtCols.find(c=>firstRow[c]!==undefined&&firstRow[c]!=='') || '';
+      if(!tgtColUsed){
+        // Fallback: cari kolom numerik pertama selain kode_toko & bulan
+        const keys=Object.keys(firstRow).filter(k=>k!=='kode_toko'&&k!=='bulan'&&k!=='kode'&&k!=='nama_toko');
+        tgtColUsed=keys.find(k=>!isNaN(parseFloat((firstRow[k]||'').toString().replace(/[.,]/g,'').trim()))) || keys[0] || '';
+      }
+    }
+    // Filter per bulan jika kolom bulan ada — ambil bulan paling baru
+    const hasBulan=targets.length>0&&targets[0]['bulan']!==undefined;
+    let tgtRows=targets;
+    if(hasBulan){
+      const bulanList=[...new Set(targets.map(r=>r.bulan||''))].filter(Boolean).sort();
+      const latestBulan=bulanList[bulanList.length-1];
+      tgtRows=targets.filter(r=>r.bulan===latestBulan);
+      if(tgtRows.length===0) tgtRows=targets; // fallback semua baris
+    }
+    const cleanNum=v=>{
+      if(v===undefined||v===null||v==='')return 0;
+      // Bersihkan format: "9.000.000" → 9000000, "9,000,000" → 9000000
+      const s=v.toString().trim().replace(/[Rp\s]/gi,'');
+      const cleaned=s.replace(/\./g,'').replace(/,/g,'');
+      return parseFloat(cleaned)||0;
+    };
+    let tgtLoaded=0;
+    tgtRows.forEach(r=>{
+      const kode=(r.kode_toko||r.kode||'').trim();
+      if(!kode)return;
+      const val=tgtColUsed?cleanNum(r[tgtColUsed]):0;
+      if(val>0){TARGET_DATA[kode]=val;tgtLoaded++;}
+    });
+    // Simpan info diagnostik untuk ditampilkan
+    window._tgtDiag={col:tgtColUsed,loaded:tgtLoaded,total:targets.length,hasBulan,sample:tgtRows.slice(0,3).map(r=>({kode:r.kode_toko||r.kode,val:tgtColUsed?r[tgtColUsed]:'?'}))};
+    console.log('[Target Diagnostik]',window._tgtDiag);
     DAILY_DATA={};DETAIL_DATA={};IS_DEMO=false;
     sales.forEach(r=>{
       const tgl=r.tanggal,kd=r.kode_toko;
@@ -1660,6 +1820,34 @@ async function loadFromSheets(){
     document.getElementById('data-mode').style.color='var(--green)';
     document.getElementById('last-updated').textContent='Google Sheets — '+new Date().toLocaleTimeString('id-ID');
     document.getElementById('loading').style.display='none';
+
+    // ── Tampilkan hasil diagnostik di panel Setup ──
+    const diag=window._tgtDiag||{};
+    const salesDates=Object.keys(DAILY_DATA).length;
+    const salesRows=Object.values(DAILY_DATA).reduce((n,d)=>n+Object.keys(d).length,0);
+    const cfgSt=document.getElementById('cfg-status');
+    if(cfgSt){
+      let tgtWarn='';
+      if(diag.loaded===0){
+        tgtWarn=`<br>⚠️ <b style="color:var(--red)">Target 0 toko berhasil dibaca!</b> Kemungkinan nama kolom di sheet tidak cocok. Kolom terdeteksi: <code>${diag.col||'tidak ditemukan'}</code>`;
+      } else if(diag.loaded<(ALL_STORES.length/2)){
+        tgtWarn=`<br>⚠️ Target hanya terbaca untuk ${diag.loaded} toko — pastikan kode_toko di sheet target sama persis dengan master toko.`;
+      }
+      cfgSt.style.display='block';
+      cfgSt.style.background='rgba(30,200,106,0.07)';
+      cfgSt.style.border='1px solid rgba(30,200,106,0.25)';
+      cfgSt.innerHTML=`
+        <b style="color:var(--green)">✅ Koneksi Berhasil — ${new Date().toLocaleTimeString('id-ID')}</b><br>
+        📋 Master Toko: <b>${ALL_STORES.length} toko</b> dimuat<br>
+        📊 Sales Daily: <b>${salesRows} baris</b> dari <b>${salesDates} hari</b><br>
+        🎯 Target: <b>${diag.loaded||0} toko</b> dimuat
+          ${diag.col?`— kolom "<code>${diag.col}</code>" digunakan`:'— <span style="color:var(--red)">kolom target tidak ditemukan</span>'}
+          ${diag.hasBulan?' (filter bulan aktif)':''}
+        ${tgtWarn}
+        ${diag.loaded===0?`<br><br>💡 <b>Solusi:</b> Pastikan header kolom target di sheet persis bernama <code>target_sales_harian</code> dan angkanya tanpa titik/koma pemisah ribuan.`:''}
+        <br><small style="color:var(--text-dim)">Contoh 3 baris target: ${JSON.stringify(diag.sample||[])}</small>
+      `;
+    }
     showTab('overview');
   }catch(e){
     document.getElementById('loading').style.display='none';
@@ -1920,6 +2108,23 @@ function updateClock(){
 document.addEventListener('DOMContentLoaded',()=>{
   updateClock();
   setInterval(updateClock,1000);
+
+  // ── Auto-refresh: semua filter trigger applyFilters tanpa perlu pencet tombol ──
+  ['f-date','f-date-from','f-area','f-cluster','f-arco','f-toko'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('change', scheduleRefresh);
+  });
+
+  // Close modal on backdrop click or Escape
+  const modal = document.getElementById('storeModal');
+  if (modal) {
+    modal.addEventListener('click', e => { if(e.target === modal) closeStoreModal(e); });
+  }
+  document.addEventListener('keydown', e => { if(e.key==='Escape') closeStoreModal(); });
+
+  // 5-minute auto-refresh for live data
+  setInterval(() => { if (!IS_DEMO) scheduleRefresh(); }, 5 * 60 * 1000);
+
   loadDemo();
 });
 </script>
