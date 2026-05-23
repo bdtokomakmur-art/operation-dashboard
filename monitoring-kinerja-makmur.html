@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAKMUR Baby Shops — Sistem Monitoring & Evaluasi Kinerja</title>
+<style>
+:root {
+  --primary: #1d4ed8; --primary-light: #dbeafe; --primary-dark: #1e3a8a;
+  --success: #16a34a; --success-light: #dcfce7; --success-bg: #f0fdf4;
+  --warning: #b45309; --warning-light: #fef3c7; --warning-bg: #fffbeb;
+  --danger: #dc2626; --danger-light: #fee2e2; --danger-bg: #fff5f5;
+  --gold: #92400e; --gold-light: #fef9c3; --gold-bg: #fefce8;
+  --bg: #f1f5f9; --card: #ffffff; --border: #e2e8f0;
+  --text: #1e293b; --muted: #64748b; --subtle: #94a3b8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+/* ──────────── HEADER ──────────── */
+.app-header {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+  color: white; padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 68px; box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  position: sticky; top: 0; z-index: 200;
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.header-icon {
+  width: 44px; height: 44px; background: rgba(255,255,255,0.2);
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 24px; border: 1px solid rgba(255,255,255,0.3);
+}
+.header-title { font-size: 19px; font-weight: 800; letter-spacing: -0.3px; }
+.header-sub { font-size: 11px; opacity: 0.75; margin-top: 2px; letter-spacing: 0.3px; }
+.header-right { text-align: right; }
+.header-date { font-size: 13px; opacity: 0.9; font-weight: 500; }
+.header-time { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ──────────── NAV ──────────── */
+.nav-bar {
+  background: white; border-bottom: 2px solid var(--border);
+  padding: 0 28px; display: flex; gap: 4px;
+  position: sticky; top: 68px; z-index: 100;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.nav-tab {
+  padding: 0 22px; height: 52px; border: none; background: none; cursor: pointer;
+  font-size: 14px; font-weight: 600; color: var(--muted);
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
+  transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+  white-space: nowrap;
+}
+.nav-tab:hover { color: var(--primary); background: #f0f7ff; border-radius: 8px 8px 0 0; }
+.nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: #f0f7ff; border-radius: 8px 8px 0 0; }
+.nav-badge {
+  background: var(--primary); color: white; font-size: 11px; font-weight: 700;
+  padding: 2px 7px; border-radius: 20px; min-width: 20px; text-align: center;
+}
+.nav-badge.success { background: var(--success); }
+
+/* ──────────── MAIN ──────────── */
+.main-content { max-width: 1200px; margin: 0 auto; padding: 24px 28px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ──────────── CARDS ──────────── */
+.card {
+  background: var(--card); border-radius: 14px; padding: 24px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06); border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 16px; font-weight: 700; color: var(--text);
+  margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--border);
+}
+.card-title .icon-circle {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; background: var(--primary-light); flex-shrink: 0;
+}
+
+/* ──────────── LEGEND ──────────── */
+.score-legend {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+  background: white; border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 16px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500;
+}
+.legend-dot {
+  width: 24px; height: 24px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: white;
+}
+.legend-title { font-size: 12px; font-weight: 700; color: var(--muted); margin-right: 8px; }
+
+/* ──────────── FORM HEADER ──────────── */
+.form-header-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 6px; }
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-field label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-field input, .form-field select, .form-field textarea {
+  padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 14px; color: var(--text); background: white; transition: all 0.2s;
+}
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+  outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,0.1);
+}
+
+/* ──────────── CATEGORY ──────────── */
+.category-card {
+  background: white; border: 1.5px solid var(--border);
+  border-radius: 14px; overflow: hidden; margin-bottom: 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.category-header {
+  padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(to right, #f8fafc, #f1f5f9); border-bottom: 1px solid var(--border);
+}
+.cat-num {
+  width: 32px; height: 32px; background: var(--primary); color: white;
+  border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px; flex-shrink: 0;
+}
+.cat-title { font-size: 15px; font-weight: 700; flex: 1; }
+.cat-icon { font-size: 20px; }
+.weight-badge {
+  background: var(--primary-light); color: var(--primary);
+  padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800;
+}
+.cat-score-display {
+  font-size: 20px; font-weight: 900; min-width: 70px;
+  text-align: right; transition: color 0.3s;
+}
+
+/* ──────────── ITEMS TABLE ──────────── */
+.items-table { width: 100%; border-collapse: collapse; }
+.items-table th {
+  background: #f8fafc; padding: 10px 18px; text-align: left;
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.items-table td { padding: 13px 18px; border-top: 1px solid #f1f5f9; vertical-align: middle; }
+.items-table tr:hover td { background: #fafbfe; }
+.item-num-circle {
+  width: 26px; height: 26px; background: #f1f5f9;
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--muted); flex-shrink: 0;
+}
+.item-text { font-size: 13.5px; line-height: 1.45; color: var(--text); }
+.item-guideline {
+  font-size: 11px; color: var(--muted); margin-top: 4px;
+  background: #f8fafc; border-radius: 4px; padding: 3px 8px;
+  display: inline-block; border-left: 2px solid var(--primary);
+}
+
+/* ──────────── RADIO SCORING ──────────── */
+.score-radio-group { display: flex; gap: 6px; justify-content: center; }
+.score-radio-group label { display: flex; flex-direction: column; align-items: center; cursor: pointer; gap: 3px; }
+.score-radio-group input[type="radio"] { display: none; }
+.score-btn {
+  width: 42px; height: 42px; border-radius: 9px; border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px; transition: all 0.15s; background: white;
+  user-select: none;
+}
+.score-btn:hover { transform: scale(1.08); }
+.score-btn[data-val="1"] { color: #dc2626; }
+.score-btn[data-val="2"] { color: #d97706; }
+.score-btn[data-val="3"] { color: #16a34a; }
+.score-btn[data-val="4"] { color: #1d4ed8; }
+.score-radio-group input:checked + .score-btn { color: white !important; transform: scale(1.1); box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+.score-radio-group input[value="1"]:checked + .score-btn { background: #dc2626; border-color: #dc2626; }
+.score-radio-group input[value="2"]:checked + .score-btn { background: #d97706; border-color: #d97706; }
+.score-radio-group input[value="3"]:checked + .score-btn { background: #16a34a; border-color: #16a34a; }
+.score-radio-group input[value="4"]:checked + .score-btn { background: #1d4ed8; border-color: #1d4ed8; }
+.score-label { font-size: 9px; color: var(--muted); font-weight: 600; text-align: center; white-space: nowrap; }
+
+/* ──────────── RESULT PANEL ──────────── */
+.result-panel {
+  background: white; border-radius: 16px; padding: 28px;
+  border: 2px solid var(--border); margin-bottom: 20px;
+}
+.result-layout { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
+.score-gauge { text-align: center; flex-shrink: 0; }
+.score-circle {
+  width: 140px; height: 140px; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 8px solid currentColor; margin: 0 auto 12px;
+}
+.score-circle .score-number { font-size: 38px; font-weight: 900; line-height: 1; }
+.score-circle .score-unit { font-size: 13px; font-weight: 600; opacity: 0.7; }
+.result-details { flex: 1; min-width: 260px; }
+
+.progress-bar-wrap { background: #f1f5f9; border-radius: 20px; height: 14px; margin: 10px 0 6px; overflow: hidden; }
+.progress-bar { height: 100%; border-radius: 20px; transition: width 0.5s ease, background 0.3s; }
+.progress-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); }
+
+.band-display { margin: 14px 0 8px; }
+.band-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 20px; border-radius: 100px; font-size: 14px; font-weight: 800;
+}
+.band-outstanding { background: var(--gold-bg); color: var(--gold); border: 2px solid #f59e0b; }
+.band-baik { background: var(--success-bg); color: var(--success); border: 2px solid #22c55e; }
+.band-cukup { background: var(--warning-bg); color: var(--warning); border: 2px solid #f59e0b; }
+.band-kurang { background: var(--danger-bg); color: var(--danger); border: 2px solid #ef4444; }
+
+/* ──────────── ACTION BOX ──────────── */
+.action-box { border-radius: 12px; padding: 18px 20px; border: 1.5px solid; }
+.action-box.outstanding { background: var(--gold-bg); border-color: #f59e0b; }
+.action-box.baik { background: var(--success-bg); border-color: #22c55e; }
+.action-box.cukup { background: var(--warning-bg); border-color: #f59e0b; }
+.action-box.kurang { background: var(--danger-bg); border-color: #ef4444; }
+.action-box h4 { font-size: 13px; font-weight: 800; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.action-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.action-list li { font-size: 13px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
+.action-list li::before { content: '→'; flex-shrink: 0; font-weight: 800; }
+
+/* ──────────── BUTTONS ──────────── */
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.btn {
+  padding: 11px 22px; border-radius: 9px; border: none; cursor: pointer;
+  font-size: 14px; font-weight: 700; display: inline-flex; align-items: center;
+  gap: 8px; transition: all 0.2s; text-decoration: none;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.btn-primary { background: var(--primary); color: white; }
+.btn-success { background: var(--success); color: white; }
+.btn-warning { background: #d97706; color: white; }
+.btn-outline { background: white; color: var(--text); border: 1.5px solid var(--border); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 7px; }
+
+/* ──────────── REKAP TABLE ──────────── */
+.rekap-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rekap-table th {
+  background: #f1f5f9; padding: 11px 14px; text-align: left;
+  font-weight: 700; color: var(--muted); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid var(--border);
+}
+.rekap-table th.sortable { cursor: pointer; user-select: none; }
+.rekap-table th.sortable:hover { background: #e8eef6; color: var(--primary); }
+.rekap-table td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.rekap-table tr:hover td { background: #fafbff; }
+.rank-badge {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; background: #f1f5f9; color: var(--muted);
+}
+.rank-badge.gold { background: #fef9c3; color: #92400e; border: 1px solid #f59e0b; }
+.rank-badge.silver { background: #f1f5f9; color: #475569; border: 1px solid #94a3b8; }
+.rank-badge.bronze { background: #fef3e2; color: #92400e; border: 1px solid #f97316; }
+.score-chip {
+  display: inline-flex; align-items: center; padding: 4px 11px;
+  border-radius: 20px; font-size: 13px; font-weight: 800;
+}
+
+/* ──────────── KPI CARDS ──────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+.kpi-card {
+  background: white; border-radius: 14px; padding: 20px;
+  border: 1px solid var(--border); text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.kpi-value { font-size: 34px; font-weight: 900; line-height: 1; margin-bottom: 6px; }
+.kpi-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+.kpi-sub { font-size: 11px; color: var(--subtle); margin-top: 3px; }
+
+/* ──────────── SECTION HEADER ──────────── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+}
+.section-title { font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+.empty-state {
+  text-align: center; padding: 48px 20px; color: var(--muted);
+  background: #fafbfc; border-radius: 10px; border: 2px dashed var(--border);
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; margin-bottom: 16px; }
+
+/* ──────────── NOTES SECTION ──────────── */
+.notes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+.form-field textarea { min-height: 100px; resize: vertical; }
+
+/* ──────────── PRINT ──────────── */
+@media print {
+  .nav-bar, .btn, .no-print, .app-header .header-right { display: none !important; }
+  .app-header { position: relative !important; height: auto; padding: 12px 20px; }
+  .tab-panel { display: block !important; }
+  #tab-rekap { display: none !important; }
+  body { background: white; font-size: 12px; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+  .main-content { padding: 12px; }
+  .result-panel { border: 2px solid #ccc; }
+  .score-btn { border: 1px solid #ccc !important; }
+}
+
+/* ──────────── RESPONSIVE ──────────── */
+@media (max-width: 768px) {
+  .form-header-grid { grid-template-columns: 1fr 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .score-btn { width: 36px; height: 36px; font-size: 14px; }
+  .notes-grid { grid-template-columns: 1fr; }
+  .result-layout { flex-direction: column; }
+}
+
+/* ──────────── ALERTS ──────────── */
+.alert { border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px; font-size: 13px; }
+.alert-info { background: var(--primary-light); color: #1e40af; border: 1px solid #93c5fd; }
+.alert-success { background: var(--success-light); color: #15803d; border: 1px solid #86efac; }
+.alert.icon { font-size: 16px; flex-shrink: 0; }
+
+/* Divider */
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════════ -->
+<div class="app-header">
+  <div class="header-left">
+    <div class="header-icon">👶</div>
+    <div>
+      <div class="header-title">MAKMUR Baby Shops</div>
+      <div class="header-sub">Sistem Monitoring & Evaluasi Kinerja Operasional</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-date" id="hdr-date">—</div>
+    <div class="header-time" id="hdr-time">00:00:00</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     NAVIGATION
+══════════════════════════════════════════════════════ -->
+<div class="nav-bar">
+  <button class="nav-tab active" onclick="switchTab('rekap')" id="navbtn-rekap">
+    📊 Rekap Operation Manager
+    <span class="nav-badge" id="nav-count-rekap">0</span>
+  </button>
+  <button class="nav-tab" onclick="switchTab('arco')" id="navbtn-arco">
+    👔 Form Evaluasi ARCO
+  </button>
+  <button class="nav-tab" onclick="switchTab('sl')" id="navbtn-sl">
+    🏪 Form Evaluasi Store Leader
+  </button>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════════════════ -->
+<div class="main-content">
+
+<!-- ──────────────────────────────────────────────────
+     TAB: REKAP OPERATION MANAGER
+────────────────────────────────────────────────────── -->
+<div id="tab-rekap" class="tab-panel active">
+
+  <!-- KPI Summary -->
+  <div class="kpi-grid" id="rekap-kpi">
+    <div class="kpi-card">
+      <div class="kpi-value" style="color:var(--primary)" id="kpi-total-arco">0</div>
+      <div class="kpi-label">ARCO Dievaluasi</div>
+      <div class="kpi-sub">dari 9 ARCO</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-avg-arco">—</div>
+      <div class="kpi-label">Avg Score ARCO</div>
+      <div class="kpi-sub">Skor rata-rata</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" style="color:var(--success)" id="kpi-total-sl">0</div>
+      <div class="kpi-label">Store Leader Dievaluasi</div>
+      <div class="kpi-sub">dari 50 Store Leader</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-avg-sl">—</div>
+      <div class="kpi-label">Avg Score SL</div>
+      <div class="kpi-sub">Skor rata-rata</div>
+    </div>
+  </div>
+
+  <!-- Legend Band -->
+  <div class="score-legend">
+    <span class="legend-title">BAND KINERJA:</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#f59e0b">⭐</span> Outstanding (≥90)</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#16a34a">✅</span> Baik (75–89)</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#d97706">⚠️</span> Cukup (60–74)</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#dc2626">🚨</span> Perlu Perbaikan (&lt;60)</span>
+  </div>
+
+  <!-- Rekap ARCO -->
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title">👔 Rekap Evaluasi ARCO</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="exportCSV('arco')">⬇️ Export CSV</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAll('arco')">🗑️ Hapus Semua</button>
+      </div>
+    </div>
+    <div id="rekap-arco-container">
+      <div class="empty-state">
+        <div class="empty-icon">👔</div>
+        <p>Belum ada data evaluasi ARCO.<br>Klik <strong>Form Evaluasi ARCO</strong> untuk memulai.</p>
+        <button class="btn btn-primary" onclick="switchTab('arco')">Buka Form ARCO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rekap Store Leader -->
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title">🏪 Rekap Evaluasi Store Leader</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="exportCSV('sl')">⬇️ Export CSV</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAll('sl')">🗑️ Hapus Semua</button>
+      </div>
+    </div>
+    <div id="rekap-sl-container">
+      <div class="empty-state">
+        <div class="empty-icon">🏪</div>
+        <p>Belum ada data evaluasi Store Leader.<br>Klik <strong>Form Evaluasi Store Leader</strong> untuk memulai.</p>
+        <button class="btn btn-primary" onclick="switchTab('sl')">Buka Form Store Leader</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tindakan Korektif & Apresiasi -->
+  <div class="card" id="rekap-actions-card" style="display:none">
+    <div class="card-title"><div class="icon-circle">⚡</div> Tindakan yang Diperlukan</div>
+    <div id="rekap-actions-content"></div>
+  </div>
+
+</div><!-- end tab-rekap -->
+
+
+<!-- ──────────────────────────────────────────────────
+     TAB: FORM EVALUASI ARCO
+────────────────────────────────────────────────────── -->
+<div id="tab-arco" class="tab-panel">
+
+  <div class="alert alert-info">
+    <span class="icon">ℹ️</span>
+    <div>
+      <strong>Panduan Penilaian ARCO:</strong> Isi semua indikator dengan skor 1–4 (1=Kurang | 2=Cukup | 3=Baik | 4=Sangat Baik).
+      Skor tertimbang dihitung otomatis. Simpan evaluasi untuk ditampilkan di Rekap OM.
+    </div>
+  </div>
+
+  <!-- Score Legend -->
+  <div class="score-legend">
+    <span class="legend-title">SKALA PENILAIAN:</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#dc2626">1</span> Kurang — Tidak memenuhi standar</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#d97706">2</span> Cukup — Sebagian terpenuhi</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#16a34a">3</span> Baik — Memenuhi standar</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#1d4ed8">4</span> Sangat Baik — Melampaui standar</span>
+  </div>
+
+  <!-- Form Header -->
+  <div class="card">
+    <div class="card-title"><div class="icon-circle">📝</div> Informasi Evaluasi ARCO</div>
+    <div class="form-header-grid">
+      <div class="form-field">
+        <label>Periode Evaluasi *</label>
+        <input type="month" id="arco-periode" required>
+      </div>
+      <div class="form-field">
+        <label>Nama ARCO *</label>
+        <input type="text" id="arco-nama" placeholder="Nama Area Coordinator" required>
+      </div>
+      <div class="form-field">
+        <label>Area yang Dikelola *</label>
+        <input type="text" id="arco-area" placeholder="mis: Jakarta Utara">
+      </div>
+      <div class="form-field">
+        <label>Jumlah Toko di Area</label>
+        <input type="number" id="arco-jumlah-toko" placeholder="mis: 6" min="1" max="50">
+      </div>
+      <div class="form-field">
+        <label>Evaluator (Operation Manager) *</label>
+        <input type="text" id="arco-evaluator" placeholder="Nama OM">
+      </div>
+      <div class="form-field">
+        <label>Tanggal Evaluasi *</label>
+        <input type="date" id="arco-tanggal" required>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories will be built by JS -->
+  <div id="arco-categories"></div>
+
+  <!-- Result Panel -->
+  <div class="result-panel" id="arco-result">
+    <div class="card-title" style="margin-bottom:20px"><div class="icon-circle">📊</div> Hasil Penilaian ARCO</div>
+    <div class="result-layout">
+      <div class="score-gauge">
+        <div class="score-circle" id="arco-score-circle" style="color:#94a3b8;border-color:#94a3b8">
+          <div class="score-number" id="arco-total-score">—</div>
+          <div class="score-unit">/ 100</div>
+        </div>
+        <div style="text-align:center;font-size:12px;color:var(--muted)">Total Skor Tertimbang</div>
+      </div>
+      <div class="result-details">
+        <div>
+          <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Progress Skor</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="arco-progress" style="width:0%;background:#94a3b8"></div>
+          </div>
+          <div class="progress-labels"><span>0</span><span>Cukup 60</span><span>Baik 75</span><span>Outstanding 90</span><span>100</span></div>
+        </div>
+        <div class="band-display">
+          <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Band Kinerja</div>
+          <div id="arco-band"><span class="band-badge" style="background:#f1f5f9;color:#94a3b8;border:2px solid #e2e8f0">⏳ Belum dihitung</span></div>
+        </div>
+        <div id="arco-action"></div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <hr class="divider">
+    <div class="notes-grid">
+      <div class="form-field">
+        <label>Catatan Evaluasi</label>
+        <textarea id="arco-catatan" placeholder="Tuliskan observasi, konteks, atau hal penting lainnya..."></textarea>
+      </div>
+      <div class="form-field">
+        <label>Rencana Tindak Lanjut</label>
+        <textarea id="arco-tindak-lanjut" placeholder="Tuliskan langkah-langkah spesifik yang akan diambil..."></textarea>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <hr class="divider">
+    <div class="btn-row no-print">
+      <button class="btn btn-success" onclick="saveEvaluation('arco')">💾 Simpan Evaluasi</button>
+      <button class="btn btn-primary" onclick="printForm('arco')">🖨️ Cetak Form</button>
+      <button class="btn btn-outline" onclick="resetForm('arco')">🔄 Reset Form</button>
+    </div>
+  </div>
+
+</div><!-- end tab-arco -->
+
+
+<!-- ──────────────────────────────────────────────────
+     TAB: FORM EVALUASI STORE LEADER
+────────────────────────────────────────────────────── -->
+<div id="tab-sl" class="tab-panel">
+
+  <div class="alert alert-info">
+    <span class="icon">ℹ️</span>
+    <div>
+      <strong>Panduan Penilaian Store Leader:</strong> Isi semua indikator dengan skor 1–4 (1=Kurang | 2=Cukup | 3=Baik | 4=Sangat Baik).
+      Bobot per kategori berbeda — lihat label <strong>Bobot X%</strong> di setiap kategori.
+    </div>
+  </div>
+
+  <!-- Score Legend -->
+  <div class="score-legend">
+    <span class="legend-title">SKALA PENILAIAN:</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#dc2626">1</span> Kurang — Tidak memenuhi standar</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#d97706">2</span> Cukup — Sebagian terpenuhi</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#16a34a">3</span> Baik — Memenuhi standar</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#1d4ed8">4</span> Sangat Baik — Melampaui standar</span>
+  </div>
+
+  <!-- Form Header -->
+  <div class="card">
+    <div class="card-title"><div class="icon-circle">📝</div> Informasi Evaluasi Store Leader</div>
+    <div class="form-header-grid">
+      <div class="form-field">
+        <label>Periode Evaluasi *</label>
+        <input type="month" id="sl-periode" required>
+      </div>
+      <div class="form-field">
+        <label>Nama Store Leader *</label>
+        <input type="text" id="sl-nama" placeholder="Nama Store Leader" required>
+      </div>
+      <div class="form-field">
+        <label>Nama Toko *</label>
+        <input type="text" id="sl-toko" placeholder="mis: Makmur BSD City">
+      </div>
+      <div class="form-field">
+        <label>Kode Toko</label>
+        <input type="text" id="sl-kode" placeholder="mis: BSD-001">
+      </div>
+      <div class="form-field">
+        <label>ARCO Pembina</label>
+        <input type="text" id="sl-arco" placeholder="Nama Area Coordinator">
+      </div>
+      <div class="form-field">
+        <label>Evaluator (ARCO / OM) *</label>
+        <input type="text" id="sl-evaluator" placeholder="Nama evaluator">
+      </div>
+      <div class="form-field">
+        <label>Tanggal Evaluasi *</label>
+        <input type="date" id="sl-tanggal" required>
+      </div>
+      <div class="form-field">
+        <label>Kota / Lokasi</label>
+        <input type="text" id="sl-kota" placeholder="mis: Tangerang Selatan">
+      </div>
+      <div class="form-field">
+        <label>Jumlah Karyawan Aktif</label>
+        <input type="number" id="sl-karyawan" placeholder="mis: 5" min="1">
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories will be built by JS -->
+  <div id="sl-categories"></div>
+
+  <!-- Result Panel -->
+  <div class="result-panel" id="sl-result">
+    <div class="card-title" style="margin-bottom:20px"><div class="icon-circle">📊</div> Hasil Penilaian Store Leader</div>
+    <div class="result-layout">
+      <div class="score-gauge">
+        <div class="score-circle" id="sl-score-circle" style="color:#94a3b8;border-color:#94a3b8">
+          <div class="score-number" id="sl-total-score">—</div>
+          <div class="score-unit">/ 100</div>
+        </div>
+        <div style="text-align:center;font-size:12px;color:var(--muted)">Total Skor Tertimbang</div>
+      </div>
+      <div class="result-details">
+        <div>
+          <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Progress Skor</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="sl-progress" style="width:0%;background:#94a3b8"></div>
+          </div>
+          <div class="progress-labels"><span>0</span><span>Cukup 60</span><span>Baik 75</span><span>Outstanding 90</span><span>100</span></div>
+        </div>
+        <div class="band-display">
+          <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Band Kinerja</div>
+          <div id="sl-band"><span class="band-badge" style="background:#f1f5f9;color:#94a3b8;border:2px solid #e2e8f0">⏳ Belum dihitung</span></div>
+        </div>
+        <div id="sl-action"></div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <hr class="divider">
+    <div class="notes-grid">
+      <div class="form-field">
+        <label>Catatan Evaluasi</label>
+        <textarea id="sl-catatan" placeholder="Tuliskan observasi, konteks, atau hal penting lainnya..."></textarea>
+      </div>
+      <div class="form-field">
+        <label>Rencana Tindak Lanjut</label>
+        <textarea id="sl-tindak-lanjut" placeholder="Tuliskan langkah-langkah spesifik yang akan diambil..."></textarea>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <hr class="divider">
+    <div class="btn-row no-print">
+      <button class="btn btn-success" onclick="saveEvaluation('sl')">💾 Simpan Evaluasi</button>
+      <button class="btn btn-primary" onclick="printForm('sl')">🖨️ Cetak Form</button>
+      <button class="btn btn-outline" onclick="resetForm('sl')">🔄 Reset Form</button>
+    </div>
+  </div>
+
+</div><!-- end tab-sl -->
+
+</div><!-- end main-content -->
+
+
+<!-- ════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════ -->
+<script>
+
+// ── DATA ─────────────────────────────────────────────
+const SCORE_LABELS = ['', 'Kurang', 'Cukup', 'Baik', 'Sangat Baik'];
+
+const ARCO_CATEGORIES = [
+  {
+    id: 'supervisi', icon: '🏃‍♂️',
+    title: 'Kunjungan & Supervisi Lapangan',
+    weight: 25,
+    items: [
+      'Memenuhi target frekuensi kunjungan ke setiap toko (min. 2×/minggu/toko)',
+      'Laporan kunjungan diselesaikan ≤24 jam setelah kunjungan selesai',
+      'Temuan dari kunjungan sebelumnya sudah ditindaklanjuti secara nyata',
+      'Kunjungan dilakukan tepat sesuai jadwal yang disepakati dengan OM',
+      'Dokumentasi kunjungan lengkap: foto, catatan temuan, tanda tangan SL'
+    ],
+    guidelines: [
+      '≥2×/minggu/toko=4 | 1×/minggu=3 | &lt;1×/minggu=2 | Jarang=1',
+      '≤24 jam=4 | ≤48 jam=3 | ≤72 jam=2 | >72 jam / tidak ada=1',
+      'Semua ditindaklanjuti=4 | Sebagian besar=3 | Sebagian=2 | Tidak ada=1',
+      '100% sesuai jadwal=4 | ≥80%=3 | ≥60%=2 | &lt;60%=1',
+      'Lengkap selalu=4 | Hampir lengkap=3 | Sebagian=2 | Jarang lengkap=1'
+    ]
+  },
+  {
+    id: 'coaching', icon: '🎯',
+    title: 'Coaching & Pengembangan Store Leader',
+    weight: 20,
+    items: [
+      'Melakukan sesi coaching / 1-on-1 dengan setiap SL minimal 1× per bulan',
+      'Feedback ke SL berbasis data performa, spesifik, konstruktif, dan tercatat',
+      'Mengidentifikasi kebutuhan pelatihan tim & menindaklanjuti ke HR / OM',
+      'SL di area menunjukkan peningkatan kompetensi yang terukur periode ini',
+      'Memiliki rencana pengembangan (succession plan) untuk posisi kritis di area'
+    ],
+    guidelines: [
+      'Semua SL ter-coaching=4 | ≥75% SL=3 | ≥50% SL=2 | &lt;50%=1',
+      'Selalu berbasis data=4 | Sering=3 | Kadang=2 | Tidak pernah berbasis data=1',
+      'Aktif identifikasi & ditindaklanjuti=4 | Identifikasi saja=3 | Jarang=2 | Tidak=1',
+      'Peningkatan nyata terukur=4 | Ada peningkatan=3 | Sedikit=2 | Tidak ada=1',
+      'Ada & tertulis=4 | Sedang dibuat=3 | Baru direncanakan=2 | Belum ada=1'
+    ]
+  },
+  {
+    id: 'kpi', icon: '📈',
+    title: 'Pencapaian KPI Area',
+    weight: 25,
+    items: [
+      'Achievement sales target area bulan ini (% pencapaian dari target)',
+      'Rata-rata compliance operasional toko di area (% skor audit internal)',
+      'Persentase toko di area yang berhasil mencapai target bulan ini',
+      'Tingkat absensi alpha (tanpa keterangan) rata-rata terjaga rendah di area',
+      'Zero insiden serius yang tidak di-eskalasi tepat waktu ke OM'
+    ],
+    guidelines: [
+      '≥95%=4 | ≥85%=3 | ≥75%=2 | &lt;75%=1',
+      '≥90%=4 | ≥80%=3 | ≥70%=2 | &lt;70%=1',
+      '≥80% toko=4 | ≥60%=3 | ≥40%=2 | &lt;40%=1',
+      '≤2% alpha=4 | ≤5%=3 | ≤10%=2 | >10%=1',
+      'Nol insiden tak ter-eskalasi=4 | 1 insiden terlambat=3 | >1=2 | Sering tidak=1'
+    ]
+  },
+  {
+    id: 'pelaporan', icon: '📋',
+    title: 'Pelaporan & Administrasi',
+    weight: 15,
+    items: [
+      'Laporan harian / mingguan / bulanan disubmit tepat waktu sesuai deadline',
+      'Akurasi dan kelengkapan isi laporan (data valid, tidak ada kolom kosong kritis)',
+      'Responsivitas terhadap permintaan data / dokumen dari OM',
+      'Update sistem monitoring / dashboard operasional dilakukan konsisten setiap hari',
+      'Administrasi area (kontrak, perizinan, dokumen SDM) tertib dan up-to-date'
+    ],
+    guidelines: [
+      '100% tepat waktu=4 | ≥90%=3 | ≥75%=2 | &lt;75%=1',
+      'Selalu akurat & lengkap=4 | Hampir selalu=3 | Sering ada kekurangan=2 | Sering salah=1',
+      '≤2 jam=4 | ≤4 jam=3 | ≤1 hari=2 | >1 hari=1',
+      'Setiap hari=4 | Hampir setiap hari=3 | Beberapa kali/minggu=2 | Jarang=1',
+      'Semua tertib=4 | Hampir semua=3 | Sebagian bermasalah=2 | Banyak tertunggak=1'
+    ]
+  },
+  {
+    id: 'koordinasi', icon: '🤝',
+    title: 'Koordinasi & Komunikasi',
+    weight: 15,
+    items: [
+      'Responsivitas komunikasi dengan OM (rata-rata respons &lt;1 jam di jam kerja)',
+      'Masalah kritis di-eskalasi tepat waktu, tepat orang, dengan informasi lengkap',
+      'Mampu memberikan solusi / rekomendasi konkret sebelum eskalasi ke OM',
+      'Instruksi dari OM diimplementasikan tepat waktu dan sesuai arahan',
+      'Koordinasi dengan dept. lain (Gudang, Finance, HR, Marketing) berjalan lancar'
+    ],
+    guidelines: [
+      'Selalu &lt;1 jam=4 | Umumnya &lt;2 jam=3 | Kadang lama=2 | Sering tidak respons=1',
+      'Selalu tepat & lengkap=4 | Hampir selalu=3 | Kadang terlambat=2 | Sering tidak eskalasi=1',
+      'Selalu ada solusi=4 | Sering ada solusi=3 | Kadang=2 | Selalu langsung eskalasi=1',
+      '100% tepat waktu=4 | ≥90%=3 | ≥75%=2 | &lt;75%=1',
+      'Selalu lancar=4 | Umumnya baik=3 | Kadang ada hambatan=2 | Sering bermasalah=1'
+    ]
+  }
+];
+
+const SL_CATEGORIES = [
+  {
+    id: 'ops', icon: '⚙️',
+    title: 'Operasional Harian',
+    weight: 20,
+    items: [
+      'Opening procedure dilaksanakan lengkap sesuai SOP sebelum toko buka',
+      'Closing procedure dilaksanakan lengkap sesuai SOP setelah toko tutup',
+      'Briefing harian tim (5–10 menit) dilakukan setiap pagi sebelum operasional',
+      'Toko buka dan tutup tepat waktu sesuai jadwal operasional yang ditetapkan',
+      'Kondisi toko dijaga rapi, bersih, dan teratur sepanjang seluruh jam operasional'
+    ],
+    guidelines: [
+      'Selalu lengkap terdokumentasi=4 | Hampir selalu=3 | Sering ada yang terlewat=2 | Jarang dilakukan=1',
+      'Selalu lengkap terdokumentasi=4 | Hampir selalu=3 | Sering ada yang terlewat=2 | Jarang dilakukan=1',
+      'Setiap hari dilakukan=4 | Hampir setiap hari=3 | Beberapa kali/minggu=2 | Jarang/tidak=1',
+      '100% tepat waktu=4 | ≥95%=3 | ≥85%=2 | &lt;85% atau sering terlambat=1',
+      'Selalu terjaga standar=4 | Hampir selalu=3 | Kadang tidak standar=2 | Sering di bawah standar=1'
+    ]
+  },
+  {
+    id: 'sales', icon: '💰',
+    title: 'Pencapaian Target Penjualan',
+    weight: 25,
+    items: [
+      'Achievement sales target harian (rata-rata % pencapaian bulan ini)',
+      'Strategi upselling dan cross-selling aktif diterapkan & diajarkan ke tim',
+      'Tracking penjualan per jam dilakukan dan dikomunikasikan kepada tim',
+      'Ada action plan tertulis untuk gap sales jika target harian belum tercapai',
+      'Laporan penjualan harian disubmit tepat waktu dengan data yang akurat'
+    ],
+    guidelines: [
+      '≥95%=4 | ≥85%=3 | ≥75%=2 | &lt;75%=1',
+      'Aktif & terdokumentasi=4 | Aktif tidak terdokumentasi=3 | Kadang-kadang=2 | Tidak dilakukan=1',
+      'Setiap hari=4 | Hampir setiap hari=3 | Beberapa kali/minggu=2 | Jarang=1',
+      'Selalu ada & dieksekusi=4 | Ada action plan=3 | Hanya verbal=2 | Tidak ada=1',
+      '100% tepat waktu & akurat=4 | ≥90%=3 | ≥75%=2 | &lt;75%=1'
+    ]
+  },
+  {
+    id: 'tim', icon: '👥',
+    title: 'Manajemen & Pengembangan Tim',
+    weight: 20,
+    items: [
+      'Tingkat kehadiran tim terjaga sesuai standar (% hadir dari jadwal)',
+      'Jadwal shift disusun optimal untuk memenuhi coverage kebutuhan toko',
+      'Melakukan coaching / feedback rutin kepada pramuniaga dan kasir',
+      'Masalah disiplin / konflik tim ditangani proaktif dan di-eskalasi bila perlu',
+      'Atmosfer kerja tim positif — motivasi, semangat, dan kekompakan terjaga'
+    ],
+    guidelines: [
+      '≥95%=4 | ≥90%=3 | ≥85%=2 | &lt;85%=1',
+      'Optimal sesuai kebutuhan=4 | Cukup baik=3 | Kadang kurang coverage=2 | Sering kekurangan personil=1',
+      '≥3×/bulan per karyawan=4 | 1–2×/bulan=3 | Jarang=2 | Tidak pernah=1',
+      'Proaktif & tercatat=4 | Ditangani tapi tidak tercatat=3 | Bereaksi saja=2 | Dibiarkan=1',
+      'Selalu positif & solid=4 | Umumnya baik=3 | Kadang ada ketegangan=2 | Sering bermasalah=1'
+    ]
+  },
+  {
+    id: 'visual', icon: '🏪',
+    title: 'Standar Toko & Visual Merchandising',
+    weight: 15,
+    items: [
+      'Display produk sesuai planogram dan standar visual merchandising perusahaan',
+      'Seluruh produk memiliki price tag lengkap, benar, dan terbaca jelas',
+      'Signage promosi / POP material terpasang sesuai ketentuan dan periode promo',
+      'Kebersihan seluruh area toko (lantai, rak, etalase, toilet, gudang) terjaga baik',
+      'Kondisi sarana & prasarana toko baik — kerusakan dilaporkan & ditindaklanjuti'
+    ],
+    guidelines: [
+      '100% sesuai planogram=4 | ≥90%=3 | ≥75%=2 | &lt;75%=1',
+      '100% produk ber-price tag=4 | ≥95%=3 | ≥85%=2 | &lt;85%=1',
+      'Semua terpasang tepat=4 | Hampir semua=3 | Sebagian=2 | Sering tidak terpasang=1',
+      'Selalu standar=4 | Umumnya bersih=3 | Kadang di bawah standar=2 | Sering kotor=1',
+      'Semua terpantau=4 | Hampir semua=3 | Lambat merespons=2 | Tidak dilaporkan=1'
+    ]
+  },
+  {
+    id: 'stok', icon: '📦',
+    title: 'Manajemen Stok & Inventori',
+    weight: 10,
+    items: [
+      'Stock opname dilakukan tepat waktu dengan akurasi tinggi (selisih ≤0.5%)',
+      'Shrinkage / susut produk terjaga dalam batas toleransi (≤1% dari omset)',
+      'Produk expired / rusak diidentifikasi segera dan diproses sesuai SOP',
+      'Laporan stok harian / mingguan disubmit tepat waktu dengan benar',
+      'Barang fast moving dimonitor — reorder request dilakukan sebelum kehabisan'
+    ],
+    guidelines: [
+      'Tepat waktu & selisih ≤0.5%=4 | Tepat waktu & selisih ≤1%=3 | Terlambat=2 | Tidak dilakukan=1',
+      '≤0.5%=4 | ≤1%=3 | ≤2%=2 | >2%=1',
+      'Segera &lt;24 jam=4 | ≤48 jam=3 | Lambat=2 | Tidak diproses=1',
+      '100% tepat waktu=4 | ≥90%=3 | ≥75%=2 | &lt;75%=1',
+      'Selalu proaktif=4 | Hampir selalu=3 | Kadang kehabisan=2 | Sering kehabisan=1'
+    ]
+  },
+  {
+    id: 'cs', icon: '😊',
+    title: 'Customer Service & Pengalaman Pelanggan',
+    weight: 10,
+    items: [
+      'Seluruh karyawan menyapa pelanggan sesuai standar greeting perusahaan',
+      'Keluhan pelanggan ditangani cepat (&lt;1 jam) dan diselesaikan secara profesional',
+      'Waktu antrian kasir terjaga (queue time &lt;5 menit pada kondisi normal)',
+      'Area khusus bayi (fitting room, display khusus) bersih, aman, dan nyaman',
+      'Tidak ada keluhan pelanggan yang dibiarkan tanpa respons atau penyelesaian'
+    ],
+    guidelines: [
+      'Seluruh karyawan konsisten=4 | Sebagian besar=3 | Sebagian=2 | Jarang dilakukan=1',
+      '&lt;1 jam selalu=4 | &lt;2 jam=3 | Kadang lambat=2 | Sering tidak terselesaikan=1',
+      'Selalu &lt;5 menit=4 | Umumnya terkontrol=3 | Kadang antrian panjang=2 | Sering lama=1',
+      'Selalu standar=4 | Umumnya baik=3 | Kadang kurang=2 | Sering di bawah standar=1',
+      'Tidak ada=4 | 1–2 kasus tertunda=3 | Beberapa kasus=2 | Sering tidak terselesaikan=1'
+    ]
+  }
+];
+
+// ── BUILD FORMS ───────────────────────────────────────
+function buildForm(formId, categories) {
+  const container = document.getElementById(formId + '-categories');
+  let html = '';
+  categories.forEach((cat, ci) => {
+    html += `
+    <div class="category-card">
+      <div class="category-header">
+        <div class="cat-num">${ci + 1}</div>
+        <div class="cat-icon">${cat.icon}</div>
+        <div class="cat-title">${cat.title}</div>
+        <div class="weight-badge">Bobot ${cat.weight}%</div>
+        <div class="cat-score-display" id="${formId}-cat-score-${ci}" style="color:#94a3b8">—</div>
+      </div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>Indikator Penilaian</th>
+            <th style="width:240px;text-align:center">Skor (1 = Kurang &nbsp;→&nbsp; 4 = Sangat Baik)</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    cat.items.forEach((item, ii) => {
+      const guide = (cat.guidelines && cat.guidelines[ii]) ?
+        `<div class="item-guideline">${cat.guidelines[ii]}</div>` : '';
+      html += `
+        <tr>
+          <td><div class="item-num-circle">${ii + 1}</div></td>
+          <td>
+            <div class="item-text">${item}</div>
+            ${guide}
+          </td>
+          <td>
+            <div class="score-radio-group">
+              ${[1,2,3,4].map(v => `
+                <label>
+                  <input type="radio" name="${formId}-c${ci}-i${ii}" value="${v}"
+                    onchange="updateScore('${formId}')">
+                  <div class="score-btn" data-val="${v}">${v}</div>
+                  <div class="score-label">${SCORE_LABELS[v]}</div>
+                </label>
+              `).join('')}
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+    html += `</tbody></table></div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ── SCORING ──────────────────────────────────────────
+function updateScore(formId) {
+  const cats = formId === 'arco' ? ARCO_CATEGORIES : SL_CATEGORIES;
+  let totalWeighted = 0;
+  let itemsFilled = 0;
+  let totalItems = 0;
+  const weakCats = [];
+
+  cats.forEach((cat, ci) => {
+    let sum = 0, count = 0;
+    cat.items.forEach((_, ii) => {
+      totalItems++;
+      const r = document.querySelector(`input[name="${formId}-c${ci}-i${ii}"]:checked`);
+      if (r) { sum += parseInt(r.value); count++; itemsFilled++; }
+    });
+    const maxPossible = cat.items.length * 4;
+    const catPct = count > 0 ? (sum / (count * 4)) * 100 : 0;
+    const weightedContrib = (catPct / 100) * cat.weight;
+    // Only add if all items in cat are filled
+    if (count === cat.items.length) {
+      totalWeighted += weightedContrib;
+    } else if (count > 0) {
+      // partial: proportional
+      totalWeighted += weightedContrib * (count / cat.items.length);
+    }
+    const scoreEl = document.getElementById(`${formId}-cat-score-${ci}`);
+    if (count > 0) {
+      const pct = (sum / (count * 4)) * 100;
+      scoreEl.textContent = pct.toFixed(0) + '%';
+      scoreEl.style.color = getColor(pct);
+    } else {
+      scoreEl.textContent = '—'; scoreEl.style.color = '#94a3b8';
+    }
+    if (count === cat.items.length && catPct < 75) weakCats.push(cat.title);
+  });
+
+  // Normalize total if not all items filled
+  let displayScore;
+  if (itemsFilled === totalItems) {
+    displayScore = totalWeighted;
+  } else if (itemsFilled > 0) {
+    // Scale proportionally
+    displayScore = totalWeighted * (totalItems / itemsFilled);
+  } else {
+    displayScore = 0;
+  }
+  displayScore = Math.min(100, displayScore);
+
+  const totalEl = document.getElementById(`${formId}-total-score`);
+  const progressEl = document.getElementById(`${formId}-progress`);
+  const circleEl = document.getElementById(`${formId}-score-circle`);
+  const bandEl = document.getElementById(`${formId}-band`);
+  const actionEl = document.getElementById(`${formId}-action`);
+
+  if (itemsFilled > 0) {
+    totalEl.textContent = displayScore.toFixed(1);
+    progressEl.style.width = displayScore + '%';
+    progressEl.style.background = getColor(displayScore);
+    circleEl.style.color = getColor(displayScore);
+    circleEl.style.borderColor = getColor(displayScore);
+    const band = getBand(displayScore);
+    bandEl.innerHTML = getBandBadge(band);
+    actionEl.innerHTML = getActionHtml(band, weakCats, formId);
+  } else {
+    totalEl.textContent = '—';
+    progressEl.style.width = '0%';
+    circleEl.style.color = '#94a3b8'; circleEl.style.borderColor = '#94a3b8';
+    bandEl.innerHTML = '<span class="band-badge" style="background:#f1f5f9;color:#94a3b8;border:2px solid #e2e8f0">⏳ Belum dihitung</span>';
+    actionEl.innerHTML = '';
+  }
+}
+
+function getColor(pct) {
+  if (pct >= 90) return '#f59e0b';
+  if (pct >= 75) return '#16a34a';
+  if (pct >= 60) return '#d97706';
+  return '#dc2626';
+}
+
+function getBand(score) {
+  if (score >= 90) return 'outstanding';
+  if (score >= 75) return 'baik';
+  if (score >= 60) return 'cukup';
+  return 'kurang';
+}
+
+function getBandBadge(band) {
+  const map = {
+    outstanding: { cls: 'band-outstanding', icon: '⭐', text: 'OUTSTANDING — Luar Biasa!' },
+    baik:        { cls: 'band-baik',        icon: '✅', text: 'BAIK — Pertahankan Performa' },
+    cukup:       { cls: 'band-cukup',       icon: '⚠️', text: 'CUKUP — Perlu Peningkatan' },
+    kurang:      { cls: 'band-kurang',       icon: '🚨', text: 'PERLU PERBAIKAN — Tindakan Segera' }
+  };
+  const b = map[band];
+  return `<span class="band-badge ${b.cls}">${b.icon} ${b.text}</span>`;
+}
+
+function getActionHtml(band, weakCats, formId) {
+  const roleLabel = formId === 'arco' ? 'ARCO' : 'Store Leader';
+  const actions = {
+    outstanding: {
+      cls: 'outstanding', icon: '🏆',
+      title: `APRESIASI — ${roleLabel} Berprestasi`,
+      items: [
+        `Berikan <strong>penghargaan formal</strong> (Best ${roleLabel} of the Month / Quarter) dalam forum resmi`,
+        `<strong>Nominasikan</strong> sebagai kandidat promosi ke jenjang karir berikutnya`,
+        `Jadikan <strong>benchmark & narasumber</strong> sharing best practice ke ${roleLabel} lain`,
+        `Pertimbangkan <strong>reward non-finansial</strong>: sertifikat, voucher, atau recognition di town hall`,
+        `Dokumentasikan <strong>praktik terbaik</strong> untuk dijadikan SOP atau modul pelatihan perusahaan`
+      ]
+    },
+    baik: {
+      cls: 'baik', icon: '🎖️',
+      title: `RECOGNITION — ${roleLabel} Berkinerja Baik`,
+      items: [
+        `Berikan <strong>feedback positif spesifik</strong> secara langsung terkait pencapaian`,
+        `Catat dalam file performa sebagai <strong>kontributor yang handal</strong> dan konsisten`,
+        `Identifikasi <strong>1–2 area fokus</strong> untuk ditingkatkan ke level Outstanding`,
+        `Pertimbangkan untuk menjadi <strong>mentor bagi ${roleLabel} baru</strong> di area`,
+        `Jadwalkan <strong>1-on-1 karir</strong> untuk membahas rencana pengembangan selanjutnya`
+      ]
+    },
+    cukup: {
+      cls: 'cukup', icon: '📋',
+      title: `IMPROVEMENT PLAN — Perlu Peningkatan`,
+      items: [
+        `Buat <strong>Performance Improvement Plan (PIP) tertulis</strong> dengan target dan deadline jelas`,
+        `Lakukan <strong>coaching session mingguan</strong> bersama ARCO / OM minimal 4 minggu ke depan`,
+        `Tetapkan <strong>KPI spesifik yang harus diperbaiki</strong> dalam 30 hari pertama`,
+        weakCats.length ? `<strong>Fokus perbaikan pada:</strong> ${weakCats.join(', ')}` : `Identifikasi kategori terendah dan buat action plan spesifik per kategori`,
+        `Lakukan <strong>review progress</strong> setiap 2 minggu dan dokumentasikan perkembangan`
+      ]
+    },
+    kurang: {
+      cls: 'kurang', icon: '🚨',
+      title: `CORRECTIVE ACTION PLAN — Tindakan Segera Diperlukan`,
+      items: [
+        `<strong>WAJIB buat Corrective Action Plan (CAP) tertulis</strong> dan ditandatangani semua pihak`,
+        `<strong>Eskalasikan ke HR</strong> untuk mendapatkan dukungan dan dokumentasi resmi`,
+        weakCats.length ? `<strong>Area kritis yang harus diperbaiki dalam 14 hari:</strong> ${weakCats.join(', ')}` : `Tetapkan area paling kritis yang harus diperbaiki dalam 14 hari pertama`,
+        `Intensifkan monitoring — <strong>evaluasi setiap minggu</strong> dengan dokumentasi tertulis`,
+        `Jika tidak ada perbaikan signifikan dalam <strong>30 hari, eskalasi ke HR</strong> untuk tindakan lanjut (mutasi / pembinaan intensif / konsekuensi lainnya)`
+      ]
+    }
+  };
+  const a = actions[band];
+  return `
+    <div class="action-box ${a.cls}" style="margin-top:14px">
+      <h4>${a.icon} ${a.title}</h4>
+      <ul class="action-list">
+        ${a.items.map(i => `<li>${i}</li>`).join('')}
+      </ul>
+    </div>
+  `;
+}
+
+// ── SAVE EVALUATION ──────────────────────────────────
+function saveEvaluation(formId) {
+  const cats = formId === 'arco' ? ARCO_CATEGORIES : SL_CATEGORIES;
+  const getVal = id => {
+    const el = document.getElementById(formId + '-' + id);
+    return el ? el.value.trim() : '';
+  };
+
+  // Validate required
+  const required = formId === 'arco'
+    ? ['periode', 'nama', 'evaluator', 'tanggal']
+    : ['periode', 'nama', 'evaluator', 'tanggal'];
+  for (const f of required) {
+    if (!getVal(f)) { alert(`Field "${f}" wajib diisi!`); return; }
+  }
+
+  // Check all scores filled
+  let allFilled = true;
+  cats.forEach((cat, ci) => {
+    cat.items.forEach((_, ii) => {
+      if (!document.querySelector(`input[name="${formId}-c${ci}-i${ii}"]:checked`)) {
+        allFilled = false;
+      }
+    });
+  });
+  if (!allFilled) {
+    if (!confirm('⚠️ Tidak semua indikator diisi.\nSkor akan dihitung dari yang sudah diisi.\nLanjutkan menyimpan?')) return;
+  }
+
+  // Collect scores
+  const scores = {};
+  cats.forEach((cat, ci) => {
+    scores[`cat${ci}`] = cat.items.map((_, ii) => {
+      const r = document.querySelector(`input[name="${formId}-c${ci}-i${ii}"]:checked`);
+      return r ? parseInt(r.value) : null;
+    });
+  });
+
+  // Calculate final score
+  let totalWeighted = 0;
+  cats.forEach((cat, ci) => {
+    const s = scores[`cat${ci}`].filter(v => v !== null);
+    if (s.length > 0) {
+      const pct = s.reduce((a, b) => a + b, 0) / (s.length * 4) * 100;
+      totalWeighted += (pct / 100) * cat.weight * (s.length / cat.items.length);
+    }
+  });
+  // Normalize
+  const totalItems = cats.reduce((a, c) => a + c.items.length, 0);
+  const filledItems = Object.values(scores).flat().filter(v => v !== null).length;
+  let finalScore = filledItems > 0 ? Math.min(100, totalWeighted * (totalItems / filledItems)) : 0;
+
+  const evalData = {
+    id: Date.now(),
+    type: formId,
+    periode: getVal('periode'),
+    nama: getVal('nama'),
+    evaluator: getVal('evaluator'),
+    tanggal: getVal('tanggal'),
+    scores,
+    catatan: getVal('catatan'),
+    tindakLanjut: getVal('tindak-lanjut'),
+    totalScore: Math.round(finalScore * 10) / 10,
+    band: getBand(finalScore)
+  };
+
+  if (formId === 'arco') {
+    evalData.area = getVal('area');
+    evalData.jumlahToko = getVal('jumlah-toko');
+  } else {
+    evalData.toko = getVal('toko');
+    evalData.kode = getVal('kode');
+    evalData.arco = getVal('arco');
+    evalData.kota = getVal('kota');
+    evalData.karyawan = getVal('karyawan');
+  }
+
+  // Save to localStorage
+  const key = formId === 'arco' ? 'makmur_arco_evals' : 'makmur_sl_evals';
+  const existing = JSON.parse(localStorage.getItem(key) || '[]');
+  existing.push(evalData);
+  localStorage.setItem(key, JSON.stringify(existing));
+
+  alert(`✅ Evaluasi ${formId.toUpperCase()} berhasil disimpan!\nSkor: ${evalData.totalScore} — ${evalData.band.toUpperCase()}`);
+  renderRekap();
+  updateNavBadge();
+}
+
+// ── REKAP RENDER ─────────────────────────────────────
+function renderRekap() {
+  renderRekapTable('arco');
+  renderRekapTable('sl');
+  renderActions();
+  updateKPI();
+}
+
+function renderRekapTable(type) {
+  const key = type === 'arco' ? 'makmur_arco_evals' : 'makmur_sl_evals';
+  const data = JSON.parse(localStorage.getItem(key) || '[]');
+  const containerId = type === 'arco' ? 'rekap-arco-container' : 'rekap-sl-container';
+  const container = document.getElementById(containerId);
+
+  if (data.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">${type === 'arco' ? '👔' : '🏪'}</div>
+      <p>Belum ada data evaluasi ${type === 'arco' ? 'ARCO' : 'Store Leader'}.<br>
+      Klik tab <strong>Form Evaluasi ${type === 'arco' ? 'ARCO' : 'Store Leader'}</strong> untuk memulai.</p>
+      <button class="btn btn-primary" onclick="switchTab('${type}')">Buka Form ${type === 'arco' ? 'ARCO' : 'Store Leader'}</button>
+    </div>`;
+    return;
+  }
+
+  // Sort by score desc
+  const sorted = [...data].sort((a, b) => b.totalScore - a.totalScore);
+
+  let html = `<div style="overflow-x:auto"><table class="rekap-table">
+    <thead><tr>
+      <th style="width:40px">Rank</th>
+      <th>Nama</th>
+      <th>${type === 'arco' ? 'Area' : 'Toko / Kode'}</th>
+      ${type === 'sl' ? '<th>ARCO</th>' : ''}
+      <th>Periode</th>
+      <th>Evaluator</th>
+      <th style="text-align:center">Skor</th>
+      <th style="text-align:center">Band</th>
+      <th style="width:80px;text-align:center">Aksi</th>
+    </tr></thead><tbody>`;
+
+  sorted.forEach((ev, idx) => {
+    const rankClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
+    const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1);
+    const bandColors = {
+      outstanding: { bg: '#fef9c3', color: '#92400e' },
+      baik: { bg: '#dcfce7', color: '#15803d' },
+      cukup: { bg: '#fef3c7', color: '#b45309' },
+      kurang: { bg: '#fee2e2', color: '#dc2626' }
+    };
+    const bc = bandColors[ev.band];
+    const bandLabels = { outstanding: '⭐ Outstanding', baik: '✅ Baik', cukup: '⚠️ Cukup', kurang: '🚨 Perlu Perbaikan' };
+
+    html += `<tr>
+      <td><span class="rank-badge ${rankClass}">${rankIcon}</span></td>
+      <td><strong>${ev.nama}</strong></td>
+      <td>${type === 'arco' ? (ev.area || '—') : `${ev.toko || '—'}${ev.kode ? ' <span style="color:var(--muted);font-size:11px">('+ev.kode+')</span>' : ''}`}</td>
+      ${type === 'sl' ? `<td>${ev.arco || '—'}</td>` : ''}
+      <td>${formatPeriode(ev.periode)}</td>
+      <td>${ev.evaluator}</td>
+      <td style="text-align:center">
+        <span class="score-chip" style="background:${bc.bg};color:${bc.color}">
+          ${ev.totalScore}
+        </span>
+      </td>
+      <td style="text-align:center">
+        <span class="score-chip" style="background:${bc.bg};color:${bc.color};font-size:11px">
+          ${bandLabels[ev.band]}
+        </span>
+      </td>
+      <td style="text-align:center">
+        <button class="btn btn-danger btn-sm" onclick="deleteEval('${type}', ${ev.id})" title="Hapus">🗑️</button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+
+  // Summary per band
+  const bands = { outstanding: 0, baik: 0, cukup: 0, kurang: 0 };
+  data.forEach(ev => bands[ev.band]++);
+  html += `<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+    <span style="font-size:12px;color:var(--muted);align-self:center;font-weight:700">DISTRIBUSI:</span>
+    <span class="score-chip" style="background:#fef9c3;color:#92400e">⭐ Outstanding: ${bands.outstanding}</span>
+    <span class="score-chip" style="background:#dcfce7;color:#15803d">✅ Baik: ${bands.baik}</span>
+    <span class="score-chip" style="background:#fef3c7;color:#b45309">⚠️ Cukup: ${bands.cukup}</span>
+    <span class="score-chip" style="background:#fee2e2;color:#dc2626">🚨 Perlu Perbaikan: ${bands.kurang}</span>
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+function renderActions() {
+  const arcoData = JSON.parse(localStorage.getItem('makmur_arco_evals') || '[]');
+  const slData = JSON.parse(localStorage.getItem('makmur_sl_evals') || '[]');
+  const allData = [...arcoData, ...slData];
+
+  const outstanding = allData.filter(e => e.band === 'outstanding');
+  const kurang = allData.filter(e => e.band === 'kurang');
+  const cukup = allData.filter(e => e.band === 'cukup');
+
+  const card = document.getElementById('rekap-actions-card');
+  const content = document.getElementById('rekap-actions-content');
+
+  if (allData.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  let html = '';
+
+  if (outstanding.length > 0) {
+    html += `<div class="action-box outstanding" style="margin-bottom:14px">
+      <h4>🏆 APRESIASI — Perlu Mendapat Penghargaan (${outstanding.length} orang)</h4>
+      <ul class="action-list">
+        ${outstanding.map(e => `<li><strong>${e.nama}</strong> ${e.type === 'arco' ? `(ARCO — ${e.area || ''})` : `(SL — ${e.toko || ''})`} — Skor: <strong>${e.totalScore}</strong> | Periode: ${formatPeriode(e.periode)}</li>`).join('')}
+      </ul>
+      <div style="margin-top:10px;padding:8px 12px;background:rgba(255,255,255,0.6);border-radius:8px;font-size:12px">
+        <strong>Rekomendasi Tindakan:</strong> Nominasikan dalam program Best Performer bulan ini. Berikan penghargaan di forum team atau town hall.
+      </div>
+    </div>`;
+  }
+
+  if (kurang.length > 0) {
+    html += `<div class="action-box kurang" style="margin-bottom:14px">
+      <h4>🚨 CORRECTIVE ACTION PLAN WAJIB — Kinerja Di Bawah Standar (${kurang.length} orang)</h4>
+      <ul class="action-list">
+        ${kurang.map(e => `<li><strong>${e.nama}</strong> ${e.type === 'arco' ? `(ARCO — ${e.area || ''})` : `(SL — ${e.toko || ''})`} — Skor: <strong>${e.totalScore}</strong> | Periode: ${formatPeriode(e.periode)}</li>`).join('')}
+      </ul>
+      <div style="margin-top:10px;padding:8px 12px;background:rgba(255,255,255,0.6);border-radius:8px;font-size:12px">
+        <strong>Langkah Segera:</strong> Buat Corrective Action Plan (CAP) tertulis dalam 3 hari kerja. Eskalasikan ke HR untuk pendampingan.
+      </div>
+    </div>`;
+  }
+
+  if (cukup.length > 0) {
+    html += `<div class="action-box cukup" style="margin-bottom:14px">
+      <h4>⚠️ IMPROVEMENT PLAN — Perlu Coaching Intensif (${cukup.length} orang)</h4>
+      <ul class="action-list">
+        ${cukup.map(e => `<li><strong>${e.nama}</strong> ${e.type === 'arco' ? `(ARCO — ${e.area || ''})` : `(SL — ${e.toko || ''})`} — Skor: <strong>${e.totalScore}</strong> | Periode: ${formatPeriode(e.periode)}</li>`).join('')}
+      </ul>
+      <div style="margin-top:10px;padding:8px 12px;background:rgba(255,255,255,0.6);border-radius:8px;font-size:12px">
+        <strong>Langkah Segera:</strong> Buat PIP (Performance Improvement Plan) dan jadwalkan coaching mingguan bersama ARCO / OM.
+      </div>
+    </div>`;
+  }
+
+  content.innerHTML = html;
+}
+
+function updateKPI() {
+  const arcoData = JSON.parse(localStorage.getItem('makmur_arco_evals') || '[]');
+  const slData = JSON.parse(localStorage.getItem('makmur_sl_evals') || '[]');
+
+  const setKPI = (id, val, color) => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = val; if (color) el.style.color = color; }
+  };
+
+  setKPI('kpi-total-arco', arcoData.length);
+  setKPI('kpi-total-sl', slData.length);
+
+  if (arcoData.length > 0) {
+    const avg = arcoData.reduce((a, e) => a + e.totalScore, 0) / arcoData.length;
+    setKPI('kpi-avg-arco', avg.toFixed(1), getColor(avg));
+  } else {
+    setKPI('kpi-avg-arco', '—', '#94a3b8');
+  }
+
+  if (slData.length > 0) {
+    const avg = slData.reduce((a, e) => a + e.totalScore, 0) / slData.length;
+    setKPI('kpi-avg-sl', avg.toFixed(1), getColor(avg));
+  } else {
+    setKPI('kpi-avg-sl', '—', '#94a3b8');
+  }
+}
+
+function updateNavBadge() {
+  const arco = JSON.parse(localStorage.getItem('makmur_arco_evals') || '[]').length;
+  const sl = JSON.parse(localStorage.getItem('makmur_sl_evals') || '[]').length;
+  const badge = document.getElementById('nav-count-rekap');
+  if (badge) { badge.textContent = arco + sl; badge.className = 'nav-badge' + ((arco + sl) > 0 ? ' success' : ''); }
+}
+
+// ── DELETE & CLEAR ────────────────────────────────────
+function deleteEval(type, id) {
+  if (!confirm('Hapus evaluasi ini?')) return;
+  const key = type === 'arco' ? 'makmur_arco_evals' : 'makmur_sl_evals';
+  const data = JSON.parse(localStorage.getItem(key) || '[]').filter(e => e.id !== id);
+  localStorage.setItem(key, JSON.stringify(data));
+  renderRekap(); updateNavBadge();
+}
+
+function clearAll(type) {
+  const label = type === 'arco' ? 'ARCO' : 'Store Leader';
+  if (!confirm(`Hapus SEMUA data evaluasi ${label}? Tindakan ini tidak dapat dibatalkan.`)) return;
+  localStorage.removeItem(type === 'arco' ? 'makmur_arco_evals' : 'makmur_sl_evals');
+  renderRekap(); updateNavBadge();
+}
+
+// ── EXPORT CSV ───────────────────────────────────────
+function exportCSV(type) {
+  const key = type === 'arco' ? 'makmur_arco_evals' : 'makmur_sl_evals';
+  const data = JSON.parse(localStorage.getItem(key) || '[]');
+  if (data.length === 0) { alert('Tidak ada data untuk diekspor.'); return; }
+
+  const rows = [type === 'arco'
+    ? ['Periode','Nama ARCO','Area','Jumlah Toko','Evaluator','Tanggal','Total Skor','Band','Catatan','Tindak Lanjut']
+    : ['Periode','Nama Store Leader','Toko','Kode Toko','ARCO','Evaluator','Tanggal','Total Skor','Band','Catatan','Tindak Lanjut']
+  ];
+
+  data.sort((a,b) => b.totalScore - a.totalScore).forEach(ev => {
+    const row = [ev.periode, ev.nama];
+    if (type === 'arco') { row.push(ev.area || '', ev.jumlahToko || ''); }
+    else { row.push(ev.toko || '', ev.kode || '', ev.arco || ''); }
+    row.push(ev.evaluator, ev.tanggal, ev.totalScore, ev.band, ev.catatan || '', ev.tindakLanjut || '');
+    rows.push(row);
+  });
+
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `evaluasi-${type}-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ── RESET FORM ───────────────────────────────────────
+function resetForm(formId) {
+  if (!confirm('Reset semua isian form? Data yang belum disimpan akan hilang.')) return;
+  document.querySelectorAll(`#tab-${formId} input[type="radio"]`).forEach(r => r.checked = false);
+  document.querySelectorAll(`#tab-${formId} input[type="text"], #tab-${formId} input[type="number"], #tab-${formId} input[type="month"], #tab-${formId} input[type="date"], #tab-${formId} textarea`).forEach(el => el.value = '');
+  // Reset scores display
+  const cats = formId === 'arco' ? ARCO_CATEGORIES : SL_CATEGORIES;
+  cats.forEach((_, ci) => {
+    const el = document.getElementById(`${formId}-cat-score-${ci}`);
+    if (el) { el.textContent = '—'; el.style.color = '#94a3b8'; }
+  });
+  const totalEl = document.getElementById(`${formId}-total-score`);
+  if (totalEl) totalEl.textContent = '—';
+  const progressEl = document.getElementById(`${formId}-progress`);
+  if (progressEl) { progressEl.style.width = '0%'; progressEl.style.background = '#94a3b8'; }
+  const circleEl = document.getElementById(`${formId}-score-circle`);
+  if (circleEl) { circleEl.style.color = '#94a3b8'; circleEl.style.borderColor = '#94a3b8'; }
+  const bandEl = document.getElementById(`${formId}-band`);
+  if (bandEl) bandEl.innerHTML = '<span class="band-badge" style="background:#f1f5f9;color:#94a3b8;border:2px solid #e2e8f0">⏳ Belum dihitung</span>';
+  const actionEl = document.getElementById(`${formId}-action`);
+  if (actionEl) actionEl.innerHTML = '';
+  // Set default date
+  document.getElementById(`${formId}-tanggal`).value = new Date().toISOString().slice(0,10);
+  document.getElementById(`${formId}-periode`).value = new Date().toISOString().slice(0,7);
+}
+
+// ── PRINT ────────────────────────────────────────────
+function printForm(formId) {
+  // Show only this tab for printing
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + formId).style.display = 'block';
+  window.print();
+  // Restore
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-rekap').style.display = 'none';
+  document.getElementById('tab-' + formId).style.display = 'block';
+  // Make sure active tab is back
+  switchTab(formId);
+}
+
+// ── NAVIGATION ───────────────────────────────────────
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  document.getElementById('navbtn-' + tabId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── CLOCK ────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const dateEl = document.getElementById('hdr-date');
+  const timeEl = document.getElementById('hdr-time');
+  if (dateEl) dateEl.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  if (timeEl) timeEl.textContent = now.toTimeString().slice(0,8);
+}
+
+// ── HELPERS ──────────────────────────────────────────
+function formatPeriode(p) {
+  if (!p) return '—';
+  const [y, m] = p.split('-');
+  const months = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${months[parseInt(m)]} ${y}`;
+}
+
+// ── INIT ─────────────────────────────────────────────
+(function init() {
+  buildForm('arco', ARCO_CATEGORIES);
+  buildForm('sl', SL_CATEGORIES);
+
+  // Set today's date
+  const today = new Date().toISOString().slice(0,10);
+  const thisMon = new Date().toISOString().slice(0,7);
+  ['arco-tanggal','sl-tanggal'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = today;
+  });
+  ['arco-periode','sl-periode'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = thisMon;
+  });
+
+  renderRekap();
+  updateNavBadge();
+  updateClock();
+  setInterval(updateClock, 1000);
+})();
+
+</script>
+</body>
+</html>
