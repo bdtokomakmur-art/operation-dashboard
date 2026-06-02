@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Penilaian Toko ARCO — Makmur Elite</title>
+  <meta name="theme-color" content="#1e40af">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .step { display: none; }
+    .step.active { display: block; }
+    .r-btn { flex:1; padding:10px 4px; border-radius:10px; border:2px solid; font-size:15px; font-weight:800; cursor:pointer; transition:all .15s; text-align:center; }
+    .r-btn[data-val="1"] { border-color:#fca5a5; color:#dc2626; background:#fff5f5; }
+    .r-btn[data-val="2"] { border-color:#fdba74; color:#ea580c; background:#fff7ed; }
+    .r-btn[data-val="3"] { border-color:#fde047; color:#ca8a04; background:#fefce8; }
+    .r-btn[data-val="4"] { border-color:#93c5fd; color:#2563eb; background:#eff6ff; }
+    .r-btn[data-val="5"] { border-color:#86efac; color:#16a34a; background:#f0fdf4; }
+    .r-btn.active-1 { background:#fca5a5 !important; color:#7f1d1d !important; }
+    .r-btn.active-2 { background:#fdba74 !important; color:#7c2d12 !important; }
+    .r-btn.active-3 { background:#fde047 !important; color:#713f12 !important; }
+    .r-btn.active-4 { background:#93c5fd !important; color:#1e3a8a !important; }
+    .r-btn.active-5 { background:#86efac !important; color:#14532d !important; }
+    .badge-critical { display:inline-flex; align-items:center; gap:3px; background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; white-space:nowrap; }
+    .badge-major    { display:inline-flex; align-items:center; gap:3px; background:#fef9c3; color:#92400e; border:1px solid #fde047; font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; white-space:nowrap; }
+    .ev-box       { display:none; margin-top:10px; background:#fef2f2; border:1px solid #fca5a5; border-radius:10px; padding:10px; }
+    .ev-box.major { background:#fffbeb; border-color:#fde047; }
+    .ev-box.show  { display:block; }
+    .photo-box { border:2px dashed #d1d5db; border-radius:10px; min-height:70px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; position:relative; }
+    .photo-box img { width:100%; height:100px; object-fit:cover; }
+    .kpi-bar      { height:10px; border-radius:5px; background:#e5e7eb; overflow:hidden; }
+    .kpi-bar-fill { height:100%; border-radius:5px; transition:width .5s ease; }
+    .store-andalan { background:linear-gradient(135deg,#d1fae5,#a7f3d0); border:2px solid #34d399; }
+    .store-baik    { background:linear-gradient(135deg,#dbeafe,#bfdbfe); border:2px solid #60a5fa; }
+    .store-cukup   { background:linear-gradient(135deg,#fef9c3,#fde68a); border:2px solid #fbbf24; }
+    .store-kritis  { background:linear-gradient(135deg,#fee2e2,#fecaca); border:2px solid #f87171; }
+    .yn-btn { flex:1; padding:12px 8px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-weight:700; cursor:pointer; text-align:center; transition:all .15s; color:#6b7280; background:#fff; }
+    .yn-btn.sel-ya    { border-color:#16a34a; background:#d1fae5; color:#14532d; }
+    .yn-btn.sel-tidak { border-color:#dc2626; background:#fee2e2; color:#7f1d1d; }
+    .ic-btn { flex:1; padding:11px 4px; border-radius:10px; border:2px solid #e5e7eb; font-size:13px; font-weight:700; cursor:pointer; text-align:center; transition:all .15s; color:#6b7280; background:#fff; }
+    .ic-btn.sel { border-color:#2563eb; background:#eff6ff; color:#1e40af; }
+    .action-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; position:relative; }
+    .action-card.priority-critical { border-left:4px solid #dc2626; }
+    .action-card.priority-major    { border-left:4px solid #f59e0b; }
+    .prev-action-item { display:flex; align-items:flex-start; gap:10px; padding:10px; background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb; }
+    .prev-action-item.done { background:#f0fdf4; border-color:#bbf7d0; }
+    .prev-action-chk { width:22px; height:22px; border-radius:6px; border:2px solid #d1d5db; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:14px; margin-top:1px; }
+    .prev-action-chk.checked { background:#16a34a; border-color:#16a34a; color:#fff; }
+    .delta-up   { color:#16a34a; font-weight:700; }
+    .delta-down { color:#dc2626; font-weight:700; }
+    .delta-same { color:#6b7280; font-weight:600; }
+    .critical-alert { background:#fef2f2; border:1px solid #fca5a5; border-radius:10px; padding:12px; }
+    .kond-box        { display:none; margin-top:10px; background:#eff6ff; border:1px solid #93c5fd; border-radius:10px; padding:10px; }
+    .kond-box.show   { display:block; }
+    .photo-label-before { font-size:11px; font-weight:700; color:#dc2626; margin-bottom:4px; display:block; }
+    .photo-label-after  { font-size:11px; font-weight:700; color:#16a34a; margin-bottom:4px; display:block; }
+    .photo-label-kond   { font-size:11px; font-weight:700; color:#2563eb; margin-bottom:4px; display:block; }
+    .star-row   { display:flex; align-items:center; gap:1px; margin-top:8px; flex-wrap:nowrap; }
+    .star-btn   { font-size:30px; cursor:pointer; transition:transform .1s, color .12s; color:#e5e7eb; line-height:1; user-select:none; flex-shrink:0; padding:2px; }
+    .star-btn:hover      { transform:scale(1.2); color:#fbbf24; }
+    .star-btn.filled     { color:#fbbf24; }
+    .star-score-badge    { margin-left:8px; font-size:12px; font-weight:700; padding:2px 7px; border-radius:8px; background:#f3f4f6; color:#374151; white-space:nowrap; }
+    .photo-gallery   { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; min-height:88px; align-items:flex-start; }
+    .photo-thumb     { position:relative; width:80px; height:80px; border-radius:8px; overflow:hidden; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+    .photo-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .photo-thumb-del { position:absolute; top:3px; right:3px; width:20px; height:20px; background:rgba(0,0,0,.65); color:#fff; border-radius:50%; font-size:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; line-height:1; font-weight:700; }
+    .photo-thumb-del:hover { background:rgba(220,38,38,.85); }
+    .photo-add-btn   { width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; color:#9ca3af; font-size:11px; gap:3px; flex-shrink:0; transition:all .15s; user-select:none; }
+    .photo-add-btn:hover { border-color:#60a5fa; color:#2563eb; background:#eff6ff; }
+    .photo-add-btn .add-icon { font-size:22px; line-height:1; }
+    .autofill-badge { display:inline-flex; align-items:center; gap:4px; background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; font-size:11px; font-weight:700; padding:3px 8px; border-radius:20px; }
+    .autofill-readonly { background:#f0fdf4 !important; border-color:#86efac !important; }
+    .fetch-loading { display:none; }
+    .fetch-loading.show { display:flex; }
+    .sl-card { background:#fff; border-radius:12px; padding:14px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+    /* Camera-only badge */
+    .camera-only-badge { display:inline-flex; align-items:center; gap:4px; background:#1e40af; color:#fff; font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<div class="bg-blue-700 text-white px-4 pt-8 pb-5">
+  <a href="index.html" class="text-blue-200 text-sm mb-3 block">← Kembali</a>
+  <h1 class="text-xl font-bold">⭐ Penilaian Toko (ARCO)</h1>
+  <p class="text-blue-200 text-sm mt-0.5">Enterprise Grade — Performance Driver System</p>
+  <div class="mt-4 bg-blue-800 rounded-full h-2">
+    <div id="progress-bar" class="bg-blue-300 h-2 rounded-full transition-all duration-300" style="width:7.7%"></div>
+  </div>
+  <div id="step-label" class="text-blue-300 text-xs mt-1 text-right">Langkah 1 dari 12</div>
+</div>
+<div class="px-4 py-6 max-w-lg mx-auto">
+
+<!-- STEP 1 -->
+<div class="step active" id="step-1">
+  <h2 class="text-lg font-bold text-gray-800 mb-4">Identitas Kunjungan</h2>
+  <div class="space-y-4">
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1">Nama ARCO <span class="text-red-500">*</span></label>
+      <select id="arco" onchange="filterTokoByArco()" class="w-full border border-gray-300 rounded-xl px-3 py-3 bg-white text-sm focus:ring-2 focus:ring-blue-500">
+        <option value="">— Pilih ARCO —</option>
+        <option>ALI</option><option>ARI</option><option>AYU</option>
+        <option>CIPTO</option><option>DEWI</option><option>HARTONO</option>
+        <option>NIA</option><option>NORA</option><option>TONI</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1">Toko yang Dikunjungi <span class="text-red-500">*</span></label>
+      <select id="kode_toko" onchange="onTokoChange()" class="w-full border border-gray-300 rounded-xl px-3 py-3 bg-white text-sm focus:ring-2 focus:ring-blue-500">
+        <option value="">— Pilih toko dulu —</option>
+      </select>
+    </div>
+    <div id="fetch-status" class="hidden">
+      <div id="fetch-loading" class="fetch-loading items-center gap-2 text-xs text-blue-600 py-2">
+        <div class="animate-spin text-base">⏳</div>
+        <span>Memuat data kunjungan terakhir...</span>
+      </div>
+      <div id="prev-visit-card" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-bold text-blue-800">📈 Data Kunjungan Terakhir</span>
+          <span id="pv-date" class="text-xs text-blue-600"></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div><div class="text-xs text-gray-500">Skor</div><div id="pv-skor-prev" class="text-xl font-black text-blue-800"></div></div>
+          <div><div class="text-xs text-gray-500">Grade</div><div id="pv-grade-prev" class="text-xl font-black"></div></div>
+          <div class="flex-1"><div class="text-xs text-gray-500">Kategori Terakhir</div><div id="pv-class-prev" class="text-sm font-bold"></div></div>
+        </div>
+        <p class="text-xs text-blue-500 mt-2">✅ Skor otomatis diisi ke Trend Tracking</p>
+      </div>
+      <div id="prev-no-data" class="hidden bg-gray-50 border border-gray-200 rounded-xl p-3">
+        <p class="text-xs text-gray-500">📋 Tidak ada data kunjungan sebelumnya — ini kunjungan pertama untuk toko ini.</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Tanggal <span class="text-red-500">*</span></label>
+        <input id="tanggal" type="date" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Jam Kunjungan</label>
+        <input id="jam_kunjungan" type="time" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+      </div>
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1">Kunjungan ke- (bulan ini)</label>
+      <input id="kunjungan_ke" type="number" min="1" max="10" value="1" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+    </div>
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+      <div class="flex items-center gap-2 mb-2"><span>📈</span><h3 class="text-sm font-bold text-blue-800">Trend Tracking</h3></div>
+      <div id="skor-autofill-display" class="hidden mb-2">
+        <div class="flex items-center justify-between">
+          <span class="autofill-badge">✅ Auto-terisi dari sistem</span>
+          <button onclick="enableManualSkor()" class="text-xs text-blue-600 underline">✎ Edit manual</button>
+        </div>
+        <div id="skor-autofill-value" class="text-2xl font-black text-green-700 mt-1"></div>
+      </div>
+      <div id="skor-manual-wrap">
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Skor kunjungan sebelumnya <span class="text-gray-400 font-normal">(jika tidak ada, kosongkan)</span></label>
+        <input id="skor_sebelumnya" type="number" min="1" max="5" step="0.01" placeholder="mis. 3.45" class="w-full border border-blue-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-blue-500">
+      </div>
+      <p class="text-xs text-blue-500 mt-1">Delta (+/−) otomatis dihitung di ringkasan akhir</p>
+    </div>
+  </div>
+  <button onclick="goStep(2)" class="mt-6 w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm">Mulai Penilaian →</button>
+</div>
+
+<!-- STEPS 2-6: Pilar A-E -->
+<div class="step" id="step-2">
+  <div class="flex items-center justify-between mb-1">
+    <h2 class="text-lg font-bold text-gray-800">Pilar A — Kebersihan</h2>
+    <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-bold">20%</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-2">Tap bintang untuk memberi nilai (★ = kurang, ★★★★★ = sempurna)</p>
+  <div class="flex gap-2 flex-wrap mb-4">
+    <span class="badge-critical">🔴 Critical — foto+catatan WAJIB jika ≤2</span>
+    <span class="badge-major">🟡 Major — catatan disarankan jika ≤2</span>
+  </div>
+  <div id="pilar-A-container" class="space-y-3"></div>
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <button onclick="goStep(1)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Kembali</button>
+    <button onclick="goNextPilar('A',3)" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Pilar B →</button>
+  </div>
+</div>
+
+<div class="step" id="step-3">
+  <div class="flex items-center justify-between mb-1">
+    <h2 class="text-lg font-bold text-gray-800">Pilar B — Display & Barang</h2>
+    <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-bold">25%</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-2">Tap bintang untuk memberi nilai (★ = kurang, ★★★★★ = sempurna)</p>
+  <div class="flex gap-2 flex-wrap mb-4">
+    <span class="badge-critical">🔴 Critical — foto+catatan WAJIB jika ≤2</span>
+    <span class="badge-major">🟡 Major — catatan disarankan jika ≤2</span>
+  </div>
+  <div id="pilar-B-container" class="space-y-3"></div>
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <button onclick="goStep(2)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Kembali</button>
+    <button onclick="goNextPilar('B',4)" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Pilar C →</button>
+  </div>
+</div>
+
+<div class="step" id="step-4">
+  <div class="flex items-center justify-between mb-1">
+    <h2 class="text-lg font-bold text-gray-800">Pilar C — Pelayanan & SDM</h2>
+    <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-bold">20%</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-2">Tap bintang untuk memberi nilai (★ = kurang, ★★★★★ = sempurna)</p>
+  <div class="flex gap-2 flex-wrap mb-4">
+    <span class="badge-critical">🔴 Critical — foto+catatan WAJIB jika ≤2</span>
+    <span class="badge-major">🟡 Major — catatan disarankan jika ≤2</span>
+  </div>
+  <div id="pilar-C-container" class="space-y-3"></div>
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <button onclick="goStep(3)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Kembali</button>
+    <button onclick="goNextPilar('C',5)" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Pilar D →</button>
+  </div>
+</div>
+
+<div class="step" id="step-5">
+  <div class="flex items-center justify-between mb-1">
+    <h2 class="text-lg font-bold text-gray-800">Pilar D — Kas & Uang Aman</h2>
+    <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-bold">20%</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-2">Tap bintang untuk memberi nilai (★ = kurang, ★★★★★ = sempurna)</p>
+  <div class="flex gap-2 flex-wrap mb-4">
+    <span class="badge-critical">🔴 Critical — foto+catatan WAJIB jika ≤2</span>
+    <span class="badge-major">🟡 Major — catatan disarankan jika ≤2</span>
+  </div>
+  <div id="pilar-D-container" class="space-y-3"></div>
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <button onclick="goStep(4)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Kembali</button>
+    <button onclick="goNextPilar('D',6)" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Pilar E →</button>
+  </div>
+</div>
+
+<div class="step" id="step-6">
+  <div class="flex items-center justify-between mb-1">
+    <h2 class="text-lg font-bold text-gray-800">Pilar E — Kepemimpinan</h2>
+    <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-bold">15%</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-2">Tap bintang untuk memberi nilai (★ = kurang, ★★★★★ = sempurna)</p>
+  <div class="flex gap-2 flex-wrap mb-4">
+    <span class="badge-critical">🔴 Critical — foto+catatan WAJIB jika ≤2</span>
+    <span class="badge-major">🟡 Major — catatan disarankan jika ≤2</span>
+  </div>
+  <div id="pilar-E-container" class="space-y-3"></div>
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <button onclick="goStep(5)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Kembali</button>
+    <button onclick="goNextPilar('E',7)" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Validasi SL →</button>
+  </div>
+</div>
+
+<!-- STEP 7 -->
+<div class="step" id="step-7">
+  <h2 class="text-lg font-bold text-gray-800 mb-1">✅ Validasi Laporan SL</h2>
+  <p class="text-xs text-gray-400 mb-5">Cek kondisi laporan & tindak lanjut dari kunjungan sebelumnya</p>
+  <div class="space-y-4">
+    <div class="sl-card">
+      <h3 class="text-sm font-bold text-gray-700 mb-3">📋 Tindak Lanjut Kunjungan Sebelumnya</h3>
+      <div id="prev-actions-container">
+        <div id="prev-actions-list" class="space-y-2 mb-3"></div>
+        <div id="closure-manual-wrap">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">% Tindak lanjut yang sudah diselesaikan</label>
+          <div class="flex items-center gap-2">
+            <input id="closure_pct_manual" type="number" min="0" max="100" placeholder="0" oninput="updateClosureManual()" class="w-24 border border-gray-300 rounded-xl px-3 py-2.5 text-sm text-center focus:ring-2 focus:ring-blue-500">
+            <span class="text-sm text-gray-400">%</span>
+          </div>
+          <div id="closure-manual-bar-wrap" class="hidden mt-2">
+            <div class="kpi-bar"><div id="closure-manual-bar" class="kpi-bar-fill bg-blue-400" style="width:0%"></div></div>
+            <p id="closure-manual-label" class="text-xs mt-1 font-bold"></p>
+          </div>
+        </div>
+        <div id="closure-auto-display" class="hidden bg-green-50 border border-green-200 rounded-xl p-3 mt-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-green-800">Closure Rate Otomatis</span>
+            <span id="closure-auto-pct" class="text-lg font-black text-green-700"></span>
+          </div>
+          <div class="kpi-bar mt-2"><div id="closure-auto-bar" class="kpi-bar-fill bg-green-400" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div id="no-prev-visit-msg" class="hidden text-xs text-gray-400 italic">Tidak ada data kunjungan sebelumnya — closure rate N/A</div>
+    </div>
+    <div class="sl-card">
+      <h3 class="text-sm font-bold text-gray-700 mb-3">🔍 Kondisi Toko Hari Ini</h3>
+      <div class="space-y-4">
+        <div>
+          <p class="text-sm font-semibold text-gray-700 mb-2">Laporan harian (Form 1) sudah disubmit hari ini?</p>
+          <div class="flex gap-2">
+            <button class="yn-btn" onclick="setSL('laporan_harian','ya',this)">✅ Sudah</button>
+            <button class="yn-btn" onclick="setSL('laporan_harian','tidak',this)">❌ Belum</button>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-gray-700 mb-2">Kepala Toko hadir saat kunjungan ARCO?</p>
+          <div class="flex gap-2">
+            <button class="yn-btn" onclick="setSL('katoko_hadir','ya',this)">✅ Hadir</button>
+            <button class="yn-btn" onclick="setSL('katoko_hadir','tidak',this)">❌ Tidak Hadir</button>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-gray-700 mb-2">Briefing pagi sudah terlaksana?</p>
+          <div class="flex gap-2">
+            <button class="yn-btn" onclick="setSL('briefing_pagi','ya',this)">✅ Terlaksana</button>
+            <button class="yn-btn" onclick="setSL('briefing_pagi','tidak',this)">❌ Tidak</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <button onclick="goStep(6)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Kembali</button>
+    <button onclick="goStep(8)" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Temuan →</button>
+  </div>
+</div>
+
+<!-- STEP 8 -->
+<div class="step" id="step-8">
+  <h2 class="text-lg font-bold text-gray-800 mb-1">📌 Temuan & Action Items</h2>
+  <p class="text-xs text-gray-400 mb-5">Setiap temuan harus punya PIC + deadline → action bisa di-track</p>
+  <div class="space-y-3" id="action-items-container"></div>
+  <button onclick="addAction()" id="add-action-btn" class="mt-3 w-full border-2 border-dashed border-blue-300 text-blue-600 py-3 rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors">+ Tambah Temuan / Action Item</button>
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <button onclick="goStep(7)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Kembali</button>
+    <button onclick="goStep(9)" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Data Anchor →</button>
+  </div>
+</div>
+
+<!-- STEP 9 — DATA ANCHOR + FOTO (MULTI, KAMERA ONLY, COMPRESSED) -->
+<div class="step" id="step-9">
+  <h2 class="text-lg font-bold text-gray-800 mb-4">Data Anchor & Foto</h2>
+  <div class="space-y-4">
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <h3 class="text-sm font-bold text-gray-600 mb-3 uppercase tracking-wide">📊 Data Anchor</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Omzet saat kunjungan (Rp)</label>
+          <input id="omzet_anchor" type="number" placeholder="0" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Setoran on-time 7 hari terakhir (%)</label>
+          <input id="setoran_ontime" type="number" min="0" max="100" placeholder="100" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Selisih kas akumulasi 7 hari (Rp)</label>
+          <input id="selisih_kas_7hari" type="number" placeholder="0" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wide">📸 Foto Kunjungan</h3>
+        <span class="camera-only-badge">📷 Kamera Langsung</span>
+      </div>
+      <p class="text-xs text-gray-400 mb-1">Foto kondisi umum, temuan, situasi toko — boleh lebih dari satu.</p>
+      <p class="text-xs text-orange-500 font-semibold mb-3">⚠️ Foto hanya bisa diambil langsung dari kamera. Upload dari galeri tidak diizinkan.</p>
+      <div class="photo-gallery" id="gal-main">
+        <div class="photo-add-btn" onclick="document.getElementById('inp-gal-main').click()">
+          <div class="add-icon">📷</div><div>Ambil Foto</div>
+        </div>
+      </div>
+      <input id="inp-gal-main" type="file" accept="image/*" capture="environment" class="hidden"
+        onchange="addToGallery(this,'gal-main')">
+      <p class="text-xs text-gray-400 mt-2">Tap <em>Ambil Foto</em> lagi untuk foto ke-2, ke-3, dst. <strong>Min. 1 foto wajib.</strong></p>
+      <p class="text-xs text-blue-500 mt-1">💡 Foto otomatis dikompres ≤500 KB — kualitas tetap tajam.</p>
+    </div>
+  </div>
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <button onclick="goStep(8)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Kembali</button>
+    <button onclick="goStep9to10()" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">KPI ARCO →</button>
+  </div>
+</div>
+<!-- STEP 10 -->
+<div class="step" id="step-10">
+  <h2 class="text-lg font-bold text-gray-800 mb-1">📊 KPI ARCO</h2>
+  <p class="text-xs text-gray-400 mb-5">Dihitung otomatis — bukan manual. ARCO = performance driver.</p>
+  <div class="space-y-4">
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2"><span>📈</span><h3 class="text-sm font-bold text-gray-700">Improvement Rate Toko Ini</h3></div>
+        <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">AUTO</span>
+      </div>
+      <div id="kpi-improvement-display" class="bg-gray-50 rounded-xl p-3 text-center">
+        <div id="kpi-improvement-value" class="text-2xl font-black text-gray-700">—</div>
+        <div id="kpi-improvement-desc"  class="text-xs text-gray-500 mt-1">Isi skor sebelumnya di Step 1</div>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2"><span>✅</span><h3 class="text-sm font-bold text-gray-700">Closure Rate Temuan</h3></div>
+        <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">AUTO</span>
+      </div>
+      <div id="kpi-closure-display" class="bg-gray-50 rounded-xl p-3 text-center">
+        <div id="kpi-closure-value" class="text-2xl font-black text-gray-700">—</div>
+        <div id="kpi-closure-desc"  class="text-xs text-gray-500 mt-1">Dari checklist tindak lanjut di Step 7</div>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <div class="flex items-center gap-2 mb-2"><span>💬</span><h3 class="text-sm font-bold text-gray-700">Catatan Coaching untuk Kepala Toko</h3></div>
+      <textarea id="catatan_coaching" rows="3" placeholder="Fokus coaching utama yang disampaikan langsung ke Kepala Toko..." class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+    </div>
+  </div>
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <button onclick="goStep(9)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Kembali</button>
+    <button onclick="goStep(11)" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Visit Impact →</button>
+  </div>
+</div>
+
+<!-- STEP 11 -->
+<div class="step" id="step-11">
+  <h2 class="text-lg font-bold text-gray-800 mb-1">🎯 Visit Impact Check</h2>
+  <p class="text-xs text-gray-400 mb-5">Ukur <strong>ACTION</strong>, bukan perasaan. 3 pertanyaan, jawaban konkret.</p>
+  <div class="space-y-5">
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <p class="text-sm font-semibold text-gray-800 mb-1">1. Ada improvement langsung yang terlihat saat kunjungan ini?</p>
+      <p class="text-xs text-gray-400 mb-3">Contoh: rak dirapikan, expired diambil, kasir memperbaiki cara salam</p>
+      <div class="flex gap-2">
+        <button class="yn-btn" onclick="setImpact('improvement_langsung','ya',this)">✅ Ya, ada langsung</button>
+        <button class="yn-btn" onclick="setImpact('improvement_langsung','tidak',this)">❌ Tidak ada</button>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <p class="text-sm font-semibold text-gray-800 mb-1">2. Berapa issue yang diselesaikan langsung saat kunjungan?</p>
+      <p class="text-xs text-gray-400 mb-3">Diselesaikan = solved on the spot, bukan dicatat untuk follow-up</p>
+      <div class="flex gap-2 mb-3">
+        <button class="ic-btn" onclick="setImpact('issue_diselesaikan','0',this)">0</button>
+        <button class="ic-btn" onclick="setImpact('issue_diselesaikan','1-2',this)">1–2</button>
+        <button class="ic-btn" onclick="setImpact('issue_diselesaikan','>3',this)">≥ 3</button>
+      </div>
+      <div id="issue-detail-wrap" class="hidden">
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Sebutkan issue apa saja yang diselesaikan:</label>
+        <textarea id="issue_detail" rows="3" placeholder="1. ..." class="w-full border border-blue-200 rounded-lg px-2 py-1.5 text-xs resize-none focus:ring-2 focus:ring-blue-500"></textarea>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <p class="text-sm font-semibold text-gray-800 mb-1">3. Apakah Store Leader di-coaching secara langsung?</p>
+      <p class="text-xs text-gray-400 mb-3">Coaching = tatap muka, ada feedback spesifik yang diberikan ke SL</p>
+      <div class="flex gap-2">
+        <button class="yn-btn" onclick="setImpact('sl_dicoaching','ya',this)">✅ Ya, di-coaching</button>
+        <button class="yn-btn" onclick="setImpact('sl_dicoaching','tidak',this)">❌ Tidak sempat</button>
+      </div>
+    </div>
+    <div id="impact-score-card" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+      <p class="text-xs text-blue-600 font-semibold mb-1">Visit Effectiveness Score</p>
+      <div id="impact-score-value" class="text-3xl font-black text-blue-800"></div>
+      <p id="impact-score-desc" class="text-xs text-blue-600 mt-1"></p>
+    </div>
+  </div>
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <button onclick="goStep(10)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Kembali</button>
+    <button onclick="showPreview()" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Lihat Skor →</button>
+  </div>
+</div>
+
+<!-- STEP 12 -->
+<div class="step" id="step-12">
+  <h2 class="text-lg font-bold text-gray-800 mb-4">🏷️ Ringkasan & Klasifikasi Toko</h2>
+  <div class="bg-white rounded-2xl shadow-sm p-5 mb-4">
+    <div id="pv-store-class" class="rounded-2xl p-5 text-center mb-5">
+      <div id="pv-class-icon"  class="text-5xl mb-2"></div>
+      <div id="pv-class-label" class="text-3xl font-black mb-1"></div>
+      <div id="pv-class-desc"  class="text-sm opacity-75"></div>
+    </div>
+    <div class="text-center mb-4 pb-4 border-b border-gray-100">
+      <div class="flex items-center justify-center gap-4">
+        <div><div id="pv-grade" class="text-5xl font-black"></div><div class="text-xs text-gray-400">Grade</div></div>
+        <div><div id="pv-skor"  class="text-2xl font-bold text-gray-800"></div><div id="pv-delta" class="text-sm mt-0.5 min-h-[18px]"></div></div>
+      </div>
+      <div id="pv-toko" class="text-sm text-gray-500 mt-2"></div>
+    </div>
+    <div id="pv-critical-box" class="critical-alert mb-4 hidden">
+      <p class="text-xs font-bold text-red-700 mb-2">🔴 Temuan Critical — Perlu Perhatian Segera:</p>
+      <div id="pv-critical-list" class="space-y-1"></div>
+    </div>
+    <div class="space-y-2 mb-3" id="pv-pilars"></div>
+    <div id="pv-kpi" class="border-t border-gray-100 pt-3 mt-2 space-y-1"></div>
+  </div>
+  <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4 text-sm text-yellow-800">
+    ⚠️ Cek kembali sebelum kirim. Penilaian yang sudah dikirim tidak dapat diubah.
+  </div>
+  <div class="grid grid-cols-2 gap-3">
+    <button onclick="goStep(11)" class="border border-gray-300 text-gray-600 py-3 rounded-xl font-semibold text-sm">← Koreksi</button>
+    <button onclick="submitForm()" id="submit-btn" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">✅ Kirim Penilaian</button>
+  </div>
+</div>
+
+<!-- STEP 13 -->
+<div class="step" id="step-13">
+  <div class="text-center py-6">
+    <div class="text-6xl mb-3">✅</div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-1">Penilaian Terkirim!</h2>
+    <p class="text-gray-500 text-sm mb-6" id="res-id"></p>
+    <div class="bg-white rounded-2xl shadow p-5 mb-6">
+      <div id="res-store-class" class="rounded-2xl p-4 text-center mb-4">
+        <div id="res-class-icon"  class="text-4xl mb-1"></div>
+        <div id="res-class-label" class="text-2xl font-black"></div>
+      </div>
+      <div class="text-center mb-4">
+        <div id="res-grade" class="text-5xl font-black"></div>
+        <div id="res-skor"  class="text-2xl font-bold text-gray-700 mt-1"></div>
+        <div id="res-delta" class="text-sm mt-1 min-h-[18px]"></div>
+      </div>
+      <div class="space-y-2" id="res-pilars"></div>
+    </div>
+    <a href="index.html" class="block w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm">← Kembali ke Menu</a>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div id="loading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-2xl p-8 text-center shadow-xl">
+    <div class="text-4xl mb-3 animate-bounce">📤</div>
+    <div class="font-bold text-gray-800">Mengirim penilaian...</div>
+    <div class="text-sm text-gray-500 mt-1">Mohon tunggu</div>
+  </div>
+</div>
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtmodIRAbpJWo0gjR3S4Fx5ZsS3wyJ7D9TNJIgMgdCP90DaMqTzBXxa98IefONn8v8/exec';
+const DASHBOARD_PASS  = '168168';
+const TOTAL_STEPS     = 13;
+
+let ratings       = {};
+let evidence      = {};
+let prevVisitData = null;
+
+// ─── PHOTO GALLERY STATE ──────────────────────────────────
+// galleries[galleryId] = [base64str, ...]
+const galleries = {};
+
+function getGallery(id) {
+  if (!galleries[id]) galleries[id] = [];
+  return galleries[id];
+}
+
+async function addToGallery(input, galleryId) {
+  const files = Array.from(input.files || []);
+  for (const file of files) {
+    const b64 = await resizeImage(file);
+    getGallery(galleryId).push(b64);
+  }
+  renderGallery(galleryId);
+  input.value = '';
+}
+
+function removeFromGallery(galleryId, idx) {
+  getGallery(galleryId).splice(idx, 1);
+  renderGallery(galleryId);
+}
+
+function renderGallery(galleryId) {
+  const el = document.getElementById(galleryId);
+  if (!el) return;
+  const photos = getGallery(galleryId);
+  el.innerHTML = photos.map((b64, i) => `
+    <div class="photo-thumb">
+      <img src="${b64}" loading="lazy">
+      <div class="photo-thumb-del" onclick="removeFromGallery('${galleryId}',${i})">×</div>
+    </div>`).join('') + `
+    <div class="photo-add-btn" onclick="document.getElementById('inp-${galleryId}').click()">
+      <div class="add-icon">📷</div>
+      <div>${photos.length > 0 ? 'Tambah lagi' : 'Ambil Foto'}</div>
+    </div>`;
+}
+
+// Build gallery HTML block for embedding (capture="environment" → kamera only)
+function galleryHtml(galleryId, label, labelClass) {
+  return `
+    <div class="mb-2">
+      <span class="${labelClass}">${label}</span>
+      <div class="photo-gallery" id="${galleryId}">
+        <div class="photo-add-btn" onclick="document.getElementById('inp-${galleryId}').click()">
+          <div class="add-icon">📷</div><div>Ambil Foto</div>
+        </div>
+      </div>
+      <input id="inp-${galleryId}" type="file" accept="image/*" capture="environment"
+        class="hidden" onchange="addToGallery(this,'${galleryId}')">
+      <p class="text-xs text-gray-400 mt-1">Tap <em>Tambah lagi</em> untuk foto ke-2 dst.</p>
+    </div>`;
+}
+
+let prevActions   = [];
+let actionItems   = [];
+let slValidation  = { laporan_harian: null, katoko_hadir: null, briefing_pagi: null };
+let visitImpact   = { improvement_langsung: null, issue_diselesaikan: null, sl_dicoaching: null };
+let actionCounter = 0;
+
+// ─── PRIORITY MAP ─────────────────────────────────────────
+const PRIORITY = {
+  // Critical — wajib foto + catatan jika ≤2
+  B_oos: 'critical', B_fefo: 'critical',
+  D_selisih: 'critical', D_setoran: 'critical', E_tl_lama: 'critical',
+  // Major — catatan disarankan jika ≤2
+  B_gon_food: 'major', B_gon_nonfood: 'major', B_gon_promo: 'major',
+  B_gon_toys: 'major', B_gon_baby: 'major', B_gon_popok: 'major',
+  B_etalase: 'major', B_fd_sembako: 'major', B_fd_amdk: 'major',
+  B_pop: 'major', B_pricecard: 'major', B_planogram: 'major',
+  C_hadir: 'major', D_admin: 'major', E_omzet: 'major',
+  E_daily: 'major', C_kasir_antri: 'major', C_salam: 'major',
+};
+
+// ─── TOKO BY ARCO ─────────────────────────────────────────
+const TOKO_BY_ARCO = {
+  'NIA'    : [{kode:'M01',nama:'MAKMUR TAMBAHREJO (1)'},{kode:'M02',nama:'MAKMUR KAPAS KRAMPUNG 75E'},{kode:'M05',nama:'MAKMUR TAMBAHREJO (2)'},{kode:'M17',nama:'MAKMUR KARANG ASEM'}],
+  'ARI'    : [{kode:'M03',nama:'MAKMUR USMAN SADAR'},{kode:'M04',nama:'MAKMUR KALIMANTAN GRS'}],
+  'HARTONO': [{kode:'M06',nama:'MAKMUR PUCANG ANOM'},{kode:'M08',nama:'MAKMUR KAPAS KRAMPUNG 138A'},{kode:'M09',nama:'MAKMUR BRATANG GEDE'}],
+  'ALI'    : [{kode:'M07',nama:'MAKMUR PACUAN KUDA'},{kode:'M15',nama:'MAKMUR DUKUH KUPANG'},{kode:'M24',nama:'MAKMUR SEMOLOWARU'},{kode:'M28',nama:'MAKMUR ARYO BEBANGAH'},{kode:'M29',nama:'MAKMUR RAYA SUKODONO'}],
+  'TONI'   : [{kode:'M10',nama:'MAKMUR PANDEGILING'}],
+  'CIPTO'  : [{kode:'M11',nama:'MAKMUR RAYA LONTAR'},{kode:'M12',nama:'MAKMUR SIDOMULYO'},{kode:'M25',nama:'MAKMUR MANUKAN TENGAH'},{kode:'M27',nama:'MAKMUR LIDAH WETAN'},{kode:'M33',nama:'MAKMUR CITRALAND'}],
+  'AYU'    : [{kode:'M14',nama:'MAKMUR RAYA MULYOSARI'},{kode:'M26',nama:'MAKMUR KEPUTIH TEGAL'}],
+  'NORA'   : [{kode:'M19',nama:'MAKMUR RAYA KETINTANG'},{kode:'M21',nama:'MAKMUR DELTA SARI'}],
+  'DEWI'   : [{kode:'M22',nama:'MAKMUR PONDOK JATI'},{kode:'M23',nama:'MAKMUR TAMAN PINANG'},{kode:'M30',nama:'MAKMUR KEMENDUNG'},{kode:'M32',nama:'MAKMUR GRAHA KOTA'}],
+};
+// ─── PILAR DEFINITIONS ────────────────────────────────────
+const PILARS = {
+  A: { label:'Kebersihan', bobot:0.20, items:[
+    { key:'A_parkir',          section:'🅿️ Area Luar & Depan Toko',
+      label:'Area parkir & tenant bersih & rapi',
+      anchor:'5=sempurna | 4=baik | 3=cukup | 2=kurang | 1=kotor' },
+    { key:'A_pintu',           section:'🚪 Area Pintu Masuk',
+      label:'Area pintu masuk pelanggan bersih & rapi',
+      anchor:'5=bersih | 1=kotor/berantakan' },
+    { key:'A_keranjang',       section:'🚪 Area Pintu Masuk',
+      label:'Keranjang belanja & trolly baik & bersih',
+      anchor:'5=semua baik | 1=kotor/rusak' },
+    { key:'A_kasa_jendela',    section:'🚪 Area Pintu Masuk',
+      label:'Kebersihan kasa jendela / di atas pintu (jika ada)',
+      anchor:'5=bersih | 3=cukup kotor | 1=sangat kotor | N/A=tidak ada' },
+    { key:'A_lorong',          section:'🛒 Area Selling Floor',
+      label:'Lorong bersih, tidak ada dus/barang menghalangi',
+      anchor:'5=clear | 1=terblokir' },
+    { key:'A_lantai',          section:'🛒 Area Selling Floor',
+      label:'Tidak ada barang jatuh di bawah gondola',
+      anchor:'5=bersih | 1=banyak barang jatuh' },
+    { key:'A_plafon',          section:'🛒 Area Selling Floor',
+      label:'Plafon bersih (tidak bersawang)',
+      anchor:'5=bersih | 1=banyak sarang laba-laba' },
+    { key:'A_kipas',           section:'🛒 Area Selling Floor',
+      label:'Kebersihan kipas angin',
+      anchor:'5=bersih | 3=sedikit berdebu | 1=sangat kotor/berdebu' },
+    { key:'A_ac',              section:'🛒 Area Selling Floor',
+      label:'Kebersihan AC (jika ada)',
+      anchor:'5=bersih | 3=cukup kotor | 1=sangat kotor | N/A=tidak ada' },
+    { key:'A_gondola_food',    section:'🏪 Area Gondola',
+      label:'Area Gondola Food (bersih dan tidak berdebu)',
+      anchor:'5=tidak ada debu | 4=sedikit | 3=cukup | 2=banyak | 1=sangat berdebu' },
+    { key:'A_gondola_nonfood', section:'🏪 Area Gondola',
+      label:'Area Gondola Non Food (bersih dan tidak berdebu)',
+      anchor:'5=tidak ada debu | 4=sedikit | 3=cukup | 2=banyak | 1=sangat berdebu' },
+    { key:'A_gondola_promo',   section:'🏪 Area Gondola',
+      label:'Area Gondola Promo (bersih dan tidak berdebu)',
+      anchor:'5=tidak ada debu | 4=sedikit | 3=cukup | 2=banyak | 1=sangat berdebu' },
+    { key:'A_gondola_toys',    section:'🏪 Area Gondola',
+      label:'Area Gondola Toys (bersih dan tidak berdebu)',
+      anchor:'5=tidak ada debu | 4=sedikit | 3=cukup | 2=banyak | 1=sangat berdebu' },
+    { key:'A_gondola_baby',    section:'🏪 Area Gondola',
+      label:'Area Gondola Baby (bersih dan tidak berdebu)',
+      anchor:'5=tidak ada debu | 4=sedikit | 3=cukup | 2=banyak | 1=sangat berdebu' },
+    { key:'A_gondola_popok',   section:'🏪 Area Gondola',
+      label:'Area Gondola Popok (bersih dan tidak berdebu)',
+      anchor:'5=tidak ada debu | 4=sedikit | 3=cukup | 2=banyak | 1=sangat berdebu' },
+    { key:'A_etalase',         section:'🏪 Area Gondola',
+      label:'Area Etalase Kaca (bersih, tidak berdebu & bebas sidik jari)',
+      anchor:'5=bersih sempurna | 3=ada noda/sidik jari | 1=sangat kotor' },
+    { key:'A_kasir',           section:'💰 Area Kasir',
+      label:'Area kasir tertata rapi & bersih',
+      anchor:'5=rapi | 1=berantakan' },
+    { key:'A_kulkas',          section:'🧊 Area Kulkas & Pendingin',
+      label:'Kulkas bersih, terisi penuh, display baik',
+      anchor:'5=sempurna | 1=kotor/kosong' },
+    { key:'A_loker',           section:'👔 Area Karyawan',
+      label:'Loker karyawan bersih & rapi',
+      anchor:'5=rapi | 1=berantakan' },
+    { key:'A_gudang',          section:'📦 Area Gudang',
+      label:'Gudang rapi & bersih',
+      anchor:'5=rapi | 1=berantakan' },
+    { key:'A_retur',           section:'📦 Area Gudang',
+      label:'Item retur tertata rapi & terpisah',
+      anchor:'5=rapi & terpisah | 1=bercampur/berantakan' },
+    { key:'A_kardus',          section:'📦 Area Gudang',
+      label:'Kardus bekas rapi, tidak menumpuk berlebih',
+      anchor:'5=rapi | 1=menumpuk' },
+    { key:'A_grouping',        section:'📦 Area Gudang',
+      label:'Grouping food & non-food terpisah',
+      anchor:'5=terpisah jelas | 1=bercampur' },
+    { key:'A_toilet',          section:'🚻 Area Toilet & Janitor',
+      label:'Kamar mandi bersih & tidak bau',
+      anchor:'5=bersih wangi | 1=kotor/bau' },
+    { key:'A_janitor',         section:'🚻 Area Toilet & Janitor',
+      label:'Area janitor bersih & terorganisir',
+      anchor:'5=rapi | 1=berantakan' },
+  ]},
+
+  B: { label:'Display & Barang', bobot:0.25, items:[
+
+    // ── 🏪 DISPLAY AREA GONDOLA ──────────────────────────────
+    { key:'B_gon_food',    section:'🏪 Display Area Gondola',
+      label:'Display Area Gondola Food (rapi & tidak ada space kosong)',
+      anchor:'5=0 space kosong | 4=1–2 space | 3=3–4 space | 2=5–6 space | 1=>6 / tidak rapi' },
+    { key:'B_gon_nonfood', section:'🏪 Display Area Gondola',
+      label:'Display Area Gondola Non Food (rapi & tidak ada space kosong)',
+      anchor:'5=0 space kosong | 4=1–2 space | 3=3–4 space | 2=5–6 space | 1=>6 / tidak rapi' },
+    { key:'B_gon_promo',   section:'🏪 Display Area Gondola',
+      label:'Display Area Gondola Promo (rapi & tidak ada space kosong)',
+      anchor:'5=lengkap & rapi | 4=1–2 space | 3=3–4 space | 2=5–6 space | 1=banyak kosong' },
+    { key:'B_gon_toys',    section:'🏪 Display Area Gondola',
+      label:'Display Area Gondola Toys (rapi & tidak ada space kosong)',
+      anchor:'5=0 space kosong | 4=1–2 space | 3=3–4 space | 2=5–6 space | 1=>6 / tidak rapi' },
+    { key:'B_gon_baby',    section:'🏪 Display Area Gondola',
+      label:'Display Area Gondola Baby (rapi & tidak ada space kosong)',
+      anchor:'5=0 space kosong | 4=1–2 space | 3=3–4 space | 2=5–6 space | 1=>6 / tidak rapi' },
+    { key:'B_gon_popok',   section:'🏪 Display Area Gondola',
+      label:'Display Area Gondola Popok (rapi & tidak ada space kosong)',
+      anchor:'5=0 space kosong | 4=1–2 space | 3=3–4 space | 2=5–6 space | 1=>6 / tidak rapi' },
+
+    // ── 🪟 ETALASE & FLOOR DISPLAY ────────────────────────────
+    { key:'B_etalase',     section:'🪟 Etalase & Floor Display',
+      label:'Display Area Etalase Kaca (rapi & tidak ada space kosong)',
+      anchor:'5=penuh & rapi | 4=1–2 space | 3=3–4 space | 2=banyak kosong | 1=tidak rapi/kosong' },
+    { key:'B_fd_sembako',  section:'🪟 Etalase & Floor Display',
+      label:'Display Area Floor Display Sembako (rapi & tidak ada space kosong)',
+      anchor:'5=penuh & rapi | 4=1–2 space | 3=ada ruang | 2=banyak kosong | 1=tidak terisi' },
+    { key:'B_fd_amdk',     section:'🪟 Etalase & Floor Display',
+      label:'Display Area Floor Display AMDK (rapi & tidak ada space kosong)',
+      anchor:'5=penuh & rapi | 4=1–2 space | 3=ada ruang | 2=banyak kosong | 1=tidak terisi' },
+
+    // ── 📋 KELENGKAPAN MATERI DISPLAY ─────────────────────────
+    { key:'B_pop',         section:'📋 Kelengkapan Materi Display',
+      label:'POP promosi terpasang lengkap & benar',
+      anchor:'5=lengkap | 4=1 tidak ada | 3=2–3 tidak ada | 1=tidak ada sama sekali/salah' },
+    { key:'B_pricecard',   section:'📋 Kelengkapan Materi Display',
+      label:'Price card tersedia di semua area & benar',
+      anchor:'5=semua benar | 4=1–2 salah | 3=3–4 salah | 2=5–6 salah | 1=>6 salah/tidak ada' },
+    { key:'B_planogram',   section:'📋 Kelengkapan Materi Display',
+      label:'Stok display sesuai planogram standar',
+      anchor:'5=sesuai penuh | 4=1 area menyimpang | 3=2–3 area | 2=4–5 area | 1=tidak sesuai planogram' },
+
+    // ── 🔍 KUALITAS STOK ─────────────────────────────────────
+    { key:'B_fefo',        section:'🔍 Kualitas Stok',
+      label:'Tidak ada barang mendekati expired (<1 bulan)',
+      anchor:'5=0 item | 4=1 item | 3=2–3 | 2=4–5 | 1=>5 item expired/mendekati expired' },
+    { key:'B_oos',         section:'🔍 Kualitas Stok',
+      label:'Tingkat kekosongan (OOS) SKU utama rendah',
+      anchor:'5=0 OOS | 4=1–2 | 3=3–5 | 2=6–10 | 1=>10 SKU kosong' },
+  ]},
+
+  C: { label:'Pelayanan & SDM', bobot:0.20, items:[
+    { key:'C_seragam',    label:'Karyawan berseragam lengkap sesuai SOP',         anchor:'5=100% | 4=1 tidak seragam | 3=2 | 2=3 | 1=>3 orang' },
+    { key:'C_salam',      label:'Karyawan ucapkan salam (Senyum-Salam-Sapa)',     anchor:'5=semua aktif | 1=tidak ada yang melakukan' },
+    { key:'C_kasir_promo',label:'Kasir menawarkan member & promo aktif',          anchor:'5=selalu ditawarkan | 1=tidak pernah' },
+    { key:'C_hafal_promo',label:'Karyawan paham & hafal promo berjalan',          anchor:'5=semua hafal | 1=tidak ada yang tahu promo' },
+    { key:'C_pembukuan',  label:'Pembukuan sesuai SOP (barang masuk, buku tamu)', anchor:'5=lengkap & benar | 1=tidak ada/salah' },
+    { key:'C_hadir',      label:'Coverage personil sesuai jadwal',                anchor:'5=100% hadir | 4=1 absen | 3=2 absen | 1=>2 absen' },
+    { key:'C_penguasaan', label:'Penguasaan produk & SOP staf (tanya sampel)',    anchor:'5=semua tahu | 1=tidak ada yang tahu' },
+    { key:'C_kasir_antri',label:'Waktu antri kasir wajar (observasi)',            anchor:'5=<2 menit | 4=2–4 mnt | 3=5–7 mnt | 2=8–10 mnt | 1=>10 mnt' },
+  ]},
+
+  D: { label:'Kas & Uang Aman', bobot:0.20, items:[
+    { key:'D_setoran',  label:'Ketepatan setoran on-time (7 hari terakhir)',     anchor:'5=100% | 4=95–99% | 3=90–94% | 2=85–89% | 1=<85%' },
+    { key:'D_selisih',  label:'Selisih kas (akumulasi 7 hari)',                  anchor:'5=Rp0 | 4=<Rp10rb | 3=Rp10–50rb | 2=Rp50–100rb | 1=>Rp100rb' },
+    { key:'D_admin',    label:'Administrasi kas tertib (buku kas, bukti setor)', anchor:'5=lengkap & rapi | 1=tidak ada/tidak tertib' },
+  ]},
+
+  E: { label:'Kepemimpinan', bobot:0.15, items:[
+    { key:'E_tl_lama',  label:'Penyelesaian temuan kunjungan sebelumnya',            anchor:'5=100% closed | 4=75–99% | 3=50–74% | 2=25–49% | 1=<25%' },
+    { key:'E_daily',    label:'Pelaksanaan daily task (rata-rata completion 7hr)',    anchor:'5=≥95% | 4=85–94% | 3=75–84% | 2=60–74% | 1=<60%' },
+    { key:'E_omzet',    label:'Pencapaian omzet vs target bulan berjalan',           anchor:'5=≥100% | 4=90–99% | 3=80–89% | 2=70–79% | 1=<70%' },
+    { key:'E_keluhan',  label:'Penanganan keluhan/insiden pelanggan terdokumentasi', anchor:'5=semua terdokumentasi | 1=tidak ada dokumentasi' },
+  ]},
+};
+// ─── STORE CLASSIFICATION ─────────────────────────────────
+function getStoreClass(skor) {
+  const pct = (skor / 5) * 100;
+  if (pct >= 90) return { icon:'🟢', label:'ANDALAN', desc:'Toko sehat — benchmark area, pertahankan',           css:'store-andalan', color:'#14532d', pctLabel:`${Math.round(pct)}%` };
+  if (pct >= 80) return { icon:'🔵', label:'BAIK',    desc:'Performa baik — fokus titik lemah minor',            css:'store-baik',    color:'#1e3a8a', pctLabel:`${Math.round(pct)}%` };
+  if (pct >= 70) return { icon:'🟡', label:'CUKUP',   desc:'Perlu perhatian serius — ada area harus diperbaiki', css:'store-cukup',   color:'#78350f', pctLabel:`${Math.round(pct)}%` };
+  return               { icon:'🔴', label:'KRITIS',  desc:'Intervensi segera — eskalasi ke OM & COO',           css:'store-kritis',  color:'#7f1d1d', pctLabel:`${Math.round(pct)}%` };
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+window.onload = () => {
+  document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+  Object.entries(PILARS).forEach(([pKey, pilar]) => {
+    const container = document.getElementById(`pilar-${pKey}-container`);
+    let lastSection = null;
+    pilar.items.forEach(item => {
+      if (item.section && item.section !== lastSection) {
+        const sDiv = document.createElement('div');
+        sDiv.className = 'pt-4 pb-1';
+        sDiv.innerHTML = `
+          <div class="flex items-center gap-2">
+            <div class="h-px flex-1 bg-gray-200"></div>
+            <span class="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-wide whitespace-nowrap">${item.section}</span>
+            <div class="h-px flex-1 bg-gray-200"></div>
+          </div>`;
+        container.appendChild(sDiv);
+        lastSection = item.section;
+      }
+      container.appendChild(buildRatingBlock(pKey, item));
+    });
+  });
+  addAction(); addAction(); addAction();
+};
+
+function filterTokoByArco() {
+  const arco = document.getElementById('arco').value;
+  const sel  = document.getElementById('kode_toko');
+  sel.innerHTML = '<option value="">— Pilih Toko —</option>';
+  (TOKO_BY_ARCO[arco] || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.kode;
+    o.textContent = `${t.kode} — ${t.nama}`;
+    sel.appendChild(o);
+  });
+  prevVisitData = null;
+  document.getElementById('fetch-status').classList.add('hidden');
+}
+
+async function onTokoChange() {
+  const kodeToko = document.getElementById('kode_toko').value;
+  if (!kodeToko) return;
+  await fetchPreviousVisit(kodeToko);
+}
+
+// ─── AUTO-FETCH PREVIOUS VISIT ────────────────────────────
+async function fetchPreviousVisit(kodeToko) {
+  const statusEl = document.getElementById('fetch-status');
+  const loadEl   = document.getElementById('fetch-loading');
+  const cardEl   = document.getElementById('prev-visit-card');
+  const noDataEl = document.getElementById('prev-no-data');
+
+  statusEl.classList.remove('hidden');
+  loadEl.classList.add('show');
+  cardEl.classList.add('hidden');
+  noDataEl.classList.add('hidden');
+  prevVisitData = null;
+  prevActions   = [];
+
+  try {
+    const controller = new AbortController();
+    const timeout    = setTimeout(() => controller.abort(), 5000);
+    const url  = `${APPS_SCRIPT_URL}?password=${encodeURIComponent(DASHBOARD_PASS)}&action=f2_history&kode_toko=${encodeURIComponent(kodeToko)}`;
+    const res  = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    const data = await res.json();
+    loadEl.classList.remove('show');
+
+    if (data.status === 'ok' && data.data && data.data.length > 0) {
+      const sorted  = [...data.data].sort((a,b) => String(b.tanggal).localeCompare(String(a.tanggal)));
+      prevVisitData = sorted[0];
+      const skorPrev = parseFloat(prevVisitData.skor_akhir) || 0;
+      if (skorPrev > 0) {
+        const inp = document.getElementById('skor_sebelumnya');
+        inp.value    = skorPrev;
+        inp.readOnly = true;
+        inp.classList.add('autofill-readonly');
+        document.getElementById('skor-autofill-display').classList.remove('hidden');
+        document.getElementById('skor-autofill-value').textContent = `${skorPrev} / 5`;
+        document.getElementById('skor-manual-wrap').querySelector('label').classList.add('hidden');
+      }
+      const sc = getStoreClass(skorPrev);
+      document.getElementById('pv-date').textContent       = prevVisitData.tanggal || '';
+      document.getElementById('pv-skor-prev').textContent  = skorPrev || '—';
+      document.getElementById('pv-grade-prev').textContent = prevVisitData.grade || '—';
+      document.getElementById('pv-grade-prev').style.color = gradeColor(prevVisitData.grade);
+      document.getElementById('pv-class-prev').textContent = `${sc.icon} ${sc.label}`;
+      document.getElementById('pv-class-prev').style.color = sc.color;
+      cardEl.classList.remove('hidden');
+      parsePrevActions(prevVisitData);
+    } else {
+      noDataEl.classList.remove('hidden');
+      renderNoPrevActions();
+    }
+  } catch (err) {
+    loadEl.classList.remove('show');
+    renderNoPrevActions();
+  }
+}
+
+function parsePrevActions(pv) {
+  prevActions = [];
+  if (pv.action_items_json) {
+    try {
+      const items = JSON.parse(pv.action_items_json);
+      if (Array.isArray(items) && items.length > 0) {
+        prevActions = items.map(a => ({ desc: a.desc || a, closed: false }));
+        renderPrevActionsChecklist();
+        return;
+      }
+    } catch(e) {}
+  }
+  renderPrevActionsFallback(pv.tindak_lanjut || '');
+}
+
+function renderPrevActionsChecklist() {
+  const list    = document.getElementById('prev-actions-list');
+  const manual  = document.getElementById('closure-manual-wrap');
+  const autoDisp= document.getElementById('closure-auto-display');
+  manual.classList.add('hidden');
+  autoDisp.classList.remove('hidden');
+  list.innerHTML = prevActions.map((a, i) => `
+    <div class="prev-action-item" id="pa-item-${i}" onclick="togglePrevAction(${i})">
+      <div class="prev-action-chk" id="pa-chk-${i}"></div>
+      <span class="text-xs text-gray-700 flex-1">${escHtml(a.desc)}</span>
+    </div>`).join('');
+  updateClosureAutoRate();
+}
+
+function togglePrevAction(idx) {
+  prevActions[idx].closed = !prevActions[idx].closed;
+  const chk  = document.getElementById(`pa-chk-${idx}`);
+  const item = document.getElementById(`pa-item-${idx}`);
+  if (prevActions[idx].closed) {
+    chk.textContent = '✓'; chk.classList.add('checked'); item.classList.add('done');
+  } else {
+    chk.textContent = ''; chk.classList.remove('checked'); item.classList.remove('done');
+  }
+  updateClosureAutoRate();
+}
+
+function updateClosureAutoRate() {
+  const total    = prevActions.length;
+  const done     = prevActions.filter(a => a.closed).length;
+  const pct      = total > 0 ? Math.round((done / total) * 100) : 0;
+  const autoDisp = document.getElementById('closure-auto-display');
+  document.getElementById('closure-auto-pct').textContent = `${pct}%`;
+  document.getElementById('closure-auto-bar').style.width = pct + '%';
+  autoDisp.querySelector('.kpi-bar-fill').className =
+    `kpi-bar-fill ${pct >= 80 ? 'bg-green-400' : pct >= 60 ? 'bg-yellow-400' : 'bg-red-400'}`;
+}
+
+function renderPrevActionsFallback(tindakLanjut) {
+  const list = document.getElementById('prev-actions-list');
+  if (tindakLanjut) {
+    list.innerHTML = `<div class="bg-gray-50 border border-gray-200 rounded-xl p-3">
+      <p class="text-xs font-semibold text-gray-500 mb-1">Tindak lanjut kunjungan sebelumnya:</p>
+      <p class="text-xs text-gray-700">${escHtml(tindakLanjut)}</p>
+    </div>`;
+    document.getElementById('closure-manual-wrap').classList.remove('hidden');
+  } else {
+    renderNoPrevActions();
+  }
+}
+
+function renderNoPrevActions() {
+  document.getElementById('prev-actions-list').innerHTML = '';
+  document.getElementById('closure-manual-wrap').classList.add('hidden');
+  document.getElementById('closure-auto-display').classList.add('hidden');
+  document.getElementById('no-prev-visit-msg').classList.remove('hidden');
+}
+
+function updateClosureManual() {
+  const pct  = parseFloat(document.getElementById('closure_pct_manual').value) || 0;
+  const wrap = document.getElementById('closure-manual-bar-wrap');
+  wrap.classList.remove('hidden');
+  document.getElementById('closure-manual-bar').style.width = Math.min(100, pct) + '%';
+  const lbl = document.getElementById('closure-manual-label');
+  lbl.textContent = `${pct}% tindak lanjut diselesaikan`;
+  lbl.className = `text-xs mt-1 font-bold ${pct >= 80 ? 'text-green-700' : pct >= 60 ? 'text-yellow-700' : 'text-red-700'}`;
+}
+
+function getClosureRate() {
+  if (prevActions.length > 0) {
+    const done = prevActions.filter(a => a.closed).length;
+    return Math.round((done / prevActions.length) * 100);
+  }
+  const manual = parseFloat(document.getElementById('closure_pct_manual').value);
+  if (!isNaN(manual)) return manual;
+  return null;
+}
+// ─── ACTION ITEMS ─────────────────────────────────────────
+function addAction() {
+  if (actionItems.length >= 5) return;
+  const id = ++actionCounter;
+  actionItems.push({ id, desc: '', pic: '', deadline: '', priority: 'major' });
+  const container = document.getElementById('action-items-container');
+  const div       = document.createElement('div');
+  div.className   = 'action-card priority-major';
+  div.id          = `ac-${id}`;
+  div.innerHTML   = `
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-bold text-gray-500">Action Item #${actionItems.length}</span>
+      <div class="flex items-center gap-2">
+        <select onchange="setActionPriority(${id},this)" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white">
+          <option value="critical">🔴 Critical</option>
+          <option value="major" selected>🟡 Major</option>
+          <option value="minor">🟢 Minor</option>
+        </select>
+        <button onclick="removeAction(${id})" class="text-gray-400 text-lg leading-none">×</button>
+      </div>
+    </div>
+    <textarea id="ac-desc-${id}" rows="2" placeholder="Deskripsi temuan & action yang harus dilakukan..."
+      oninput="syncAction(${id})"
+      class="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs resize-none mb-2 focus:ring-2 focus:ring-blue-500"></textarea>
+    <div class="grid grid-cols-3 gap-2 mb-2">
+      <div>
+        <label class="block text-xs text-gray-500 mb-0.5">PIC</label>
+        <input id="ac-pic-${id}" type="text" placeholder="Nama PIC" oninput="syncAction(${id})"
+          class="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-0.5">Deadline</label>
+        <input id="ac-dl-${id}" type="date" oninput="syncAction(${id})"
+          class="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-0.5">Status</label>
+        <select id="ac-status-${id}" onchange="syncAction(${id})"
+          class="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs bg-white focus:ring-2 focus:ring-blue-500">
+          <option value="open">🔴 Open</option>
+          <option value="progress">🟡 Progress</option>
+          <option value="done">🟢 Done</option>
+        </select>
+      </div>
+    </div>`;
+  container.appendChild(div);
+  if (actionItems.length >= 5) document.getElementById('add-action-btn').classList.add('hidden');
+}
+
+function removeAction(id) {
+  actionItems = actionItems.filter(a => a.id !== id);
+  document.getElementById(`ac-${id}`)?.remove();
+  document.getElementById('add-action-btn').classList.remove('hidden');
+}
+
+function syncAction(id) {
+  const item = actionItems.find(a => a.id === id);
+  if (!item) return;
+  item.desc     = document.getElementById(`ac-desc-${id}`)?.value    || '';
+  item.pic      = document.getElementById(`ac-pic-${id}`)?.value     || '';
+  item.deadline = document.getElementById(`ac-dl-${id}`)?.value      || '';
+  item.status   = document.getElementById(`ac-status-${id}`)?.value  || 'open';
+}
+
+function setActionPriority(id, sel) {
+  const item = actionItems.find(a => a.id === id);
+  if (!item) return;
+  item.priority = sel.value;
+  const card = document.getElementById(`ac-${id}`);
+  if (card) card.className = `action-card priority-${sel.value}`;
+}
+
+// ─── SL VALIDATION ────────────────────────────────────────
+function setSL(field, val, btn) {
+  slValidation[field] = val;
+  btn.parentElement.querySelectorAll('.yn-btn').forEach(b => b.className = 'yn-btn');
+  btn.classList.add(`sel-${val}`);
+}
+
+// ─── VISIT IMPACT ─────────────────────────────────────────
+function setImpact(field, val, btn) {
+  visitImpact[field] = val;
+  btn.parentElement.querySelectorAll('button').forEach(b => { b.className = b.className.replace(/ sel(-\w+)?/g, ''); });
+  if (field === 'issue_diselesaikan') {
+    btn.classList.add('sel');
+    document.getElementById('issue-detail-wrap')?.classList.toggle('hidden', val === '0');
+  } else {
+    btn.classList.add(`sel-${val}`);
+  }
+  calcImpactScore();
+}
+
+function calcImpactScore() {
+  let pts = 0;
+  if (visitImpact.improvement_langsung === 'ya') pts += 2;
+  if (visitImpact.issue_diselesaikan   === '>3')  pts += 3;
+  else if (visitImpact.issue_diselesaikan === '1-2') pts += 2;
+  if (visitImpact.sl_dicoaching === 'ya') pts += 2;
+  const allAnswered = visitImpact.improvement_langsung && visitImpact.issue_diselesaikan && visitImpact.sl_dicoaching;
+  if (!allAnswered) { document.getElementById('impact-score-card').classList.add('hidden'); return; }
+  const pct   = Math.round((pts / 7) * 100);
+  const label = pct >= 80 ? '🚀 Kunjungan Sangat Efektif' : pct >= 60 ? '👍 Kunjungan Efektif' : pct >= 40 ? '⚠️ Kunjungan Cukup' : '📋 Perlu Peningkatan';
+  document.getElementById('impact-score-card').classList.remove('hidden');
+  document.getElementById('impact-score-value').textContent = `${pct}%`;
+  document.getElementById('impact-score-desc').textContent  = label;
+}
+
+function getImpactScore() {
+  let pts = 0;
+  if (visitImpact.improvement_langsung === 'ya') pts += 2;
+  if (visitImpact.issue_diselesaikan   === '>3')  pts += 3;
+  else if (visitImpact.issue_diselesaikan === '1-2') pts += 2;
+  if (visitImpact.sl_dicoaching === 'ya') pts += 2;
+  return Math.round((pts / 7) * 100);
+}
+
+// ─── BUILD RATING BLOCK ───────────────────────────────────
+function buildRatingBlock(pilarKey, item) {
+  const prio       = PRIORITY[item.key];
+  const isCritical = prio === 'critical';
+  const isMajor    = prio === 'major';
+  const div        = document.createElement('div');
+  div.className    = 'bg-white rounded-xl p-4 shadow-sm';
+  div.dataset.key  = item.key;
+
+  let badgeHtml = '';
+  if (isCritical) badgeHtml = `<span class="badge-critical flex-shrink-0">🔴 Critical</span>`;
+  else if (isMajor) badgeHtml = `<span class="badge-major flex-shrink-0">🟡 Major</span>`;
+
+  const starRow = `
+    <div class="star-row" id="stars-${item.key}">
+      ${[1,2,3,4,5].map(v =>
+        `<span class="star-btn" id="star-${item.key}-${v}" data-val="${v}"
+               onclick="setRating('${item.key}',${v})"
+               onmouseover="hoverStars('${item.key}',${v})"
+               onmouseout="resetStarHover('${item.key}')">☆</span>`
+      ).join('')}
+      <span class="star-score-badge" id="star-badge-${item.key}" style="display:none"></span>
+    </div>`;
+
+  const catBd   = isCritical ? 'border-red-300' : 'border-yellow-300';
+  const evClass = `ev-box${isMajor ? ' major' : ''}`;
+  const evTitle = isCritical
+    ? '🔴 Skor ≤ 3 — Catatan, Foto Before & After <strong>WAJIB</strong>'
+    : isMajor
+    ? '🟡 Skor ≤ 3 — Catatan, Foto Before & After <strong>WAJIB</strong>'
+    : '📝 Skor ≤ 3 — Foto Before & After <strong>WAJIB</strong>';
+
+  const evBoxHtml = `
+    <div class="${evClass}" id="ev-${item.key}">
+      <p class="text-xs font-bold mb-2 ${isCritical ? 'text-red-700' : 'text-amber-700'}">${evTitle}</p>
+      <textarea id="ev-cat-${item.key}" rows="2" placeholder="Deskripsikan temuan secara spesifik..."
+        class="w-full border ${catBd} rounded-lg px-2 py-1.5 text-xs resize-none mb-2"></textarea>
+      ${galleryHtml(`gal-bef-${item.key}`, '📸 Foto Before (WAJIB — kondisi sebelum)', 'photo-label-before')}
+      ${galleryHtml(`gal-aft-${item.key}`, '📸 Foto After (WAJIB — kondisi setelah perbaikan)', 'photo-label-after')}
+    </div>`;
+
+  const kondTitle = isCritical
+    ? '🔵 Skor ≥ 4 — Foto Kondisi & Deskripsi <strong>WAJIB</strong> (anti-manipulasi)'
+    : isMajor
+    ? '🔵 Skor ≥ 4 — Foto kondisi sekarang (disarankan)'
+    : '🔵 Skor ≥ 4 — Dokumentasi kondisi baik (opsional)';
+  const kondFotoLabel = isCritical ? 'Foto Kondisi Sekarang (WAJIB)' : 'Foto Kondisi Sekarang (disarankan)';
+
+  const kondBoxHtml = `
+    <div class="kond-box" id="kond-${item.key}">
+      <p class="text-xs font-bold text-blue-700 mb-2">${kondTitle}</p>
+      <textarea id="kond-desc-${item.key}" rows="2" placeholder="Deskripsi kondisi saat ini..."
+        class="w-full border border-blue-200 rounded-lg px-2 py-1.5 text-xs resize-none mb-2"></textarea>
+      ${galleryHtml(`gal-kond-${item.key}`, `📸 ${kondFotoLabel}`, 'photo-label-kond')}
+    </div>`;
+
+  div.innerHTML = `
+    <div class="flex items-start justify-between gap-2 mb-1">
+      <div class="text-sm font-semibold text-gray-700 leading-snug">${item.label}</div>
+      ${badgeHtml}
+    </div>
+    <div class="text-xs text-gray-400 mb-2">${item.anchor}</div>
+    ${starRow}
+    ${evBoxHtml}
+    ${kondBoxHtml}`;
+  return div;
+}
+
+const STAR_LABELS = { 1:'Buruk', 2:'Kurang', 3:'Cukup', 4:'Baik', 5:'Sangat Baik' };
+
+function setRating(key, val) {
+  ratings[key] = val;
+  renderStars(key, val, true);
+  const evBox   = document.getElementById(`ev-${key}`);
+  const kondBox = document.getElementById(`kond-${key}`);
+  if (evBox)   evBox.classList.toggle('show', val <= 3);
+  if (kondBox) kondBox.classList.toggle('show', val >= 4);
+}
+
+function renderStars(key, val, persist) {
+  for (let v = 1; v <= 5; v++) {
+    const star = document.getElementById(`star-${key}-${v}`);
+    if (!star) continue;
+    star.textContent = v <= val ? '★' : '☆';
+    v <= val ? star.classList.add('filled') : star.classList.remove('filled');
+  }
+  const badge = document.getElementById(`star-badge-${key}`);
+  if (badge && persist) {
+    badge.style.display    = 'inline-block';
+    badge.textContent      = `${val} — ${STAR_LABELS[val] || ''}`;
+    badge.style.color      = scoreColor(val);
+    badge.style.background = val >= 4 ? '#eff6ff' : val === 3 ? '#fefce8' : '#fff5f5';
+  }
+}
+
+function hoverStars(key, val)  { renderStars(key, val, false); }
+function resetStarHover(key)   {
+  const saved = ratings[key];
+  if (saved) renderStars(key, saved, false);
+  else for (let v = 1; v <= 5; v++) {
+    const star = document.getElementById(`star-${key}-${v}`);
+    if (star) { star.textContent = '☆'; star.classList.remove('filled'); }
+  }
+}
+// ─── NAVIGASI ─────────────────────────────────────────────
+function goStep(n) {
+  if (n === 2 && !validateStep1()) return;
+  if (n === 10) renderKpiAuto();
+  document.querySelectorAll('.step').forEach((el, i) => el.classList.toggle('active', i + 1 === n));
+  const pct = Math.min(100, Math.round((n / TOTAL_STEPS) * 100));
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('step-label').textContent   = n < TOTAL_STEPS ? `Langkah ${n} dari 12` : 'Selesai!';
+  window.scrollTo(0, 0);
+}
+
+// Step 9 → 10: validasi min. 1 foto kunjungan
+function goStep9to10() {
+  if (getGallery('gal-main').length === 0) {
+    alert('📸 Minimal 1 foto kunjungan wajib diambil.\nTap tombol "Ambil Foto" untuk mengambil foto langsung dari kamera.');
+    return;
+  }
+  goStep(10);
+}
+
+function goNextPilar(pilarKey, nextStep) {
+  if (!validatePilarEvidence(pilarKey)) return;
+  syncPilarEvidence(pilarKey);
+  goStep(nextStep);
+}
+
+function validateStep1() {
+  if (!document.getElementById('arco').value)      { alert('Pilih ARCO terlebih dahulu'); return false; }
+  if (!document.getElementById('kode_toko').value) { alert('Pilih toko'); return false; }
+  return true;
+}
+
+function validatePilarEvidence(pilarKey) {
+  for (const item of PILARS[pilarKey].items) {
+    const prio = PRIORITY[item.key];
+    const skor = ratings[item.key] || 0;
+    if (skor <= 0) continue;
+
+    if (skor <= 3) {
+      if (prio === 'critical' || prio === 'major') {
+        const catatan = document.getElementById(`ev-cat-${item.key}`)?.value?.trim() || '';
+        if (!catatan) {
+          const icon = prio === 'critical' ? '🔴' : '🟡';
+          alert(`${icon} "${item.label}"\n\nSkor ${skor} (≤ 3) — catatan WAJIB sebelum lanjut.`);
+          document.getElementById(`ev-cat-${item.key}`)?.focus();
+          return false;
+        }
+      }
+      if (getGallery(`gal-bef-${item.key}`).length === 0) {
+        alert(`📸 "${item.label}"\n\nSkor ${skor} (≤ 3) — Foto Before WAJIB.\nAmbil foto kondisi SEBELUM perbaikan.`);
+        return false;
+      }
+      if (getGallery(`gal-aft-${item.key}`).length === 0) {
+        alert(`📸 "${item.label}"\n\nSkor ${skor} (≤ 3) — Foto After WAJIB.\nAmbil foto SETELAH perbaikan dilakukan.`);
+        return false;
+      }
+    }
+
+    if (skor >= 4 && prio === 'critical') {
+      const kondDesc = document.getElementById(`kond-desc-${item.key}`)?.value?.trim() || '';
+      if (!kondDesc) {
+        alert(`🔵 Item Critical:\n"${item.label}"\n\nSkor ${skor} (≥ 4) — Deskripsi kondisi WAJIB diisi.`);
+        document.getElementById(`kond-desc-${item.key}`)?.focus();
+        return false;
+      }
+      if (getGallery(`gal-kond-${item.key}`).length === 0) {
+        alert(`🔵 Item Critical:\n"${item.label}"\n\nSkor ${skor} (≥ 4) — Foto Kondisi Sekarang WAJIB sebagai bukti kondisi baik.`);
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function syncPilarEvidence(pilarKey) {
+  PILARS[pilarKey].items.forEach(item => {
+    if (!evidence[item.key]) evidence[item.key] = {};
+    const catEl  = document.getElementById(`ev-cat-${item.key}`);
+    if (catEl?.value?.trim())  evidence[item.key].catatan      = catEl.value.trim();
+    const kondEl = document.getElementById(`kond-desc-${item.key}`);
+    if (kondEl?.value?.trim()) evidence[item.key].kond_catatan = kondEl.value.trim();
+  });
+}
+
+function enableManualSkor() {
+  const inp = document.getElementById('skor_sebelumnya');
+  inp.readOnly = false;
+  inp.classList.remove('autofill-readonly');
+  inp.focus();
+  document.getElementById('skor-autofill-display').classList.add('hidden');
+  document.getElementById('skor-manual-wrap').querySelector('label').classList.remove('hidden');
+}
+
+// ─── KPI AUTO-CALC ────────────────────────────────────────
+function renderKpiAuto() {
+  const s        = calcSkor();
+  const skorSblm = parseFloat(document.getElementById('skor_sebelumnya').value);
+  const closure  = getClosureRate();
+
+  const impEl  = document.getElementById('kpi-improvement-value');
+  const impDsc = document.getElementById('kpi-improvement-desc');
+  if (!isNaN(skorSblm) && skorSblm > 0) {
+    const delta = Math.round((s.total - skorSblm) * 100) / 100;
+    const pct   = Math.round(((s.total - skorSblm) / skorSblm) * 100);
+    if (delta > 0)      { impEl.textContent = `▲ +${delta} poin`; impEl.style.color = '#16a34a'; impDsc.textContent = `Naik ${pct}% dari skor sebelumnya (${skorSblm} → ${s.total})`; }
+    else if (delta < 0) { impEl.textContent = `▼ ${delta} poin`;  impEl.style.color = '#dc2626'; impDsc.textContent = `Turun ${Math.abs(pct)}% dari skor sebelumnya (${skorSblm} → ${s.total})`; }
+    else                { impEl.textContent = `= Tidak berubah`;   impEl.style.color = '#6b7280'; impDsc.textContent = `Skor sama dengan kunjungan sebelumnya (${skorSblm})`; }
+  } else {
+    impEl.textContent = '—'; impEl.style.color = '#9ca3af';
+    impDsc.textContent = 'Isi skor sebelumnya di Step 1 untuk melihat improvement rate';
+  }
+
+  // Critical Rate
+  const critAllItems = Object.values(PILARS).flatMap(p => p.items).filter(i => PRIORITY[i.key] === 'critical');
+  const critRated    = critAllItems.filter(i => (ratings[i.key] || 0) > 0);
+  const critIssues   = critRated.filter(i => ratings[i.key] <= 3);
+  const critRate     = critRated.length > 0 ? Math.round((critIssues.length / critRated.length) * 100) : null;
+
+  let critCard = document.getElementById('kpi-critical-card');
+  if (!critCard) {
+    const kpiSection = document.getElementById('kpi-closure-value')?.closest('.bg-white');
+    if (kpiSection) {
+      critCard = document.createElement('div');
+      critCard.id = 'kpi-critical-card';
+      critCard.className = 'bg-white rounded-xl p-4 shadow-sm mt-4';
+      critCard.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2"><span>🚨</span><h3 class="text-sm font-bold text-gray-700">Critical Rate</h3></div>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">AUTO</span>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-3 text-center">
+          <div id="kpi-critical-value" class="text-2xl font-black text-gray-700">—</div>
+          <div id="kpi-critical-desc"  class="text-xs text-gray-500 mt-1"></div>
+        </div>`;
+      kpiSection.parentNode.insertBefore(critCard, kpiSection.nextSibling);
+    }
+  }
+  const critEl  = document.getElementById('kpi-critical-value');
+  const critDsc = document.getElementById('kpi-critical-desc');
+  if (critEl && critRate !== null) {
+    critEl.textContent  = `${critRate}%`;
+    critEl.style.color  = critRate === 0 ? '#16a34a' : critRate <= 20 ? '#d97706' : '#dc2626';
+    critDsc.textContent = `${critIssues.length} dari ${critRated.length} item critical bermasalah`;
+  }
+
+  // Closure Rate
+  const closEl  = document.getElementById('kpi-closure-value');
+  const closDsc = document.getElementById('kpi-closure-desc');
+  if (closure !== null && !isNaN(closure)) {
+    closEl.textContent  = `${closure}%`;
+    closEl.style.color  = closure >= 80 ? '#16a34a' : closure >= 60 ? '#d97706' : '#dc2626';
+    const done  = prevActions.filter(a => a.closed).length;
+    const total = prevActions.length;
+    closDsc.textContent = total > 0
+      ? `${done} dari ${total} action selesai (auto-dihitung dari checklist)`
+      : `Dari input manual Anda`;
+  } else {
+    closEl.textContent  = '—'; closEl.style.color = '#9ca3af';
+    closDsc.textContent = prevVisitData === null ? 'Tidak ada kunjungan sebelumnya' : 'Centang tindak lanjut di Step 7';
+  }
+}
+
+// ─── KALKULASI SKOR ───────────────────────────────────────
+function calcSkor() {
+  const out = {};
+  let total = 0;
+  Object.entries(PILARS).forEach(([pKey, pilar]) => {
+    const vals = pilar.items.map(i => ratings[i.key] || 0).filter(v => v > 0);
+    const avg  = vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+    out[pKey]  = Math.round(avg * 100) / 100;
+    total     += avg * pilar.bobot;
+  });
+  out.total = Math.round(total * 100) / 100;
+  out.grade = total >= 4.5 ? 'A' : total >= 3.5 ? 'B' : total >= 2.5 ? 'C' : 'D';
+  return out;
+}
+
+function scoreColor(v) {
+  if (!v) return '#9ca3af';
+  if (v >= 4.5) return '#16a34a';
+  if (v >= 3.5) return '#2563eb';
+  if (v >= 2.5) return '#d97706';
+  return '#dc2626';
+}
+function gradeColor(g) { return { A:'#16a34a', B:'#2563eb', C:'#d97706', D:'#dc2626' }[g] || '#374151'; }
+function renderDelta(skorNow, skorSblm) {
+  if (!skorSblm || isNaN(skorSblm) || skorSblm <= 0) return '';
+  const delta = Math.round((skorNow - skorSblm) * 100) / 100;
+  if (delta > 0) return `<span class="delta-up">▲ +${delta} vs kunjungan sebelumnya</span>`;
+  if (delta < 0) return `<span class="delta-down">▼ ${delta} vs kunjungan sebelumnya</span>`;
+  return `<span class="delta-same">= Tidak berubah</span>`;
+}
+// ─── PREVIEW ──────────────────────────────────────────────
+function showPreview() {
+  const s        = calcSkor();
+  const skorSblm = parseFloat(document.getElementById('skor_sebelumnya').value);
+  const tokoSel  = document.getElementById('kode_toko');
+  const sc       = getStoreClass(s.total);
+  const closure  = getClosureRate();
+  const impact   = getImpactScore();
+
+  const scEl = document.getElementById('pv-store-class');
+  scEl.className = `rounded-2xl p-5 text-center mb-5 ${sc.css}`;
+  document.getElementById('pv-class-icon').textContent  = sc.icon;
+  document.getElementById('pv-class-label').textContent = sc.label;
+  document.getElementById('pv-class-label').style.color = sc.color;
+  document.getElementById('pv-class-desc').textContent  = sc.desc;
+
+  const pvGrade = document.getElementById('pv-grade');
+  pvGrade.textContent = s.grade;
+  pvGrade.style.color = gradeColor(s.grade);
+  document.getElementById('pv-skor').textContent  = `${s.total} / 5  (${Math.round((s.total/5)*100)}%)`;
+  document.getElementById('pv-delta').innerHTML   = renderDelta(s.total, skorSblm);
+  document.getElementById('pv-toko').textContent  = tokoSel.options[tokoSel.selectedIndex]?.text || '';
+
+  const critList = Object.values(PILARS).flatMap(p => p.items).filter(item =>
+    PRIORITY[item.key] === 'critical' && (ratings[item.key] || 0) > 0 && ratings[item.key] <= 2
+  );
+  const critBox = document.getElementById('pv-critical-box');
+  if (critList.length > 0) {
+    critBox.classList.remove('hidden');
+    document.getElementById('pv-critical-list').innerHTML = critList.map(ci =>
+      `<p class="text-xs text-red-700">• ${ci.label} — Skor <strong>${ratings[ci.key]}</strong></p>`
+    ).join('');
+  } else {
+    critBox.classList.add('hidden');
+  }
+
+  document.getElementById('pv-pilars').innerHTML = Object.entries(PILARS).map(([pKey, pilar]) => `
+    <div class="flex justify-between items-center py-1.5 border-b border-gray-50 last:border-0">
+      <div>
+        <span class="text-sm text-gray-600">Pilar ${pKey} — ${pilar.label}</span>
+        <span class="text-xs text-gray-400 ml-1">(${pilar.bobot*100}%)</span>
+      </div>
+      <span class="font-bold text-sm" style="color:${scoreColor(s[pKey])}">${s[pKey] || '—'}</span>
+    </div>`).join('');
+
+  const kpiLines = [];
+  if (!isNaN(skorSblm) && skorSblm > 0) {
+    const delta = Math.round((s.total - skorSblm) * 100) / 100;
+    kpiLines.push(`📈 Improvement: <strong>${delta > 0 ? '+' : ''}${delta} poin</strong> vs kunjungan sebelumnya`);
+  }
+  if (closure !== null) kpiLines.push(`✅ Closure Rate: <strong>${closure}%</strong> temuan sebelumnya diselesaikan`);
+  if (visitImpact.improvement_langsung) kpiLines.push(`🎯 Improvement langsung: <strong>${visitImpact.improvement_langsung === 'ya' ? 'Ada' : 'Tidak ada'}</strong>`);
+  if (visitImpact.issue_diselesaikan)   kpiLines.push(`🔧 Issue on-the-spot: <strong>${visitImpact.issue_diselesaikan}</strong> issue`);
+  if (visitImpact.sl_dicoaching)        kpiLines.push(`💬 SL di-coaching: <strong>${visitImpact.sl_dicoaching === 'ya' ? 'Ya' : 'Tidak'}</strong>`);
+  if (visitImpact.improvement_langsung && visitImpact.issue_diselesaikan && visitImpact.sl_dicoaching)
+    kpiLines.push(`⭐ Visit Effectiveness: <strong>${impact}%</strong>`);
+  const cRated  = Object.values(PILARS).flatMap(p => p.items).filter(i => PRIORITY[i.key] === 'critical' && (ratings[i.key]||0) > 0);
+  const cIssues = cRated.filter(i => ratings[i.key] <= 3);
+  if (cRated.length > 0) kpiLines.push(`🚨 Critical Rate: <strong>${Math.round((cIssues.length/cRated.length)*100)}%</strong> (${cIssues.length}/${cRated.length} item critical bermasalah)`);
+  const syncedActions = actionItems.filter(a => document.getElementById(`ac-desc-${a.id}`)?.value?.trim());
+  if (syncedActions.length > 0) {
+    const openN = syncedActions.filter(a => (document.getElementById(`ac-status-${a.id}`)?.value||'open') === 'open').length;
+    const progN = syncedActions.filter(a => (document.getElementById(`ac-status-${a.id}`)?.value||'open') === 'progress').length;
+    const doneN = syncedActions.filter(a => (document.getElementById(`ac-status-${a.id}`)?.value||'open') === 'done').length;
+    kpiLines.push(`📌 Action Items: <strong>${syncedActions.length} total</strong> — 🔴${openN} Open · 🟡${progN} Progress · 🟢${doneN} Done`);
+  }
+  // Foto kunjungan count
+  const mainPhotoCount = getGallery('gal-main').length;
+  kpiLines.push(`📸 Foto Kunjungan: <strong>${mainPhotoCount} foto</strong> (terkompresi ≤500KB)`);
+
+  document.getElementById('pv-kpi').innerHTML = kpiLines.length
+    ? `<p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">KPI & Visit Impact</p>` +
+      kpiLines.map(l => `<p class="text-xs text-gray-600">${l}</p>`).join('')
+    : '';
+
+  goStep(12);
+}
+
+// ─── PHOTO COMPRESSION ────────────────────────────────────
+// Target <500 KB — max 1280px (setara WhatsApp), quality 0.82 turun bertahap
+// Typical output: 150–400 KB — tajam di layar HP & laptop
+function resizeImage(file, maxPx = 1280) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const ratio  = Math.min(maxPx / img.width, maxPx / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        // 500 KB = 512 000 bytes; base64 overhead ~33% → target ≤ 682 000 chars
+        const TARGET = 682000;
+        let quality  = 0.82;
+        let result   = canvas.toDataURL('image/jpeg', quality);
+        while (result.length > TARGET && quality > 0.40) {
+          quality -= 0.08;
+          result   = canvas.toDataURL('image/jpeg', Math.max(quality, 0.40));
+        }
+        resolve(result);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── SUBMIT ───────────────────────────────────────────────
+async function submitForm() {
+  const btn = document.getElementById('submit-btn');
+  document.getElementById('loading').classList.remove('hidden');
+  btn.disabled = true;
+
+  actionItems.forEach(a => {
+    a.desc     = document.getElementById(`ac-desc-${a.id}`)?.value || a.desc;
+    a.pic      = document.getElementById(`ac-pic-${a.id}`)?.value  || a.pic;
+    a.deadline = document.getElementById(`ac-dl-${a.id}`)?.value   || a.deadline;
+  });
+  const validActions = actionItems.filter(a => a.desc.trim());
+
+  const s = calcSkor();
+  const skorDetail = {};
+  Object.values(PILARS).forEach(p => p.items.forEach(item => { skorDetail[item.key] = ratings[item.key] || 0; }));
+
+  const allItems = Object.values(PILARS).flatMap(p => p.items);
+  const evidenceList = allItems
+    .filter(item => {
+      const v = evidence[item.key] || {};
+      return v.catatan || v.kond_catatan ||
+             getGallery(`gal-bef-${item.key}`).length  > 0 ||
+             getGallery(`gal-aft-${item.key}`).length  > 0 ||
+             getGallery(`gal-kond-${item.key}`).length > 0;
+    })
+    .map(item => {
+      const v = evidence[item.key] || {};
+      return {
+        key              : item.key,
+        label            : item.label,
+        priority         : PRIORITY[item.key] || 'minor',
+        skor             : ratings[item.key]  || 0,
+        catatan          : v.catatan          || '',
+        kond_catatan     : v.kond_catatan     || '',
+        foto_before_b64s : getGallery(`gal-bef-${item.key}`),
+        foto_after_b64s  : getGallery(`gal-aft-${item.key}`),
+        foto_kondisi_b64s: getGallery(`gal-kond-${item.key}`),
+      };
+    });
+
+  const tokoSel  = document.getElementById('kode_toko');
+  const tokoNama = tokoSel.options[tokoSel.selectedIndex]?.text.split(' — ')[1] || '';
+  const skorSblm = parseFloat(document.getElementById('skor_sebelumnya').value) || null;
+  const closure  = getClosureRate();
+  const sc       = getStoreClass(s.total);
+
+  const data = {
+    form_type: 'F2',
+    payload: {
+      tanggal              : document.getElementById('tanggal').value,
+      jam_kunjungan        : document.getElementById('jam_kunjungan').value,
+      kode_toko            : document.getElementById('kode_toko').value,
+      nama_toko            : tokoNama,
+      arco                 : document.getElementById('arco').value,
+      kunjungan_ke         : parseInt(document.getElementById('kunjungan_ke').value) || 1,
+      skor_pilar_A         : PILARS.A.items.map(i => ratings[i.key] || 0),
+      skor_pilar_B         : PILARS.B.items.map(i => ratings[i.key] || 0),
+      skor_pilar_C         : PILARS.C.items.map(i => ratings[i.key] || 0),
+      skor_pilar_D         : PILARS.D.items.map(i => ratings[i.key] || 0),
+      skor_pilar_E         : PILARS.E.items.map(i => ratings[i.key] || 0),
+      skor_detail          : skorDetail,
+      omzet_anchor         : parseFloat(document.getElementById('omzet_anchor').value)     || 0,
+      setoran_ontime_persen: parseFloat(document.getElementById('setoran_ontime').value)   || 0,
+      selisih_kas_7hari    : parseFloat(document.getElementById('selisih_kas_7hari').value) || 0,
+      temuan_utama         : validActions.map((a,i) => `${i+1}. [${a.priority.toUpperCase()}] ${a.desc}`).join('\n'),
+      tindak_lanjut        : validActions.map(a => `${a.desc} — PIC: ${a.pic||'?'} | Deadline: ${a.deadline||'—'}`).join('\n'),
+      deadline_tl          : validActions.filter(a => a.deadline).sort((a,b) => a.deadline.localeCompare(b.deadline))[0]?.deadline || '',
+      foto_base64          : getGallery('gal-main'),   // ← multi-foto kunjungan, terkompresi ≤500KB
+      store_classification : { label: sc.label, icon: sc.icon, skor_pct: Math.round((s.total/5)*100) },
+      skor_sebelumnya      : skorSblm,
+      delta_skor           : skorSblm != null ? Math.round((s.total - skorSblm) * 100) / 100 : null,
+      evidence_items       : evidenceList,
+      action_items         : validActions,
+      action_items_json    : JSON.stringify(validActions),
+      sl_validation        : slValidation,
+      kpi_arco             : {
+        closure_rate      : closure,
+        improvement_delta : skorSblm != null ? Math.round((s.total - skorSblm) * 100) / 100 : null,
+        improvement_pct   : (skorSblm != null && skorSblm > 0) ? Math.round(((s.total - skorSblm) / skorSblm) * 100) : null,
+        catatan_coaching  : document.getElementById('catatan_coaching').value.trim(),
+      },
+      visit_impact         : {
+        ...visitImpact,
+        issue_detail        : document.getElementById('issue_detail')?.value?.trim() || '',
+        effectiveness_score : getImpactScore()
+      },
+      action_status_summary: {
+        open    : validActions.filter(a => a.status === 'open').length,
+        progress: validActions.filter(a => a.status === 'progress').length,
+        done    : validActions.filter(a => a.status === 'done').length,
+        total   : validActions.length
+      }
+    }
+  };
+
+  try {
+    const res    = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+    const result = await res.json();
+    document.getElementById('loading').classList.add('hidden');
+    if (result.status === 'ok') showResult(result, s);
+    else { alert('Gagal: ' + (result.message || 'Terjadi kesalahan')); btn.disabled = false; }
+  } catch (err) {
+    document.getElementById('loading').classList.add('hidden');
+    btn.disabled = false;
+    alert('Koneksi gagal. Cek internet & URL Apps Script.\n\n' + err.message);
+  }
+}
+
+// ─── SHOW RESULT ──────────────────────────────────────────
+function showResult(r, s) {
+  const grade    = r.grade || s.grade;
+  const skor     = r.skor_akhir || s.total;
+  const skorSblm = parseFloat(document.getElementById('skor_sebelumnya').value);
+  const sc       = getStoreClass(skor);
+  const resSC    = document.getElementById('res-store-class');
+  resSC.className = `rounded-2xl p-4 text-center mb-4 ${sc.css}`;
+  document.getElementById('res-class-icon').textContent  = sc.icon;
+  document.getElementById('res-class-label').textContent = sc.label;
+  document.getElementById('res-class-label').style.color = sc.color;
+  const resGrade = document.getElementById('res-grade');
+  resGrade.textContent = grade;
+  resGrade.style.color = gradeColor(grade);
+  document.getElementById('res-skor').textContent  = `${skor} / 5  (${Math.round((skor/5)*100)}%)`;
+  document.getElementById('res-delta').innerHTML   = renderDelta(skor, skorSblm);
+  document.getElementById('res-id').textContent    = 'ID: ' + (r.id || '-');
+  document.getElementById('res-pilars').innerHTML  = Object.entries(PILARS).map(([pKey, pilar]) => `
+    <div class="flex justify-between items-center py-1.5 border-b border-gray-50 last:border-0">
+      <span class="text-sm text-gray-600">Pilar ${pKey} — ${pilar.label}
+        <span class="text-gray-400">(${pilar.bobot*100}%)</span></span>
+      <span class="font-bold text-sm" style="color:${scoreColor(s[pKey])}">${s[pKey] || '—'}</span>
+    </div>`).join('');
+  goStep(13);
+}
+
+// ─── UTIL ─────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
