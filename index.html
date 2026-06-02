@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Makmur Monitoring</title>
+  <meta name="theme-color" content="#1e3a5f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Makmur OPR">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%); min-height: 100vh; }
+    .card { transition: transform 0.1s, box-shadow 0.1s; }
+    .card:active { transform: scale(0.98); }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-start p-4 pt-8 pb-10">
+
+  <!-- Header -->
+  <div class="text-center mb-8 text-white">
+    <div class="text-5xl mb-3">🏪</div>
+    <h1 class="text-2xl font-bold tracking-wide">TOKO MAKMUR</h1>
+    <p class="text-blue-200 text-sm mt-1">Sistem Monitoring Operasional</p>
+    <div class="mt-3 bg-white/10 rounded-full px-4 py-1 inline-block">
+      <span class="text-white text-sm font-medium" id="tanggal-hari"></span>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div class="w-full max-w-sm space-y-3">
+
+    <!-- Form 1 — Katoko -->
+    <a href="form1.html" class="card block bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div class="flex items-center p-4 gap-4">
+        <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-2xl flex-shrink-0">📋</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-gray-800 text-base">Laporan Harian Toko</div>
+          <div class="text-xs text-gray-500 mt-0.5">Kepala Toko · Isi setiap hari</div>
+        </div>
+        <div class="text-emerald-500 font-bold text-xl">›</div>
+      </div>
+      <div class="h-1 bg-emerald-400"></div>
+    </a>
+
+    <!-- Form 2 — ARCO -->
+    <a href="form2.html" class="card block bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div class="flex items-center p-4 gap-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-2xl flex-shrink-0">⭐</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-gray-800 text-base">Penilaian Toko (ARCO)</div>
+          <div class="text-xs text-gray-500 mt-0.5">ARCO · Audit per kunjungan</div>
+        </div>
+        <div class="text-blue-500 font-bold text-xl">›</div>
+      </div>
+      <div class="h-1 bg-blue-400"></div>
+    </a>
+
+    <!-- Form 3 — OM → ARCO -->
+    <a href="form3.html" class="card block bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div class="flex items-center p-4 gap-4">
+        <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-2xl flex-shrink-0">📊</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-gray-800 text-base">Penilaian ARCO (OM)</div>
+          <div class="text-xs text-gray-500 mt-0.5">OM/GM · Mingguan <span class="text-orange-400 ml-1">🔒</span></div>
+        </div>
+        <div class="text-orange-400 font-bold text-xl">›</div>
+      </div>
+      <div class="h-1 bg-orange-400"></div>
+    </a>
+
+    <!-- Form 4 — Sidak OM -->
+    <a href="form4.html" class="card block bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div class="flex items-center p-4 gap-4">
+        <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-2xl flex-shrink-0">🔍</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-gray-800 text-base">Sidak OM</div>
+          <div class="text-xs text-gray-500 mt-0.5">OM/GM · Inspeksi mendadak <span class="text-red-400 ml-1">🔒</span></div>
+        </div>
+        <div class="text-red-400 font-bold text-xl">›</div>
+      </div>
+      <div class="h-1 bg-red-400"></div>
+    </a>
+
+  </div>
+
+  <p class="text-blue-300/60 text-xs mt-8">v1.0 — Makmur DB OPR</p>
+
+  <script>
+    const d = new Date();
+    const opt = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+    document.getElementById('tanggal-hari').textContent = d.toLocaleDateString('id-ID', opt);
+  </script>
+</body>
+</html>
