@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard Minus Kasir & Setoran — Makmur 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070c;--bg2:#0f0f18;--bg3:#141420;--bghov:#1a1a28;
+  --bdr:#1e1e30;--bdrg:rgba(201,168,76,.22);
+  --gold:#c9a84c;--glt:#e8c96b;--gdk:#8b6914;--gglow:rgba(201,168,76,.1);
+  --txt:#ede9df;--muted:#7a7a90;--dim:#3a3a55;
+  --red:#ff4757;--redbg:rgba(255,71,87,.1);--redbd:rgba(255,71,87,.3);
+  --grn:#1ec86a;--grnbg:rgba(30,200,106,.1);
+  --ylw:#ffb300;--blu:#4f9cf9;--rad:10px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:13px}
+
+#pw-ov{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center}
+#pw-box{background:var(--bg2);border:1px solid var(--bdrg);border-radius:14px;padding:40px 36px;width:340px;text-align:center;box-shadow:0 8px 40px #000a}
+#pw-box h2{color:var(--gold);font-size:1.15rem;font-weight:800;margin-bottom:4px}
+#pw-box p{color:var(--muted);font-size:.78rem;margin-bottom:22px}
+#pw-logo{font-size:2.8rem;margin-bottom:14px}
+#pw-in{width:100%;background:var(--bg3);border:1.5px solid var(--bdr);color:var(--txt);padding:10px;border-radius:8px;font-size:1.1rem;letter-spacing:6px;text-align:center;outline:none;margin-bottom:12px}
+#pw-in:focus{border-color:var(--gold)}
+#pw-in.shake{animation:shake .35s;border-color:var(--red)!important}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+#pw-btn{width:100%;padding:10px;background:var(--gdk);color:var(--glt);border:none;border-radius:8px;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .15s}
+#pw-btn:hover{background:var(--gold)}
+#pw-err{color:var(--red);font-size:.75rem;margin-top:8px;min-height:16px}
+
+.hdr{background:linear-gradient(135deg,#0a0a14,#10101e);border-bottom:1px solid var(--bdrg);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.hdr-title{font-size:1.2rem;font-weight:800;letter-spacing:-.02em}
+.hdr-title span{color:var(--gold)}
+.hdr-meta{font-size:.7rem;color:var(--muted);margin-top:3px}
+.hdr-stats{display:flex;gap:10px;flex-wrap:wrap}
+.hs{background:var(--gglow);border:1px solid var(--bdrg);border-radius:8px;padding:7px 14px;text-align:center;min-width:110px}
+.hs-v{font-size:1rem;font-weight:800}
+.hs-l{font-size:.62rem;color:var(--muted);margin-top:1px}
+
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--bdr);overflow-x:auto}
+.tab{padding:11px 18px;cursor:pointer;font-size:.8rem;font-weight:700;color:var(--dim);border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;letter-spacing:.02em}
+.tab:hover{color:var(--muted);background:var(--bghov)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+.tp{display:none;padding:20px 22px;max-width:1700px;margin:0 auto}
+.tp.active{display:block}
+
+.exec-alert{background:linear-gradient(135deg,rgba(255,71,87,.07),rgba(255,179,0,.04));border:1px solid rgba(255,71,87,.25);border-radius:10px;padding:13px 18px;margin-bottom:18px;font-size:.78rem;line-height:1.7}
+.exec-insight{background:linear-gradient(135deg,rgba(79,156,249,.06),rgba(30,200,106,.04));border:1px solid rgba(79,156,249,.2);border-radius:10px;padding:13px 18px;margin-bottom:18px;font-size:.78rem;line-height:1.7}
+
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:11px;margin-bottom:18px}
+.kpi{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rad);padding:15px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kr::before{background:linear-gradient(90deg,var(--red),transparent)}
+.kg::before{background:linear-gradient(90deg,var(--grn),transparent)}
+.ky::before{background:linear-gradient(90deg,var(--ylw),transparent)}
+.kb::before{background:linear-gradient(90deg,var(--blu),transparent)}
+.kgd::before{background:linear-gradient(90deg,var(--gold),transparent)}
+.kpk::before{background:linear-gradient(90deg,#f472b6,transparent)}
+.kv{font-size:1.55rem;font-weight:800;line-height:1.1}
+.kr .kv{color:var(--red)}.kg .kv{color:var(--grn)}.ky .kv{color:var(--ylw)}
+.kb .kv{color:var(--blu)}.kgd .kv{color:var(--gold)}.kpk .kv{color:#f472b6}
+.kl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-top:6px}
+.ks{font-size:.62rem;color:var(--dim);margin-top:2px}
+
+.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rad);padding:16px;margin-bottom:16px}
+.ct{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gold);margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--bdr)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.chs{position:relative;height:200px}.chm{position:relative;height:260px}
+.chl{position:relative;height:310px}.chxl{position:relative;height:360px}
+
+.tbl-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--bdr)}
+.tbl-sc{max-height:440px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:.76rem}
+th{background:var(--bg3);color:var(--gold);padding:8px 10px;text-align:left;font-weight:700;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;position:sticky;top:0;z-index:2;white-space:nowrap;border-bottom:1px solid var(--bdr);cursor:pointer;user-select:none}
+th:hover{color:var(--glt)}
+th .si{opacity:.4;margin-left:3px}
+th.asc .si::after{content:'\2191';opacity:1}
+th.desc .si::after{content:'\2193';opacity:1}
+th:not(.asc):not(.desc) .si::after{content:'\2195'}
+td{padding:7px 10px;border-bottom:1px solid var(--bdr);color:var(--txt);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bghov)}
+.nr{text-align:right;font-weight:600;color:var(--red)}
+.ng{text-align:right;font-weight:600;color:var(--grn)}
+.ny{text-align:right;color:var(--ylw)}
+.nn{text-align:right;color:var(--muted)}
+
+.fbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.fbar select,.fbar input{background:var(--bg3);border:1px solid var(--bdr);color:var(--txt);padding:6px 10px;border-radius:6px;font-size:.75rem;outline:none}
+.fbar select:focus,.fbar input:focus{border-color:var(--gold)}
+.fbar label{font-size:.7rem;color:var(--muted)}
+.fcnt{font-size:.7rem;color:var(--muted);margin-left:auto}
+
+.pill{display:inline-block;padding:1px 7px;border-radius:4px;font-size:.63rem;font-weight:700;white-space:nowrap}
+.pb{background:rgba(79,156,249,.1);color:var(--blu);border:1px solid rgba(79,156,249,.25)}
+.pg{background:rgba(30,200,106,.1);color:var(--grn);border:1px solid rgba(30,200,106,.25)}
+.pr{background:rgba(255,71,87,.1);color:var(--red);border:1px solid rgba(255,71,87,.3)}
+.py{background:rgba(255,179,0,.1);color:var(--ylw);border:1px solid rgba(255,179,0,.25)}
+.pgd{background:rgba(201,168,76,.1);color:var(--gold);border:1px solid rgba(201,168,76,.25)}
+.resign-tag{background:rgba(255,71,87,.15);color:var(--red);border:1px solid rgba(255,71,87,.3);padding:1px 7px;border-radius:4px;font-size:.62rem;font-weight:700}
+
+.arco-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--bdr)}
+.arco-row:last-child{border-bottom:none}
+.ar-name{min-width:90px;font-weight:700;font-size:.78rem}
+.ar-bar{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.ar-bar div{height:100%;border-radius:4px}
+.ar-val{min-width:100px;text-align:right;font-size:.78rem;font-weight:700}
+.ar-meta{min-width:110px;font-size:.68rem;color:var(--muted);text-align:right}
+
+.spark{display:flex;gap:2px;align-items:flex-end;height:30px}
+.spark div{flex:1;border-radius:2px 2px 0 0;min-width:5px}
+
+#k-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;padding:20px}
+#k-modal.open{display:flex}
+#k-mbox{background:var(--bg2);border:1px solid var(--bdrg);border-radius:14px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;padding:28px}
+#k-close{float:right;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer}
+#k-close:hover{color:var(--txt)}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+.footer{text-align:center;padding:18px;font-size:.68rem;color:var(--dim);border-top:1px solid var(--bdr)}
+@media(max-width:768px){.g2,.g3{grid-template-columns:1fr}.tp{padding:12px}}
+
+/* freq/tfoot/new panels */
+#arco-cards{margin-bottom:4px}
+tfoot td{background:var(--bg3)!important;border-top:2px solid rgba(201,168,76,.35)!important;color:var(--txt)!important;font-weight:700}
+tfoot tr:hover td{background:var(--bg3)!important}
+#ov-repeat table thead th{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.si{display:inline-block;margin-left:3px;opacity:.5;font-size:.7rem}
+th.asc .si::after{content:"▲"}
+th.desc .si::after{content:"▼"}
+th:not(.asc):not(.desc):hover .si::after{content:"↕"}
+
+</style>
+</head>
+<body>
+
+<div id="pw-ov">
+  <div id="pw-box">
+    <div id="pw-logo">&#128184;</div>
+    <h2>Dashboard Minus &mdash; Makmur 2026</h2>
+    <p>Masukkan password untuk melanjutkan</p>
+    <input id="pw-in" type="password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" maxlength="20" onkeydown="if(event.key==='Enter')pwCheck()">
+    <button id="pw-btn" onclick="pwCheck()">Masuk &rarr;</button>
+    <div id="pw-err"></div>
+  </div>
+</div>
+
+<div id="k-modal">
+  <div id="k-mbox">
+    <button id="k-close" onclick="closeMod()">&#10005;</button>
+    <div id="k-mcontent"></div>
+  </div>
+</div>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-title">&#128184; Dashboard Minus <span>Makmur</span></div>
+    <div class="hdr-meta" id="hdr-meta"></div>
+  </div>
+  <div class="hdr-stats" id="hdr-stats"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('ov',this)">&#127968; Executive Overview</div>
+  <div class="tab" onclick="showTab('arco',this)">&#127919; Analisa Arco</div>
+  <div class="tab" onclick="showTab('kasir',this)">&#128100; Minus Kasir</div>
+  <div class="tab" onclick="showTab('setoran',this)">&#127974; Minus Setoran</div>
+  <div class="tab" onclick="showTab('toko',this)">&#127978; Performa Toko</div>
+</div>
+
+<div class="tp active" id="tp-ov">
+  <div class="exec-alert" id="ov-alert"></div>
+  <div class="kgrid" id="ov-kpi"></div>
+  <div class="g3">
+    <div class="card" style="grid-column:span 2">
+      <div class="ct">Tren Minus Bulanan &mdash; Kasir vs Setoran (Jan&ndash;Mei 2026)</div>
+      <div class="chm"><canvas id="ch-ov-trend"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">Komposisi Kasir vs Setoran</div>
+      <div class="chm"><canvas id="ch-ov-split"></canvas></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Total Minus Kasir per Arco</div>
+      <div id="ov-arco-bars"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Top 10 Toko &mdash; Grand Total Minus</div>
+      <div class="chl"><canvas id="ch-ov-toko"></canvas></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct">&#128308; Radar Merah &mdash; Kasir Bermasalah Berulang (&ge;3 Bulan)</div>
+      <div id="ov-repeat" style="max-height:220px;overflow-y:auto"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Status Toko &mdash; Distribusi Risiko (33 Toko)</div>
+      <div class="chs"><canvas id="ch-ov-status"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">&#128200; Rekap Bulanan &mdash; Total Minus Kasir + Setoran</div>
+    <div id="ov-monthly-sum"></div>
+  </div>
+</div>
+
+<div class="tp" id="tp-arco">
+  <div class="exec-insight" id="arco-insight"></div>
+  <!-- ARCO KPI MINI CARDS -->
+  <div id="arco-cards"></div>
+  <!-- ROW 1: Chart + CFO Table side-by-side -->
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Ranking Arco &mdash; Total Minus Kasir</div>
+      <div class="chl"><canvas id="ch-arco-bar"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">&#128203; Ringkasan CFO &mdash; Kasir + Setoran per Arco</div>
+      <div class="tbl-wrap" style="max-height:320px;overflow-y:auto"><table id="tbl-arco-cfo"></table></div>
+    </div>
+  </div>
+  <!-- ROW 2: Trend full width -->
+  <div class="card">
+    <div class="ct">&#128200; Tren Bulanan per Arco (Jan&ndash;Mei) &mdash; klik legenda untuk hide/show</div>
+    <div style="height:270px"><canvas id="ch-arco-trend"></canvas></div>
+  </div>
+  <!-- ROW 3: Setoran + Monthly breakdown side-by-side -->
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Minus Setoran per Arco</div>
+      <div class="chm"><canvas id="ch-arco-set"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">&#128197; Breakdown Bulanan Minus Kasir per Arco</div>
+      <div class="tbl-wrap" style="max-height:300px;overflow-y:auto"><table id="tbl-arco-month"></table></div>
+    </div>
+  </div>
+</div>
+
+<div class="tp" id="tp-kasir">
+  <div class="fbar">
+    <label>Arco</label>
+    <select id="k-arco" onchange="kRender()"><option value="">Semua Arco</option></select>
+    <label>Toko</label>
+    <select id="k-toko" onchange="kRender()"><option value="">Semua Toko</option></select>
+    <select id="k-ket" onchange="kRender()">
+      <option value="">Semua Status</option>
+      <option value="RESIGN">Resign</option>
+      <option value="AKTIF">Aktif</option>
+    </select>
+    <input id="k-q" placeholder="Cari nama / NRP..." onkeyup="kRender()" style="width:160px">
+    <span class="fcnt" id="k-cnt"></span>
+  </div>
+  <div class="tbl-wrap tbl-sc" id="tbl-kasir-wrap"></div>
+  <p style="font-size:.7rem;color:var(--muted);margin-top:8px;padding:0 4px">Klik nama kasir (kolom warna emas) untuk melihat tren performa bulanan individu.</p>
+</div>
+
+<div class="tp" id="tp-setoran">
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Ranking Toko &mdash; Minus Setoran Terbesar</div>
+      <div class="chxl"><canvas id="ch-set-rank"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">Ringkasan Setoran per Arco</div>
+      <div id="set-arco-wrap"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">
+      Detail Minus Setoran per Toko
+      <span style="float:right">
+        <select id="s-arco" onchange="sRender()" style="background:var(--bg3);border:1px solid var(--bdr);color:var(--txt);padding:4px 8px;border-radius:6px;font-size:.72rem">
+          <option value="">Semua Arco</option>
+        </select>
+      </span>
+    </div>
+    <div class="tbl-wrap tbl-sc" id="tbl-set-wrap"></div>
+  </div>
+</div>
+
+<div class="tp" id="tp-toko">
+  <div class="fbar">
+    <label>Arco</label>
+    <select id="t-arco" onchange="tRender()"><option value="">Semua Arco</option></select>
+    <label>Status</label>
+    <select id="t-st" onchange="tRender()">
+      <option value="">Semua Status</option>
+      <option value="SANGAT">Sangat Tinggi</option>
+      <option value="TINGGI">Tinggi</option>
+      <option value="NORMAL">Normal</option>
+    </select>
+    <input id="t-q" placeholder="Cari toko..." onkeyup="tRender()" style="width:150px">
+    <span class="fcnt" id="t-cnt"></span>
+  </div>
+  <div class="tbl-wrap" style="max-height:560px;overflow-y:auto" id="tbl-toko-wrap"></div>
+</div>
+
+<div class="footer">Dashboard Minus Kasir &amp; Setoran &mdash; PT Makmur Sejati &nbsp;|&nbsp; <span id="ft"></span></div>
+
+<script>
+const D={"update_date":"6 Juni 2026","periode":"Januari – Jun-1 2026","months":["Jan","Feb","Mar","Apr","Mei","Jun-1"],"grand_kasir":105495124,"grand_setoran":14392500,"grand_total":119887624,"monthly_kasir":[25586494,25943903,24309881,14355691,11593735,3705420],"monthly_setoran":[0,1545100,5624000,5037800,2112600,73000],"n_resign":2,"worst_arco":"ALI","n_toko_kasir":33,"n_toko_setoran":21,"toko_list":[{"kode":"M07","nama":"MAKMUR PACUAN KUDA","arco":"ALI","monthly":[2801072,2450419,3636553,1426365,695302,34863],"total":11044574,"rank":1,"status":"SANGAT TINGGI","rank_chg":"— tetap"},{"kode":"M15","nama":"MAKMUR DUKUH KUPANG","arco":"ALI","monthly":[1752572,1361540,3947147,1628798,587490,265915],"total":9543462,"rank":2,"status":"SANGAT TINGGI","rank_chg":"— tetap"},{"kode":"M24","nama":"MAKMUR SEMOLOWARU","arco":"ALI","monthly":[1160959,2111616,3226015,1235091,910622,383972],"total":9028275,"rank":3,"status":"SANGAT TINGGI","rank_chg":"▼ 1"},{"kode":"M08","nama":"MAKMUR KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[1750172,1327801,2230930,2003327,1206398,365047],"total":8883675,"rank":4,"status":"SANGAT TINGGI","rank_chg":"▼ 1"},{"kode":"M25","nama":"MAKMUR MANUKAN TENGAH","arco":"CIPTO","monthly":[1131332,2521018,3877266,1253406,24646,23790],"total":8831458,"rank":5,"status":"SANGAT TINGGI","rank_chg":"— tetap"},{"kode":"M18","nama":"MAKMUR GARUDA BETRO","arco":"LINDA","monthly":[1897684,581360,283738,5252778,134206,0],"total":8149766,"rank":6,"status":"SANGAT TINGGI","rank_chg":"▲ 7"},{"kode":"M09","nama":"MAKMUR BRATANG GEDE","arco":"HARTONO","monthly":[1111983,993511,1962437,1121807,1420975,633906],"total":7244619,"rank":7,"status":"SANGAT TINGGI","rank_chg":"▼ 1"},{"kode":"M29","nama":"MAKMUR RAYA SUKODONO","arco":"ALI","monthly":[1132501,2053948,147322,1332418,966437,397899],"total":6030525,"rank":8,"status":"SANGAT TINGGI","rank_chg":"— tetap"},{"kode":"M30","nama":"MAKMUR KEMENDUNG","arco":"DEWI","monthly":[2902617,1850108,543465,169140,523723,18021],"total":6007074,"rank":9,"status":"SANGAT TINGGI","rank_chg":"▼ 1"},{"kode":"M06","nama":"MAKMUR PUCANG ANOM","arco":"HARTONO","monthly":[1049130,184217,1016932,1993127,919182,96455],"total":5259043,"rank":10,"status":"SANGAT TINGGI","rank_chg":"▲ 3"},{"kode":"M16","nama":"MAKMUR RUNGKUT MENANGGAL","arco":"LINDA","monthly":[191480,1066688,893401,2036522,185030,0],"total":4373121,"rank":11,"status":"SANGAT TINGGI","rank_chg":"▲ 4"},{"kode":"M28","nama":"MAKMUR ARYO BEBANGAH","arco":"ALI","monthly":[377048,1583594,989518,413185,516111,490312],"total":4369768,"rank":12,"status":"SANGAT TINGGI","rank_chg":"▼ 3"},{"kode":"M19","nama":"MAKMUR RAYA KETINTANG","arco":"NORA","monthly":[451752,1412625,512126,862611,519032,106468],"total":3864614,"rank":13,"status":"SANGAT TINGGI","rank_chg":"▼ 2"},{"kode":"M31","nama":"MAKMUR RAYA TROPODO","arco":"LINDA","monthly":[951329,1440790,1004853,65061,350116,7076],"total":3819225,"rank":14,"status":"SANGAT TINGGI","rank_chg":"▼ 4"},{"kode":"M10","nama":"MAKMUR PANDEGILING","arco":"TONI","monthly":[187332,651592,520482,1135457,387799,204697],"total":3087359,"rank":15,"status":"TINGGI","rank_chg":"▲ 3"},{"kode":"M14","nama":"MAKMUR RAYA MULYOSARI","arco":"AYU","monthly":[790791,361479,1095876,324837,290484,136694],"total":3000161,"rank":16,"status":"TINGGI","rank_chg":"▼ 1"},{"kode":"M05","nama":"MAKMUR TAMBAHREJO","arco":"NIA","monthly":[104146,181709,1705468,344662,239501,12745],"total":2588231,"rank":17,"status":"TINGGI","rank_chg":"— tetap"},{"kode":"M12","nama":"MAKMUR SIDOMULYO","arco":"CIPTO","monthly":[347267,149067,693376,1144451,74168,0],"total":2408329,"rank":18,"status":"TINGGI","rank_chg":"▲ 2"},{"kode":"M22","nama":"MAKMUR PONDOK JATI","arco":"DEWI","monthly":[1728997,296721,0,173779,15633,69022],"total":2284152,"rank":19,"status":"TINGGI","rank_chg":"▼ 3"},{"kode":"M03","nama":"MAKMUR USMAN SADAR","arco":"ARI","monthly":[341947,336658,502469,167817,440377,219787],"total":2009055,"rank":20,"status":"TINGGI","rank_chg":"▲ 1"},{"kode":"M13","nama":"MAKMUR WIGUNA TENGAH","arco":"LINDA","monthly":[985404,263913,380288,114704,17585,84479],"total":1846373,"rank":21,"status":"TINGGI","rank_chg":"▼ 2"},{"kode":"M20","nama":"MAKMUR RAYA TENGGILIS","arco":"LINDA","monthly":[199084,328533,403039,332326,88557,5720],"total":1357259,"rank":22,"status":"TINGGI","rank_chg":"▲ 1"},{"kode":"M27","nama":"MAKMUR LIDAH WETAN","arco":"CIPTO","monthly":[665929,28511,491139,28414,21016,0],"total":1235009,"rank":23,"status":"TINGGI","rank_chg":"▼ 2"},{"kode":"M23","nama":"MAKMUR TAMAN PINANG","arco":"DEWI","monthly":[575955,51188,164989,67624,309881,0],"total":1169637,"rank":24,"status":"NORMAL","rank_chg":"▲ 1"},{"kode":"M21","nama":"MAKMUR DELTA SARI","arco":"NORA","monthly":[174371,191494,15740,359381,217576,54285],"total":1012847,"rank":25,"status":"NORMAL","rank_chg":"▲ 4"},{"kode":"M04","nama":"MAKMUR KALIMANTAN GRS","arco":"ARI","monthly":[709402,100000,0,8925,5036,0],"total":823363,"rank":26,"status":"NORMAL","rank_chg":"▼ 1"},{"kode":"M26","nama":"MAKMUR KEPUTIH TEGAL","arco":"AYU","monthly":[145001,321118,74563,51033,221987,8081],"total":821783,"rank":27,"status":"NORMAL","rank_chg":"▼ 1"},{"kode":"M11","nama":"MAKMUR RAYA LONTAR","arco":"CIPTO","monthly":[74500,10000,473208,175910,26825,7781],"total":768224,"rank":28,"status":"NORMAL","rank_chg":"— tetap"},{"kode":"M02","nama":"MAKMUR KAPAS KRAMPUNG 75E","arco":"NIA","monthly":[100712,334821,137765,23032,12480,12745],"total":621555,"rank":29,"status":"NORMAL","rank_chg":"▼ 2"},{"kode":"M33","nama":"MAKMUR CITRALAND","arco":"CIPTO","monthly":[330097,9861,125504,0,8113,0],"total":473575,"rank":30,"status":"NORMAL","rank_chg":"▼ 1"},{"kode":"M17","nama":"MAKMUR KARANG ASEM","arco":"NIA","monthly":[124538,104007,76565,11809,0,65660],"total":382579,"rank":31,"status":"NORMAL","rank_chg":"— tetap"},{"kode":"M32","nama":"MAKMUR GRAHA KOTA","arco":"DEWI","monthly":[79709,86257,65432,17888,19546,0],"total":268832,"rank":32,"status":"NORMAL","rank_chg":"— tetap"},{"kode":"M01","nama":"MAKMUR TAMBAHREJO","arco":"NIA","monthly":[10970,8000,12041,5178,0,0],"total":36189,"rank":33,"status":"NORMAL","rank_chg":"— tetap"}],"kasir_list":[{"nrp":"522020181","nama":"Jihan F. N. Rohma","kode":"M25","nama_toko":"MANUKAN TENGAH","arco":"CIPTO","monthly":[327083,2137481,2907162,0,0,0],"total":5371726,"ket":""},{"nrp":"923020401","nama":"Tania P. Sugiarto","kode":"M24","nama_toko":"SEMOLOWARU","arco":"ALI","monthly":[126126,1011101,1990212,27558,0,11570],"total":3166567,"ket":""},{"nrp":"825021111","nama":"Dichelseal R. Setiyawan","kode":"M09","nama_toko":"BRATANG GEDE","arco":"HARTONO","monthly":[667383,821814,932439,686282,0,0],"total":3107918,"ket":"OFF KASIR/PRAM"},{"nrp":"425020940","nama":"Rani Shofiya Salsabila","kode":"M15","nama_toko":"DUKUH KUPANG","arco":"ALI","monthly":[792564,332465,1682247,35684,93700,0],"total":2936660,"ket":""},{"nrp":"126021319","nama":"126021319","kode":"M15","nama_toko":"DUKUH KUPANG","arco":"ALI","monthly":[0,352059,1248036,725563,0,0],"total":2325658,"ket":""},{"nrp":"SG1225021281","nama":"Erinda M. Rahma","kode":"M29","nama_toko":"RAYA SUKODONO","arco":"ALI","monthly":[0,680306,95455,808482,682122,0],"total":2266365,"ket":"RESIGN"},{"nrp":"925021172","nama":"Adinda Fatmawati","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[661653,995336,346865,227856,0,0],"total":2231710,"ket":""},{"nrp":"SG0424020538","nama":"Dewi N. Sari","kode":"M29","nama_toko":"RAYA SUKODONO","arco":"ALI","monthly":[801815,1189184,51867,101238,57194,55997],"total":2257295,"ket":""},{"nrp":"SG0425020935","nama":"Sandi A. Karim","kode":"M30","nama_toko":"KEMENDUNG","arco":"DEWI","monthly":[2146346,0,0,0,0,0],"total":2146346,"ket":""},{"nrp":"924020745","nama":"924020745","kode":"M24","nama_toko":"SEMOLOWARU","arco":"ALI","monthly":[537046,802359,800687,0,0,0],"total":2140092,"ket":""},{"nrp":"122020142","nama":"Siti Khodijah","kode":"M15","nama_toko":"DUKUH KUPANG","arco":"ALI","monthly":[875447,632016,246892,228795,65180,0],"total":2048330,"ket":""},{"nrp":"1022020236","nama":"Salsabila N. Aulia","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[419087,438237,592164,379342,84017,8610],"total":1921457,"ket":""},{"nrp":"1025021198","nama":"1025021198","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[560849,496013,805446,48894,0,0],"total":1911202,"ket":""},{"nrp":"SG1225021303","nama":"Nasya N. Ramadhani","kode":"M30","nama_toko":"KEMENDUNG","arco":"DEWI","monthly":[170447,1185452,190860,0,0,0],"total":1546759,"ket":""},{"nrp":"125020872","nama":"Cholifatul Aima","kode":"M09","nama_toko":"BRATANG GEDE","arco":"HARTONO","monthly":[261941,102650,552328,89341,524108,99000],"total":1629368,"ket":""},{"nrp":"625021036","nama":"Dara D. Prasasti Januari","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[115683,26790,347883,28289,976948,0],"total":1495593,"ket":""},{"nrp":"924020707","nama":"Rinayatul Lisulfiyana","kode":"M24","nama_toko":"SEMOLOWARU","arco":"ALI","monthly":[126871,251499,347024,303846,453179,133480],"total":1615899,"ket":""},{"nrp":"SG1125021238","nama":"SG1125021238","kode":"M31","nama_toko":"RAYA TROPODO","arco":"VACANT","monthly":[162007,581579,598039,18912,0,0],"total":1360537,"ket":""},{"nrp":"226021340","nama":"Zaskia A. Fibriyanti","kode":"M19","nama_toko":"RAYA KETINTANG","arco":"NORA","monthly":[0,0,280624,686945,344893,0],"total":1312462,"ket":"RESIGN"},{"nrp":"922020222","nama":"Siti N. Faisa","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[561973,324812,199267,179066,20269,0],"total":1285387,"ket":""},{"nrp":"624020595","nama":"Putri Andriani","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[177378,171330,198176,669755,25293,0],"total":1241932,"ket":""},{"nrp":"123020266","nama":"Dinda K. Wardani","kode":"M25","nama_toko":"MANUKAN TENGAH","arco":"CIPTO","monthly":[348330,213100,21570,621312,0,0],"total":1204312,"ket":""},{"nrp":"1024020748","nama":"Pearl S. Belva","kode":"M06","nama_toko":"PUCANG ANOM","arco":"HARTONO","monthly":[488425,34845,462676,69388,143549,40454],"total":1239337,"ket":""},{"nrp":"SG1025021201","nama":"Leni Marniati","kode":"M18","nama_toko":"GARUDA BETRO","arco":"VACANT","monthly":[709603,91422,140883,242086,0,0],"total":1183994,"ket":""},{"nrp":"SG1025021224","nama":"SG1025021224","kode":"M18","nama_toko":"GARUDA BETRO","arco":"VACANT","monthly":[379015,775878,0,0,0,0],"total":1154893,"ket":""},{"nrp":"SG1225021300","nama":"Arum F. Yanti","kode":"M30","nama_toko":"KEMENDUNG","arco":"DEWI","monthly":[403044,599711,68864,54334,18334,0],"total":1144287,"ket":""},{"nrp":"1225021278","nama":"1225021278","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[936085,136373,0,0,0,0],"total":1072458,"ket":""},{"nrp":"725021091","nama":"725021091","kode":"M19","nama_toko":"RAYA KETINTANG","arco":"NORA","monthly":[81478,790240,23989,126813,0,0],"total":1022520,"ket":""},{"nrp":"923020406","nama":"Khusnul Chotimah","kode":"M06","nama_toko":"PUCANG ANOM","arco":"HARTONO","monthly":[277256,102713,274342,195590,159467,0],"total":1009368,"ket":""},{"nrp":"SG1125021254","nama":"SG1125021254","kode":"M22","nama_toko":"PONDOK JATI","arco":"DEWI","monthly":[810469,121490,31478,31478,0,0],"total":994915,"ket":""},{"nrp":"1225021308","nama":"Nabiilah U. Roihaanah","kode":"M10","nama_toko":"PANDEGILING","arco":"TONI","monthly":[0,352657,301996,228446,103289,142675],"total":1129063,"ket":""},{"nrp":"922020229","nama":"Oktaviani Hidayat","kode":"M14","nama_toko":"RAYA MULYOSARI","arco":"AYU","monthly":[509659,43174,118602,137090,159904,130913],"total":1099342,"ket":""},{"nrp":"925021155","nama":"Nihaya I. Salsabillah","kode":"M04","nama_toko":"KALIMANTAN GRS","arco":"ARI","monthly":[691311,100000,174900,0,0,0],"total":966211,"ket":""},{"nrp":"SG0824020702","nama":"Prima M. Hernowo","kode":"M31","nama_toko":"RAYA TROPODO","arco":"VACANT","monthly":[357865,83333,406814,41032,40871,0],"total":929915,"ket":""},{"nrp":"118020030","nama":"Eliska F. Fransiska","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[181464,166970,315153,222710,0,12018],"total":898315,"ket":""},{"nrp":"1123020436","nama":"Dwi Novitasari","kode":"M16","nama_toko":"RUNGKUT MENANGGAL","arco":"VACANT","monthly":[86360,214573,575749,0,0,0],"total":876682,"ket":""},{"nrp":"723010376","nama":"Muchamad A. Robiyansyah","kode":"M13","nama_toko":"WIGUNA TENGAH","arco":"VACANT","monthly":[587410,230810,0,35126,0,0],"total":853346,"ket":""},{"nrp":"524020576","nama":"524020576","kode":"M19","nama_toko":"RAYA KETINTANG","arco":"NORA","monthly":[261171,351596,207513,28509,0,0],"total":848789,"ket":""},{"nrp":"525021005","nama":"Lailatul Fitriya","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[147244,158221,223267,255549,39480,160033],"total":983794,"ket":""},{"nrp":"SG0126021316","nama":"SG0126021316","kode":"M28","nama_toko":"ARYO BEBANGAH","arco":"ALI","monthly":[0,786557,29141,0,0,0],"total":815698,"ket":""},{"nrp":"125020870","nama":"Safira A. Isyahaya","kode":"M24","nama_toko":"SEMOLOWARU","arco":"ALI","monthly":[222736,46657,88092,247432,208822,101531],"total":915270,"ket":""},{"nrp":"1124010797","nama":"Hendra Kurniawan","kode":"M03","nama_toko":"USMAN SADAR","arco":"ARI","monthly":[323947,203638,165508,0,103131,49190],"total":845414,"ket":""},{"nrp":"SG1025021224","nama":"SG1025021224","kode":"M31","nama_toko":"RAYA TROPODO","arco":"VACANT","monthly":[0,775878,0,0,0,0],"total":775878,"ket":""},{"nrp":"226021366","nama":"Siti Aisyah","kode":"M03","nama_toko":"USMAN SADAR","arco":"ARI","monthly":[0,0,217468,309320,242024,128976],"total":897788,"ket":""},{"nrp":"226021349","nama":"226021349","kode":"M15","nama_toko":"DUKUH KUPANG","arco":"ALI","monthly":[0,0,758787,0,0,0],"total":758787,"ket":""},{"nrp":"SG1123020448","nama":"Rosiana S. Zulaika","kode":"M29","nama_toko":"RAYA SUKODONO","arco":"ALI","monthly":[330686,184458,0,210000,0,0],"total":725144,"ket":""},{"nrp":"326021393","nama":"326021393","kode":"M06","nama_toko":"PUCANG ANOM","arco":"HARTONO","monthly":[0,0,0,258457,451142,39321],"total":748920,"ket":""},{"nrp":"0426021445","nama":"SALSHA KAROLINA RATU MUSHIA","kode":"M09","nama_toko":"BRATANG GEDE","arco":"HARTONO","monthly":[0,0,0,0,675544,516140],"total":1191684,"ket":""},{"nrp":"SG0924020706","nama":"SG0924020706","kode":"M28","nama_toko":"ARYO BEBANGAH","arco":"ALI","monthly":[87652,303629,265360,0,0,0],"total":656641,"ket":""},{"nrp":"425020964","nama":"425020964","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[18161,192042,44901,375191,15330,0],"total":645625,"ket":""},{"nrp":"SG0525020998","nama":"Rosma A. Nafisah","kode":"M23","nama_toko":"TAMAN PINANG","arco":"DEWI","monthly":[418669,6954,142665,14061,49704,0],"total":632053,"ket":""},{"nrp":"126021326","nama":"Jihan Salwa Fadillah","kode":"M25","nama_toko":"MANUKAN TENGAH","arco":"CIPTO","monthly":[0,0,284920,305740,18156,0],"total":608816,"ket":""},{"nrp":"SG1025021225","nama":"SG1025021225","kode":"M18","nama_toko":"GARUDA BETRO","arco":"VACANT","monthly":[446835,85551,36090,27034,0,0],"total":595510,"ket":""},{"nrp":"1025021232","nama":"Yuni A. Putri","kode":"M27","nama_toko":"LIDAH WETAN","arco":"CIPTO","monthly":[517194,5091,23390,23284,12161,0],"total":581120,"ket":""},{"nrp":"925021133","nama":"925021133","kode":"M16","nama_toko":"RUNGKUT MENANGGAL","arco":"VACANT","monthly":[0,578152,0,0,0,0],"total":578152,"ket":""},{"nrp":"925021125","nama":"Sabrina A. B. Prameswari","kode":"M16","nama_toko":"RUNGKUT MENANGGAL","arco":"VACANT","monthly":[0,273963,84152,39608,168420,0],"total":566143,"ket":""},{"nrp":"SG0425020965","nama":"Syafitri","kode":"M28","nama_toko":"ARYO BEBANGAH","arco":"ALI","monthly":[0,0,123221,217001,222878,65900],"total":629000,"ket":""},{"nrp":"326021378","nama":"326021378","kode":"M24","nama_toko":"SEMOLOWARU","arco":"ALI","monthly":[0,0,0,327685,231850,148961],"total":708496,"ket":""},{"nrp":"122020147","nama":"Alfiyah","kode":"M24","nama_toko":"SEMOLOWARU","arco":"ALI","monthly":[148180,0,0,391322,16771,0],"total":556273,"ket":""},{"nrp":"1125021261","nama":"Dwi R. Panjaitan","kode":"M10","nama_toko":"PANDEGILING","arco":"TONI","monthly":[67974,249215,54920,88587,78861,0],"total":539557,"ket":""},{"nrp":"1220020089","nama":"Munawaroh","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[54724,95343,113270,225412,8246,5097],"total":502092,"ket":""},{"nrp":"722020195","nama":"Nita Wahyuni","kode":"M06","nama_toko":"PUCANG ANOM","arco":"HARTONO","monthly":[36495,34541,61195,346072,11420,16680],"total":506403,"ket":""},{"nrp":"SG0725021080","nama":"SG0725021080","kode":"M28","nama_toko":"ARYO BEBANGAH","arco":"ALI","monthly":[0,472128,0,0,0,0],"total":472128,"ket":""},{"nrp":"SG0226021339","nama":"Meylani I. Firdaus","kode":"M30","nama_toko":"KEMENDUNG","arco":"DEWI","monthly":[0,0,283741,96034,91579,0],"total":471354,"ket":""},{"nrp":"125020868","nama":"Nazilla Rahmawati","kode":"M06","nama_toko":"PUCANG ANOM","arco":"HARTONO","monthly":[246955,12118,27719,26936,153604,0],"total":467332,"ket":""},{"nrp":"720020068","nama":"720020068","kode":"M13","nama_toko":"WIGUNA TENGAH","arco":"VACANT","monthly":[336984,33103,70926,25468,0,0],"total":466481,"ket":""},{"nrp":"525021004","nama":"Siti Maisyaroh","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[187160,271080,0,0,0,0],"total":458240,"ket":""},{"nrp":"SG1025021203","nama":"SG1025021203","kode":"M18","nama_toko":"GARUDA BETRO","arco":"VACANT","monthly":[266005,186302,0,0,0,0],"total":452307,"ket":""},{"nrp":"622020192","nama":"Andini S. Wulandari","kode":"M20","nama_toko":"RAYA TENGGILIS","arco":"VACANT","monthly":[120247,60192,50208,170525,46463,5720],"total":453355,"ket":""},{"nrp":"925011142","nama":"Ana Lutvia","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[58525,26500,312501,13821,34054,0],"total":445401,"ket":""},{"nrp":"724020651","nama":"Silfiana","kode":"M09","nama_toko":"BRATANG GEDE","arco":"HARTONO","monthly":[104834,53316,10670,68142,198113,0],"total":435075,"ket":""},{"nrp":"SG0525020999","nama":"SG0525020999","kode":"M22","nama_toko":"PONDOK JATI","arco":"DEWI","monthly":[428489,0,0,0,0,0],"total":428489,"ket":""},{"nrp":"SG0426021404","nama":"NAJWA KHOIRINA","kode":"M30","nama_toko":"KEMENDUNG","arco":"DEWI","monthly":[0,0,0,0,413810,18021],"total":431831,"ket":""},{"nrp":"925021154","nama":"925021154","kode":"M25","nama_toko":"MANUKAN TENGAH","arco":"CIPTO","monthly":[0,404000,0,0,0,0],"total":404000,"ket":""},{"nrp":"SG0821020115","nama":"Ayu W. Safitri","kode":"M28","nama_toko":"ARYO BEBANGAH","arco":"ALI","monthly":[29634,21280,341296,11015,0,0],"total":403225,"ket":""},{"nrp":"SG0725021075","nama":"Rizky A. F. Nuzula","kode":"M22","nama_toko":"PONDOK JATI","arco":"DEWI","monthly":[350095,0,0,47801,0,69022],"total":466918,"ket":""},{"nrp":"925021143","nama":"Septiananda P. Lestari","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[209324,61683,101665,5000,0,174207],"total":551879,"ket":""},{"nrp":"SG0925021163","nama":"SG0925021163","kode":"M31","nama_toko":"RAYA TROPODO","arco":"VACANT","monthly":[370707,0,0,0,0,0],"total":370707,"ket":""},{"nrp":"326021375","nama":"326021375","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[0,0,72814,277650,0,0],"total":350464,"ket":""},{"nrp":"226021369","nama":"226021369","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[0,0,337108,10141,0,0],"total":347249,"ket":""},{"nrp":"426021418","nama":"426021418","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[0,0,0,121723,213291,0],"total":335014,"ket":""},{"nrp":"1024020765","nama":"Kamilia","kode":"M03","nama_toko":"USMAN SADAR","arco":"ARI","monthly":[18000,124025,84761,10759,95222,41621],"total":374388,"ket":""},{"nrp":"1025021187","nama":"Vira A. Natasya","kode":"M12","nama_toko":"SIDOMULYO","arco":"CIPTO","monthly":[204891,0,30401,94834,0,0],"total":330126,"ket":""},{"nrp":"524020542","nama":"Lyra Phenzaloka","kode":"M05","nama_toko":"TAMBAHREJO","arco":"NIA","monthly":[0,22133,242029,63294,0,0],"total":327456,"ket":""},{"nrp":"SG0125020839","nama":"Tiara F. Sukma","kode":"M22","nama_toko":"PONDOK JATI","arco":"DEWI","monthly":[139944,175231,0,0,8257,0],"total":323432,"ket":""},{"nrp":"1025021235","nama":"Nabilla E. Putri Arifanti","kode":"M18","nama_toko":"GARUDA BETRO","arco":"VACANT","monthly":[96227,17960,101232,5000,94741,0],"total":315160,"ket":""},{"nrp":"SG0426021408","nama":"SG0426021408","kode":"M22","nama_toko":"PONDOK JATI","arco":"DEWI","monthly":[0,0,0,296320,0,0],"total":296320,"ket":""},{"nrp":"916020021","nama":"Anis Fadillah","kode":"M17","nama_toko":"KARANG ASEM","arco":"NIA","monthly":[124538,98977,57571,11809,0,0],"total":292895,"ket":""},{"nrp":"1123020434","nama":"Vita A. Putri","kode":"M11","nama_toko":"RAYA LONTAR","arco":"CIPTO","monthly":[0,0,102728,154017,26825,7781],"total":291351,"ket":""},{"nrp":"0426021444","nama":"TAMARA ANGGRAINI","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[0,0,0,0,281969,0],"total":281969,"ket":""},{"nrp":"521020102","nama":"521020102","kode":"M19","nama_toko":"RAYA KETINTANG","arco":"NORA","monthly":[13776,265786,0,0,0,0],"total":279562,"ket":""},{"nrp":"SG0426021422","nama":"DIVA DWI PRATIWI","kode":"M28","nama_toko":"ARYO BEBANGAH","arco":"ALI","monthly":[0,0,0,0,277697,68235],"total":345932,"ket":""},{"nrp":"223020280","nama":"Titah S. Rani","kode":"M05","nama_toko":"TAMBAHREJO","arco":"NIA","monthly":[0,28715,65137,85713,93844,0],"total":273409,"ket":""},{"nrp":"1024020763","nama":"Nadya S. W. Ningrum","kode":"M05","nama_toko":"TAMBAHREJO","arco":"NIA","monthly":[0,11371,60674,99121,102043,12745],"total":285954,"ket":""},{"nrp":"1125021237","nama":"1125021237","kode":"M18","nama_toko":"GARUDA BETRO","arco":"VACANT","monthly":[0,0,0,231658,39465,0],"total":271123,"ket":""},{"nrp":"1125021245","nama":"Delfis L. Alisdiono","kode":"M12","nama_toko":"SIDOMULYO","arco":"CIPTO","monthly":[0,69508,115190,43795,40835,0],"total":269328,"ket":""},{"nrp":"425020974","nama":"L. Hanum Mufidah","kode":"M20","nama_toko":"RAYA TENGGILIS","arco":"VACANT","monthly":[48822,119136,20831,44459,33500,0],"total":266748,"ket":""},{"nrp":"1025021186","nama":"Rohmatul M. Fauzi","kode":"M14","nama_toko":"RAYA MULYOSARI","arco":"AYU","monthly":[0,109872,37665,118400,0,0],"total":265937,"ket":""},{"nrp":"1223020468","nama":"Nadia A. Putri","kode":"M14","nama_toko":"RAYA MULYOSARI","arco":"AYU","monthly":[194409,66180,5061,0,0,5781],"total":271431,"ket":""},{"nrp":"524020571","nama":"Maefa D. Wulandari","kode":"M14","nama_toko":"RAYA MULYOSARI","arco":"AYU","monthly":[78001,120488,28598,8951,28008,0],"total":264046,"ket":""},{"nrp":"1225021290","nama":"1225021290","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[41933,217490,0,0,0,0],"total":259423,"ket":""},{"nrp":"225020905","nama":"Devita E. Putri Permaisindy","kode":"M26","nama_toko":"KEPUTIH TEGAL","arco":"AYU","monthly":[0,85729,50662,48111,74674,8081],"total":267257,"ket":""},{"nrp":"825021109","nama":"Syahwa A. Putri","kode":"M33","nama_toko":"CITRALAND","arco":"ARI","monthly":[248672,9861,0,0,0,0],"total":258533,"ket":""},{"nrp":"SG1025021204","nama":"Virda N. Seviani","kode":"M18","nama_toko":"GARUDA BETRO","arco":"VACANT","monthly":[0,200125,5533,45000,0,0],"total":250658,"ket":""},{"nrp":"SG0524020550","nama":"Frida R. Pammasena","kode":"M23","nama_toko":"TAMAN PINANG","arco":"DEWI","monthly":[60681,36643,13621,23405,106914,0],"total":241264,"ket":""},{"nrp":"1125021244","nama":"Alfira Fitriah","kode":"M12","nama_toko":"SIDOMULYO","arco":"CIPTO","monthly":[136986,0,97785,5822,0,0],"total":240593,"ket":""},{"nrp":"0426021473","nama":"VIONA 00015","kode":"M15","nama_toko":"DUKUH KUPANG","arco":"ALI","monthly":[0,0,0,0,238615,233623],"total":472238,"ket":""},{"nrp":"326011385","nama":"326011385","kode":"M21","nama_toko":"DELTA SARI","arco":"NORA","monthly":[0,0,0,212718,18375,0],"total":231093,"ket":""},{"nrp":"SG0426021412","nama":"ANGGITA AULIA MONIK","kode":"M31","nama_toko":"RAYA TROPODO","arco":"VACANT","monthly":[0,0,0,0,230141,7076],"total":237217,"ket":""},{"nrp":"426011413","nama":"426011413","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[0,0,0,113805,116025,14235],"total":244065,"ket":""},{"nrp":"725021092","nama":"Zahra A. Setyowati","kode":"M21","nama_toko":"DELTA SARI","arco":"NORA","monthly":[130388,45200,0,46857,0,0],"total":222445,"ket":""},{"nrp":"525021002","nama":"525021002","kode":"M05","nama_toko":"TAMBAHREJO","arco":"NIA","monthly":[104146,112990,5222,0,0,0],"total":222358,"ket":""},{"nrp":"425020947","nama":"425020947","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[220000,0,0,0,0,0],"total":220000,"ket":""},{"nrp":"1119020059","nama":"Afwa Falutfi","kode":"M02","nama_toko":"KAPAS KRAMPUNG 75E","arco":"NIA","monthly":[9440,184518,16846,0,0,0],"total":210804,"ket":""},{"nrp":"226021356","nama":"Andini A. Putri Sagita","kode":"M25","nama_toko":"MANUKAN TENGAH","arco":"CIPTO","monthly":[0,0,207614,0,0,0],"total":207614,"ket":""},{"nrp":"419020048","nama":"Vika Anjana","kode":"M02","nama_toko":"KAPAS KRAMPUNG 75E","arco":"NIA","monthly":[58321,144263,0,0,0,0],"total":202584,"ket":""},{"nrp":"SG0924020721","nama":"Tarisa N. Fauzia","kode":"M23","nama_toko":"TAMAN PINANG","arco":"DEWI","monthly":[96605,7591,8703,30158,58502,0],"total":201559,"ket":""},{"nrp":"126021320","nama":"126021320","kode":"M21","nama_toko":"DELTA SARI","arco":"NORA","monthly":[0,0,99806,99806,0,0],"total":199612,"ket":""},{"nrp":"824020675","nama":"Anissa T. Widearti","kode":"M10","nama_toko":"PANDEGILING","arco":"TONI","monthly":[15803,49720,22066,86364,24312,0],"total":198265,"ket":""},{"nrp":"425020937","nama":"A. Tara Yustia","kode":"M20","nama_toko":"RAYA TENGGILIS","arco":"VACANT","monthly":[30015,149205,0,7342,8594,0],"total":195156,"ket":""},{"nrp":"921020118","nama":"Asyahnur P. Utami","kode":"M13","nama_toko":"WIGUNA TENGAH","arco":"VACANT","monthly":[0,0,140251,54110,0,0],"total":194361,"ket":""},{"nrp":"0426021474","nama":"Silfiana","kode":"M15","nama_toko":"DUKUH KUPANG","arco":"ALI","monthly":[0,0,0,0,189995,32292],"total":222287,"ket":""},{"nrp":"SG2605021499","nama":"Kasir Baru","kode":"M29","nama_toko":"RAYA SUKODONO","arco":"ALI","monthly":[0,0,0,0,188689,109684],"total":298373,"ket":""},{"nrp":"SG0524020552","nama":"Nadiya I. Safitri","kode":"M30","nama_toko":"KEMENDUNG","arco":"DEWI","monthly":[100665,64945,0,18772,0,0],"total":184382,"ket":""},{"nrp":"0426011462","nama":"SALWA  TRI NAILA SAADAH","kode":"M10","nama_toko":"PANDEGILING","arco":"TONI","monthly":[0,0,0,0,181337,62022],"total":243359,"ket":""},{"nrp":"624020620","nama":"Kasih K. Ramadani","kode":"M02","nama_toko":"KAPAS KRAMPUNG 75E","arco":"NIA","monthly":[32951,6040,105840,23032,12480,12745],"total":193088,"ket":""},{"nrp":"1225021296","nama":"Aminah Khatum","kode":"M13","nama_toko":"WIGUNA TENGAH","arco":"VACANT","monthly":[0,0,169111,0,8040,69719],"total":246870,"ket":""},{"nrp":"919020056","nama":"Nora Afriani","kode":"M21","nama_toko":"DELTA SARI","arco":"NORA","monthly":[0,97086,0,0,75444,0],"total":172530,"ket":""},{"nrp":"126011311","nama":"Ivan Y. Irawan","kode":"M25","nama_toko":"MANUKAN TENGAH","arco":"CIPTO","monthly":[0,160879,0,0,0,0],"total":160879,"ket":""},{"nrp":"326021381","nama":"Sri Nurhayati","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[0,0,159003,0,0,0],"total":159003,"ket":""},{"nrp":"224020506","nama":"224020506","kode":"M27","nama_toko":"LIDAH WETAN","arco":"CIPTO","monthly":[148735,5563,0,0,0,0],"total":154298,"ket":""},{"nrp":"0426021406","nama":"APRILLIA AYU NADIFA","kode":"M26","nama_toko":"KEPUTIH TEGAL","arco":"AYU","monthly":[0,0,0,0,147313,0],"total":147313,"ket":""},{"nrp":"426021443","nama":"426021443","kode":"M19","nama_toko":"RAYA KETINTANG","arco":"NORA","monthly":[0,0,0,90447,55715,0],"total":146162,"ket":""},{"nrp":"225020911","nama":"Riska D. Amalia","kode":"M33","nama_toko":"CITRALAND","arco":"ARI","monthly":[81425,9861,50451,0,0,0],"total":141737,"ket":""},{"nrp":"1222020251","nama":"Sabbrina Cahyani","kode":"M31","nama_toko":"RAYA TROPODO","arco":"VACANT","monthly":[60750,0,0,5117,69000,0],"total":134867,"ket":""},{"nrp":"925021129","nama":"Nanda A. Setiawati","kode":"M14","nama_toko":"RAYA MULYOSARI","arco":"AYU","monthly":[0,8433,0,45456,72871,0],"total":126760,"ket":""},{"nrp":"SG0824020682","nama":"Isnaini A. Rofiqi","kode":"M32","nama_toko":"GRAHA KOTA","arco":"DEWI","monthly":[0,86257,20484,17888,0,0],"total":124629,"ket":""},{"nrp":"126021318","nama":"Putri A. Camila","kode":"M21","nama_toko":"DELTA SARI","arco":"NORA","monthly":[0,49208,15740,0,59168,0],"total":124116,"ket":""},{"nrp":"0426021464","nama":"KHARIZMA DWI AMANDA","kode":"M21","nama_toko":"DELTA SARI","arco":"NORA","monthly":[0,0,0,0,123757,54285],"total":178042,"ket":""},{"nrp":"920010076","nama":"Kelawan Sucipto","kode":"M25","nama_toko":"MANUKAN TENGAH","arco":"CIPTO","monthly":[51919,9558,0,61154,0,0],"total":122631,"ket":""},{"nrp":"925021126","nama":"925021126","kode":"M26","nama_toko":"KEPUTIH TEGAL","arco":"AYU","monthly":[0,116264,0,0,0,0],"total":116264,"ket":""},{"nrp":"426021470","nama":"426021470","kode":"M25","nama_toko":"MANUKAN TENGAH","arco":"CIPTO","monthly":[0,0,0,109476,6490,0],"total":115966,"ket":""},{"nrp":"SG0924020713","nama":"Fanny D. Nur Aini","kode":"M32","nama_toko":"GRAHA KOTA","arco":"DEWI","monthly":[69695,0,44948,0,0,0],"total":114643,"ket":""},{"nrp":"1225021308","nama":"1225021308","kode":"M07","nama_toko":"PACUAN KUDA","arco":"ALI","monthly":[0,0,0,10544,103289,142675],"total":256508,"ket":""},{"nrp":"724020638","nama":"Dewi P. Alwani","kode":"M11","nama_toko":"RAYA LONTAR","arco":"CIPTO","monthly":[74500,5000,6480,21893,0,0],"total":107873,"ket":""},{"nrp":"1125021260","nama":"1125021260","kode":"M10","nama_toko":"PANDEGILING","arco":"TONI","monthly":[103555,0,0,0,0,0],"total":103555,"ket":""},{"nrp":"818020037","nama":"Desy P. Sari","kode":"M26","nama_toko":"KEPUTIH TEGAL","arco":"AYU","monthly":[0,100263,0,0,0,0],"total":100263,"ket":""},{"nrp":"522020183","nama":"522020183","kode":"M19","nama_toko":"RAYA KETINTANG","arco":"NORA","monthly":[95327,0,0,0,0,0],"total":95327,"ket":""},{"nrp":"SG1121020124","nama":"OKTAVIANI LAILATUL JANNAH","kode":"M23","nama_toko":"TAMAN PINANG","arco":"DEWI","monthly":[0,0,0,0,94761,0],"total":94761,"ket":""},{"nrp":"425020953","nama":"425020953","kode":"M09","nama_toko":"BRATANG GEDE","arco":"HARTONO","monthly":[77826,15731,0,0,0,0],"total":93557,"ket":""},{"nrp":"1025021216","nama":"Hanum Wawaddah","kode":"M12","nama_toko":"SIDOMULYO","arco":"CIPTO","monthly":[5390,79559,0,0,0,0],"total":84949,"ket":""},{"nrp":"SG0624020606","nama":"SG0624020606","kode":"M30","nama_toko":"KEMENDUNG","arco":"DEWI","monthly":[82115,0,0,0,0,0],"total":82115,"ket":""},{"nrp":"0226021373","nama":"Salsadila Syabibi","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[0,0,0,0,80863,14140],"total":95003,"ket":""},{"nrp":"919020056","nama":"Nora Afriani","kode":"M19","nama_toko":"RAYA KETINTANG","arco":"NORA","monthly":[0,5003,0,0,75444,0],"total":80447,"ket":""},{"nrp":"925021132","nama":"925021132","kode":"M15","nama_toko":"DUKUH KUPANG","arco":"ALI","monthly":[76000,0,0,0,0,0],"total":76000,"ket":""},{"nrp":"720020070","nama":"720020070","kode":"M15","nama_toko":"DUKUH KUPANG","arco":"ALI","monthly":[8561,45000,11185,0,0,0],"total":64746,"ket":""},{"nrp":"126021318","nama":"126021318","kode":"M19","nama_toko":"RAYA KETINTANG","arco":"NORA","monthly":[0,0,0,5200,59168,0],"total":64368,"ket":""},{"nrp":"120020060","nama":"Sinta Nuriyah","kode":"M16","nama_toko":"RUNGKUT MENANGGAL","arco":"VACANT","monthly":[61516,0,0,0,0,0],"total":61516,"ket":""},{"nrp":"1025021183","nama":"1025021183","kode":"M13","nama_toko":"WIGUNA TENGAH","arco":"VACANT","monthly":[61010,0,0,0,0,0],"total":61010,"ket":""},{"nrp":"522020182","nama":"Abdiniati","kode":"M26","nama_toko":"KEPUTIH TEGAL","arco":"AYU","monthly":[0,9142,23901,22316,0,0],"total":55359,"ket":""},{"nrp":"924020726","nama":"924020726","kode":"M26","nama_toko":"KEPUTIH TEGAL","arco":"AYU","monthly":[44951,9720,0,0,0,0],"total":54671,"ket":""},{"nrp":"723020359","nama":"Dela Puspita","kode":"M27","nama_toko":"LIDAH WETAN","arco":"CIPTO","monthly":[0,0,46756,5130,0,0],"total":51886,"ket":""},{"nrp":"126021321","nama":"126021321","kode":"M03","nama_toko":"USMAN SADAR","arco":"ARI","monthly":[0,0,34732,13144,0,0],"total":47876,"ket":""},{"nrp":"226021363","nama":"Intan P. Pratiwi","kode":"M33","nama_toko":"CITRALAND","arco":"ARI","monthly":[0,0,47000,0,0,0],"total":47000,"ket":""},{"nrp":"921020118","nama":"Asyahnur P. Utami","kode":"M16","nama_toko":"RUNGKUT MENANGGAL","arco":"VACANT","monthly":[43604,0,0,0,0,0],"total":43604,"ket":""},{"nrp":"823020388","nama":"Putri A. Anggraini","kode":"M05","nama_toko":"TAMBAHREJO","arco":"NIA","monthly":[0,0,9906,11726,19481,0],"total":41113,"ket":""},{"nrp":"SG2605021503","nama":"Kasir Baru","kode":"M29","nama_toko":"RAYA SUKODONO","arco":"ALI","monthly":[0,0,0,0,38432,232218],"total":270650,"ket":""},{"nrp":"0426011417","nama":"SHERYL ARIYA BAWANTARA","kode":"M19","nama_toko":"RAYA KETINTANG","arco":"NORA","monthly":[0,0,0,0,36460,0],"total":36460,"ket":""},{"nrp":"1125021266","nama":"Chika E. Tafani","kode":"M33","nama_toko":"CITRALAND","arco":"ARI","monthly":[0,0,28053,0,8113,0],"total":36166,"ket":""},{"nrp":"1025021215","nama":"1025021215","kode":"M26","nama_toko":"KEPUTIH TEGAL","arco":"AYU","monthly":[33397,0,0,0,0,0],"total":33397,"ket":""},{"nrp":"0426021423","nama":"ROSA  AMELIA SETIA PUTRI","kode":"M12","nama_toko":"SIDOMULYO","arco":"CIPTO","monthly":[0,0,0,0,33333,0],"total":33333,"ket":""},{"nrp":"1225021279","nama":"KHARISMAH  NUR FADILAH","kode":"M14","nama_toko":"RAYA MULYOSARI","arco":"AYU","monthly":[0,0,0,0,29701,0],"total":29701,"ket":""},{"nrp":"SG0824020681","nama":"Nuna S. Ikhwan","kode":"M32","nama_toko":"GRAHA KOTA","arco":"DEWI","monthly":[10014,0,0,0,19546,0],"total":29560,"ket":""},{"nrp":"1225021280","nama":"RADINTA  SALSABILA YUMNA","kode":"M05","nama_toko":"TAMBAHREJO","arco":"NIA","monthly":[0,0,0,0,24133,0],"total":24133,"ket":""},{"nrp":"221020095","nama":"Trisna L. Azizah","kode":"M14","nama_toko":"RAYA MULYOSARI","arco":"AYU","monthly":[8722,0,0,14940,0,0],"total":23662,"ket":""},{"nrp":"0426021410","nama":"KHOFIFAH","kode":"M09","nama_toko":"BRATANG GEDE","arco":"HARTONO","monthly":[0,0,0,0,23210,18766],"total":41976,"ket":""},{"nrp":"0426021456","nama":"VIVI BINTANG NADIA KURNIAWAN","kode":"M19","nama_toko":"RAYA KETINTANG","arco":"NORA","monthly":[0,0,0,0,22796,106468],"total":129264,"ket":""},{"nrp":"725021066","nama":"Wilda Zainia","kode":"M17","nama_toko":"KARANG ASEM","arco":"NIA","monthly":[0,0,18994,0,0,65660],"total":84654,"ket":""},{"nrp":"725011094","nama":"Ari Crisprianto","kode":"M04","nama_toko":"KALIMANTAN GRS","arco":"ARI","monthly":[18091,0,0,0,0,0],"total":18091,"ket":""},{"nrp":"625021032","nama":"Aisyah A. Kurniawan","kode":"M01","nama_toko":"TAMBAHREJO","arco":"NIA","monthly":[0,0,12041,5178,0,0],"total":17219,"ket":""},{"nrp":"1025021206","nama":"JESICA AMELIA DWI SAPUTRI","kode":"M16","nama_toko":"RUNGKUT MENANGGAL","arco":"VACANT","monthly":[0,0,0,0,16610,0],"total":16610,"ket":""},{"nrp":"725021095","nama":"725021095","kode":"M21","nama_toko":"DELTA SARI","arco":"NORA","monthly":[16046,0,0,0,0,0],"total":16046,"ket":""},{"nrp":"SG0426021463","nama":"ANNATASYA  KRISNU DAMAYANTI","kode":"M28","nama_toko":"ARYO BEBANGAH","arco":"ALI","monthly":[0,0,0,0,15536,356177],"total":371713,"ket":""},{"nrp":"822020219","nama":"Vivi Urviyanti","kode":"M27","nama_toko":"LIDAH WETAN","arco":"CIPTO","monthly":[0,7761,6993,0,0,0],"total":14754,"ket":""},{"nrp":"1217020029","nama":"Nurillah","kode":"M14","nama_toko":"RAYA MULYOSARI","arco":"AYU","monthly":[0,13332,0,0,0,0],"total":13332,"ket":""},{"nrp":"814020014","nama":"Lisa Novinia","kode":"M01","nama_toko":"TAMBAHREJO","arco":"NIA","monthly":[10970,0,0,0,0,0],"total":10970,"ket":""},{"nrp":"SG0426021429","nama":"IDA ROMZAH HASANAH","kode":"M31","nama_toko":"RAYA TROPODO","arco":"VACANT","monthly":[0,0,0,0,10104,0],"total":10104,"ket":""},{"nrp":"824020667","nama":"Nely V. Ardini","kode":"M27","nama_toko":"LIDAH WETAN","arco":"CIPTO","monthly":[0,10096,0,0,0,0],"total":10096,"ket":""},{"nrp":"922020231","nama":"Nur I. Sari","kode":"M02","nama_toko":"KAPAS KRAMPUNG 75E","arco":"NIA","monthly":[0,0,10000,0,0,0],"total":10000,"ket":""},{"nrp":"0326021401","nama":"AISYAH ALYA RAMADHANI","kode":"M13","nama_toko":"WIGUNA TENGAH","arco":"VACANT","monthly":[0,0,0,0,9545,14760],"total":24305,"ket":""},{"nrp":"725011094","nama":"Ari Crisprianto","kode":"M03","nama_toko":"USMAN SADAR","arco":"ARI","monthly":[0,8995,0,0,0,0],"total":8995,"ket":""},{"nrp":"125020856","nama":"125020856","kode":"M04","nama_toko":"KALIMANTAN GRS","arco":"ARI","monthly":[0,0,0,8925,0,0],"total":8925,"ket":""},{"nrp":"0426021432","nama":"RISKA TRI AULIA","kode":"M27","nama_toko":"LIDAH WETAN","arco":"CIPTO","monthly":[0,0,0,0,8855,0],"total":8855,"ket":""},{"nrp":"723020355","nama":"Masruroh Safitri","kode":"M01","nama_toko":"TAMBAHREJO","arco":"NIA","monthly":[0,8000,0,0,0,0],"total":8000,"ket":""},{"nrp":"823020384","nama":"823020384","kode":"M12","nama_toko":"SIDOMULYO","arco":"CIPTO","monthly":[0,0,0,7952,0,0],"total":7952,"ket":""},{"nrp":"SG1121020123","nama":"DEVIANA ARDIANTI","kode":"M22","nama_toko":"PONDOK JATI","arco":"DEWI","monthly":[0,0,0,0,7376,0],"total":7376,"ket":""},{"nrp":"725021088","nama":"725021088","kode":"M21","nama_toko":"DELTA SARI","arco":"NORA","monthly":[7061,0,0,0,0,0],"total":7061,"ket":""},{"nrp":"722020200","nama":"Safira A. Widjaya","kode":"M05","nama_toko":"TAMBAHREJO","arco":"NIA","monthly":[0,6500,0,0,0,0],"total":6500,"ket":""},{"nrp":"0525021218","nama":"Zahrotul Madania","kode":"M08","nama_toko":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[0,0,0,0,5915,0],"total":5915,"ket":""},{"nrp":"1224020918","nama":"Dini Islami","kode":"M02","nama_toko":"KAPAS KRAMPUNG 75E","arco":"NIA","monthly":[0,0,5079,0,0,0],"total":5079,"ket":""},{"nrp":"0925021156","nama":"ISTA  WAHYU WIDAYANTI","kode":"M04","nama_toko":"KALIMANTAN GRS","arco":"ARI","monthly":[0,0,0,0,5036,0],"total":5036,"ket":""},{"nrp":"1120020084","nama":"Nur A. Wulandari","kode":"M17","nama_toko":"KARANG ASEM","arco":"NIA","monthly":[0,5030,0,0,0,0],"total":5030,"ket":""},{"nrp":"823020384","nama":"Aisyah A. Shalsabila","kode":"M11","nama_toko":"RAYA LONTAR","arco":"CIPTO","monthly":[0,5000,0,0,0,0],"total":5000,"ket":""},{"nrp":"SG0425021408","nama":"SG0426021408","kode":"M22","nama_toko":"PONDOK JATI","arco":"DEWI","monthly":[0,0,0,0,0,0],"total":0,"ket":""},{"nrp":"0426021440","nama":"Dina Adelia Anggit Fradana","kode":"M25","nama_toko":"MANUKAN TENGAH","arco":"CIPTO","monthly":[0,0,0,0,0,23790],"total":23790,"ket":""}],"setoran_list":[{"kode":"M18","nama":"GARUDA BETRO","arco":"LINDA","monthly":[0,0,107500,3502000,142000,0],"total":3751500},{"kode":"M15","nama":"DUKUH KUPANG","arco":"ALI","monthly":[0,837000,1940500,550000,0,0],"total":3327500},{"kode":"M12","nama":"SIDOMULYO","arco":"CIPTO","monthly":[0,100000,207000,0,821000,0],"total":1128000},{"kode":"M03","nama":"USMAN SADAR","arco":"ARI","monthly":[0,0,872500,0,100000,0],"total":972500},{"kode":"M29","nama":"RAYA SUKODONO","arco":"ALI","monthly":[0,80000,13000,239900,591700,0],"total":924600},{"kode":"M06","nama":"PUCANG ANOM","arco":"HARTONO","monthly":[0,5000,754900,150000,0,0],"total":909900},{"kode":"M07","nama":"PACUAN KUDA","arco":"ALI","monthly":[0,323200,269500,13700,107500,20000],"total":733900},{"kode":"M09","nama":"BRATANG GEDE","arco":"HARTONO","monthly":[0,0,166100,317000,172400,0],"total":655500},{"kode":"M16","nama":"RUNGKUT MENANGGAL","arco":"LINDA","monthly":[0,0,585500,0,0,10000],"total":595500},{"kode":"M25","nama":"MANUKAN TENGAH","arco":"CIPTO","monthly":[0,0,30000,265200,0,0],"total":295200},{"kode":"M28","nama":"ARYO BEBANGAH","arco":"ALI","monthly":[0,90400,200100,0,0,0],"total":290500},{"kode":"M04","nama":"KALIMANTAN GRS","arco":"ARI","monthly":[0,0,174900,0,0,0],"total":174900},{"kode":"M24","nama":"SEMOLOWARU","arco":"ALI","monthly":[0,0,151000,0,0,0],"total":151000},{"kode":"M08","nama":"KAPAS KRAMPUNG 138A","arco":"HARTONO","monthly":[0,0,0,0,110000,0],"total":110000},{"kode":"M30","nama":"KEMENDUNG","arco":"DEWI","monthly":[0,0,40500,0,50000,0],"total":90500},{"kode":"M21","nama":"DELTA SARI","arco":"NORA","monthly":[0,0,90000,0,0,0],"total":90000},{"kode":"M22","nama":"PONDOK JATI","arco":"DEWI","monthly":[0,57000,0,0,0,0],"total":57000},{"kode":"M33","nama":"CITRALAND","arco":"ARI","monthly":[0,30000,21000,0,0,0],"total":51000},{"kode":"M11","nama":"RAYA LONTAR","arco":"CIPTO","monthly":[0,22500,0,0,0,0],"total":22500},{"kode":"M10","nama":"PANDEGILING","arco":"TONI","monthly":[0,0,0,0,18000,10000],"total":28000},{"kode":"M20","nama":"RAYA TENGGILIS","arco":"LINDA","monthly":[0,0,0,0,0,33000],"total":33000}],"arco_kasir":[{"arco":"ALI","monthly":[6964389,9561117,10708055,5048286,3779251,1572961],"total":37634059,"n_kasir":39,"n_toko":5,"resign":1},{"arco":"HARTONO","monthly":[3911287,2505529,3862299,3492291,3546555,1095408],"total":18413369,"n_kasir":23,"n_toko":3,"resign":0},{"arco":"VACANT","monthly":[4224982,4457162,2399819,992477,775494,0],"total":12849934,"n_kasir":27,"n_toko":5,"resign":0},{"arco":"CIPTO","monthly":[1815028,3112596,3850989,1454409,146655,31571],"total":10411248,"n_kasir":22,"n_toko":4,"resign":0},{"arco":"DEWI","monthly":[5287278,2284274,805364,630251,868783,87043],"total":9962993,"n_kasir":21,"n_toko":4,"resign":0},{"arco":"NORA","monthly":[605247,1604119,627672,1297295,871220,160753],"total":5166306,"n_kasir":16,"n_toko":2,"resign":1},{"arco":"ARI","monthly":[1381446,456380,802873,342148,453526,219787],"total":3656160,"n_kasir":12,"n_toko":3,"resign":0},{"arco":"AYU","monthly":[869139,682597,264489,395264,512471,144775],"total":2868735,"n_kasir":15,"n_toko":2,"resign":0},{"arco":"NIA","monthly":[340366,628537,609339,299873,251981,91150],"total":2221246,"n_kasir":18,"n_toko":4,"resign":0},{"arco":"TONI","monthly":[187332,651592,378982,403397,387799,204697],"total":2213799,"n_kasir":5,"n_toko":1,"resign":0}],"arco_setoran":[{"arco":"ALI","monthly":[0,1330600,2574100,803600,699200,20000],"total":5427500,"n_toko":5},{"arco":"LINDA","monthly":[0,0,693000,3502000,142000,43000],"total":4380000,"n_toko":2},{"arco":"HARTONO","monthly":[0,5000,921000,467000,282400,0],"total":1675400,"n_toko":3},{"arco":"CIPTO","monthly":[0,122500,237000,265200,821000,0],"total":1445700,"n_toko":3},{"arco":"ARI","monthly":[0,30000,1068400,0,100000,0],"total":1198400,"n_toko":3},{"arco":"DEWI","monthly":[0,57000,40500,0,50000,0],"total":147500,"n_toko":2},{"arco":"NORA","monthly":[0,0,90000,0,0,0],"total":90000,"n_toko":1},{"arco":"TONI","monthly":[0,0,0,0,18000,10000],"total":28000,"n_toko":1}]};
+
+const AP={ALI:'#4f9cf9',HARTONO:'#ff4757',LINDA:'#00d2ff',CIPTO:'#1ec86a',ARI:'#a855f7',DEWI:'#f472b6',TONI:'#ffb300',NORA:'#86efac',NIA:'#38bdf8',AYU:'#bef264',VACANT:'#94a3b8'};
+
+/* === PASSWORD === */
+(function(){
+  if(sessionStorage.getItem('mkm26')==='1'){
+    document.addEventListener('DOMContentLoaded',function(){
+      var o=document.getElementById('pw-ov');
+      if(o)o.remove();
+    });
+  }
+})();
+function pwCheck(){
+  var v=document.getElementById('pw-in').value;
+  if(v==='168168'){
+    sessionStorage.setItem('mkm26','1');
+    var o=document.getElementById('pw-ov');
+    o.style.transition='opacity .3s';
+    o.style.opacity='0';
+    setTimeout(function(){o.remove();},320);
+  } else {
+    var i=document.getElementById('pw-in');
+    i.classList.remove('shake');
+    void i.offsetWidth;
+    i.classList.add('shake');
+    document.getElementById('pw-err').textContent='Password salah. Coba lagi.';
+    i.value='';
+    setTimeout(function(){i.classList.remove('shake');},400);
+  }
+}
+
+/* === HELPERS === */
+function fRp(n,s){
+  if(!n&&n!==0)return'—';
+  if(s&&n>=1e9)return'Rp '+(n/1e9).toFixed(1)+'M';
+  if(s&&n>=1e6)return'Rp '+(n/1e6).toFixed(1)+'jt';
+  if(s&&n>=1e3)return'Rp '+(n/1e3).toFixed(0)+'k';
+  return'Rp '+Math.round(n).toLocaleString('id-ID');
+}
+function apill(a){
+  var c=AP[a]||'#94a3b8';
+  return '<span class="pill" style="background:'+c+'18;color:'+c+';border:1px solid '+c+'40">'+a+'</span>';
+}
+function medal(r){
+  if(r===1)return'🥇';
+  if(r===2)return'🥈';
+  if(r===3)return'🥉';
+  return '<span style="color:#3a3a55;font-size:.75rem">#'+r+'</span>';
+}
+function pbar(pct,col){
+  var w=Math.min(pct,100).toFixed(1);
+  return '<div style="display:flex;align-items:center;gap:5px"><div style="flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:'+col+';border-radius:3px"></div></div><span style="font-size:.65rem;color:var(--muted);min-width:32px;text-align:right">'+pct.toFixed(1)+'%</span></div>';
+}
+function delta(arr){
+  if(!arr||arr.length<2)return '';
+  var last=arr[arr.length-1],prev=arr[arr.length-2];
+  if(!prev)return '';
+  var d=last-prev;
+  if(d===0)return '<span style="color:var(--muted);font-size:.65rem">—</span>';
+  if(d>0)return '<span style="color:var(--red);font-size:.65rem">▲ '+fRp(d,true)+'</span>';
+  return '<span style="color:var(--grn);font-size:.65rem">▼ '+fRp(Math.abs(d),true)+'</span>';
+}
+function spark(arr){
+  var mx=Math.max.apply(null,arr.concat([1]));
+  return arr.map(function(v){
+    var h=v?Math.max(4,Math.round(v/mx*26)):2;
+    var c=v?AP.ALI+'88':'#1e1e30';
+    return '<div style="height:'+h+'px;background:'+c+';flex:1;border-radius:2px 2px 0 0;min-width:5px"></div>';
+  }).join('');
+}
+function stBadge(s){
+  if(s.indexOf('SANGAT')>=0)return '<span style="color:var(--red);font-size:.68rem;font-weight:700">🔴 SANGAT TINGGI</span>';
+  if(s.indexOf('TINGGI')>=0)return '<span style="color:var(--ylw);font-size:.68rem;font-weight:700">🟡 TINGGI</span>';
+  return '<span style="color:var(--grn);font-size:.68rem;font-weight:700">🟢 NORMAL</span>';
+}
+function mkrow(cells){return '<tr>'+cells.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>';}
+function mktbl(hdrs,rows){
+  return '<table><thead><tr>'+hdrs.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+}
+
+var CC={};
+Chart.register(ChartDataLabels);
+function mkChart(id,cfg){if(CC[id])CC[id].destroy();CC[id]=new Chart(document.getElementById(id),cfg);}
+
+/* === TABS === */
+var rendered={};
+function showTab(id,el){
+  var tabs=document.querySelectorAll('.tp');
+  for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');
+  var btns=document.querySelectorAll('.tab');
+  for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');
+  document.getElementById('tp-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  if(!rendered[id]){
+    var fns={ov:renderOv,arco:renderArco,kasir:renderKasir,setoran:renderSetoran,toko:renderToko};
+    if(fns[id])fns[id]();
+    rendered[id]=true;
+  }
+}
+
+/* === INIT === */
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('hdr-meta').textContent='Periode: '+D.periode+' · Update: '+D.update_date+' · 33 Cabang';
+  document.getElementById('ft').textContent='Data: '+D.periode+' · Update: '+D.update_date;
+  document.getElementById('hdr-stats').innerHTML=
+    '<div class="hs"><div class="hs-v" style="color:var(--red)">'+fRp(D.grand_total,true)+'</div><div class="hs-l">Grand Total Minus</div></div>'+
+    '<div class="hs"><div class="hs-v" style="color:var(--ylw)">'+fRp(D.grand_kasir,true)+'</div><div class="hs-l">Minus Kasir</div></div>'+
+    '<div class="hs"><div class="hs-v" style="color:var(--grn)">'+fRp(D.grand_setoran,true)+'</div><div class="hs-l">Minus Setoran</div></div>';
+
+  // Populate filters
+  var arcosK=[],tokosK=[];
+  for(var i=0;i<D.kasir_list.length;i++){
+    if(arcosK.indexOf(D.kasir_list[i].arco)<0)arcosK.push(D.kasir_list[i].arco);
+    if(tokosK.indexOf(D.kasir_list[i].kode)<0)tokosK.push(D.kasir_list[i].kode);
+  }
+  arcosK.sort(); tokosK.sort();
+  var selKA=document.getElementById('k-arco'),selKT=document.getElementById('k-toko');
+  var selTA=document.getElementById('t-arco'),selSA=document.getElementById('s-arco');
+  for(var i=0;i<arcosK.length;i++){
+    selKA.add(new Option(arcosK[i],arcosK[i]));
+    selTA.add(new Option(arcosK[i],arcosK[i]));
+  }
+  for(var i=0;i<tokosK.length;i++)selKT.add(new Option(tokosK[i],tokosK[i]));
+  var arcosS=[];
+  for(var i=0;i<D.setoran_list.length;i++){
+    if(arcosS.indexOf(D.setoran_list[i].arco)<0)arcosS.push(D.setoran_list[i].arco);
+  }
+  arcosS.sort();
+  for(var i=0;i<arcosS.length;i++)selSA.add(new Option(arcosS[i],arcosS[i]));
+
+  renderOv(); rendered.ov=true;
+});
+
+/* === OVERVIEW === */
+function renderOv(){
+  var topA=D.arco_kasir[0],topT=D.toko_list[0];
+  var worstMi=0;
+  for(var i=1;i<D.monthly_kasir.length;i++){if(D.monthly_kasir[i]>D.monthly_kasir[worstMi])worstMi=i;}
+  document.getElementById('ov-alert').innerHTML=
+    '<strong style="color:var(--gold)">⚡ CEO/CFO Alert — Jan–Mei 2026:</strong> '+
+    'Grand total minus <strong style="color:var(--red)">'+fRp(D.grand_total)+'</strong> '+
+    '(Kasir: '+fRp(D.grand_kasir,true)+' &middot; Setoran: '+fRp(D.grand_setoran,true)+'). '+
+    'Arco paling bermasalah: <strong style="color:'+AP[topA.arco]+'">'+topA.arco+'</strong> '+
+    '('+fRp(topA.total,true)+' &middot; '+topA.n_kasir+' kasir'+
+    (topA.resign?' &middot; <span style="color:var(--red)">'+topA.resign+' resign</span>':'')+
+    '). Toko terbesar: <strong style="color:var(--red)">'+topT.kode+'</strong> ('+fRp(topT.total,true)+'). '+
+    'Bulan terburuk: <strong style="color:var(--ylw)">'+D.months[worstMi]+' 2026</strong> ('+fRp(D.monthly_kasir[worstMi],true)+'). '+
+    'Kasir RESIGN dengan saldo aktif: <strong style="color:var(--red)">'+D.n_resign+'</strong> orang.';
+
+  document.getElementById('ov-kpi').innerHTML=
+    '<div class="kpi kr"><div class="kv">'+fRp(D.grand_total,true)+'</div><div class="kl">Grand Total Minus</div><div class="ks">Kasir + Setoran</div></div>'+
+    '<div class="kpi kr"><div class="kv">'+fRp(D.grand_kasir,true)+'</div><div class="kl">Total Minus Kasir</div><div class="ks">'+D.kasir_list.length+' kasir tercatat</div></div>'+
+    '<div class="kpi kg"><div class="kv">'+fRp(D.grand_setoran,true)+'</div><div class="kl">Total Minus Setoran</div><div class="ks">'+D.n_toko_setoran+' toko bermasalah</div></div>'+
+    '<div class="kpi ky"><div class="kv">'+D.arco_kasir.length+'</div><div class="kl">Arco Bermasalah</div><div class="ks">Terbesar: '+topA.arco+'</div></div>'+
+    '<div class="kpi kr"><div class="kv">'+D.n_toko_kasir+'</div><div class="kl">Toko Terlibat</div><div class="ks">dari 33 toko aktif</div></div>'+
+    '<div class="kpi kpk"><div class="kv">'+D.n_resign+'</div><div class="kl">Kasir Resign</div><div class="ks">Masih ada saldo minus</div></div>';
+
+  mkChart('ch-ov-trend',{type:'line',data:{labels:D.months,datasets:[
+    {label:'Minus Kasir',data:D.monthly_kasir,borderColor:'#ff4757',backgroundColor:'rgba(255,71,87,.08)',tension:0.4,fill:true,pointRadius:5,pointBackgroundColor:'#ff4757',datalabels:{color:'#ff4757',anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:function(v){return fRp(v,true);}}},
+    {label:'Minus Setoran',data:D.monthly_setoran,borderColor:'#1ec86a',backgroundColor:'rgba(30,200,106,.08)',tension:0.4,fill:true,pointRadius:5,pointBackgroundColor:'#1ec86a',datalabels:{color:'#1ec86a',anchor:'end',align:'bottom',font:{size:9,weight:'bold'},formatter:function(v){return fRp(v,true);}}}
+  ]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22,bottom:22}},plugins:{legend:{labels:{color:'var(--muted)',font:{size:11}}},tooltip:{callbacks:{label:function(c){return fRp(c.parsed.y);}}},datalabels:{display:true}},scales:{x:{ticks:{color:'var(--muted)'},grid:{color:'var(--bdr)'}},y:{ticks:{color:'var(--muted)',callback:function(v){return fRp(v,true).replace('Rp ','');}},grid:{color:'var(--bdr)'}}}}});
+
+  mkChart('ch-ov-split',{type:'doughnut',data:{labels:['Minus Kasir','Minus Setoran'],datasets:[{data:[D.grand_kasir,D.grand_setoran],backgroundColor:['rgba(255,71,87,.8)','rgba(30,200,106,.8)'],borderColor:'var(--bg)',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'var(--muted)',font:{size:11}}},datalabels:{color:'#ede9df',font:{size:13,weight:'bold'},formatter:function(value,context){var total=context.dataset.data.reduce(function(a,b){return a+b;},0);return Math.round(value/total*100)+'%';}}}}});
+
+  var gA=0; for(var i=0;i<D.arco_kasir.length;i++)gA+=D.arco_kasir[i].total;
+  var arcoHtml='';
+  for(var i=0;i<D.arco_kasir.length;i++){
+    var a=D.arco_kasir[i],c=AP[a.arco]||'#94a3b8';
+    arcoHtml+='<div class="arco-row">'+
+      '<div class="ar-name">'+medal(i+1)+' '+apill(a.arco)+'</div>'+
+      '<div class="ar-bar"><div style="width:'+(a.total/gA*100).toFixed(1)+'%;background:'+c+'"></div></div>'+
+      '<div class="ar-val" style="color:'+c+'">'+fRp(a.total,true)+'</div>'+
+      '<div class="ar-meta">'+a.n_kasir+' kasir &middot; '+a.n_toko+' toko'+(a.resign?' &middot; <span style="color:var(--red)">'+a.resign+' resign</span>':'')+'</div>'+
+      '</div>';
+  }
+  document.getElementById('ov-arco-bars').innerHTML=arcoHtml;
+
+  var top10=D.toko_list.slice(0,10);
+  mkChart('ch-ov-toko',{type:'bar',indexAxis:'y',data:{labels:top10.map(function(t){return t.kode+' '+t.nama.replace('MAKMUR','');}),datasets:[{label:'Total Minus',data:top10.map(function(t){return t.total;}),backgroundColor:top10.map(function(t){return(AP[t.arco]||'#94a3b8')+'99';}),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{right:75}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return fRp(c.dataset.data[c.dataIndex]);}}},datalabels:{anchor:'end',align:'right',clamp:false,color:'#ede9df',font:{size:9,weight:'bold'},formatter:function(v){return fRp(v,true);}}},scales:{x:{ticks:{color:'var(--muted)',callback:function(v){return fRp(v,true).replace('Rp ','');}},grid:{color:'var(--bdr)'}},y:{ticks:{color:'var(--muted)',font:{size:10}},grid:{display:false}}}}});
+
+  var st={ST:0,T:0,N:0};
+  for(var i=0;i<D.toko_list.length;i++){var s=D.toko_list[i].status;if(s.indexOf('SANGAT')>=0)st.ST++;else if(s.indexOf('TINGGI')>=0)st.T++;else st.N++;}
+  mkChart('ch-ov-status',{type:'bar',data:{labels:['Sangat Tinggi ('+st.ST+')','Tinggi ('+st.T+')','Normal ('+st.N+')'],datasets:[{data:[st.ST,st.T,st.N],backgroundColor:['rgba(255,71,87,.75)','rgba(255,179,0,.75)','rgba(30,200,106,.75)'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24}},plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',color:'#ede9df',font:{size:12,weight:'bold'},formatter:function(v){return v+' toko';}}},scales:{x:{ticks:{color:'var(--muted)'},grid:{display:false}},y:{ticks:{color:'var(--muted)'},grid:{color:'var(--bdr)'}}}}});
+
+  /* RADAR MERAH: kasir berulang >= 3 bulan */
+  var repeat=D.kasir_list.filter(function(k){return k.monthly.filter(function(v){return v>0;}).length>=3;});
+  repeat.sort(function(a,b){
+    var fa=a.monthly.filter(function(v){return v>0;}).length;
+    var fb=b.monthly.filter(function(v){return v>0;}).length;
+    return fb-fa||b.total-a.total;
+  });
+  var repHtml='';
+  if(repeat.length===0){
+    repHtml='<div style="color:var(--grn);padding:16px;text-align:center;font-size:.85rem">&#10003; Tidak ada kasir bermasalah berulang</div>';
+  } else {
+    repHtml='<table style="width:100%;border-collapse:collapse;font-size:.75rem">'+
+      '<thead><tr style="color:var(--muted);border-bottom:1px solid var(--bdr)">'+
+        '<th style="text-align:left;padding:5px 8px">Kasir</th>'+
+        '<th style="text-align:left;padding:5px 8px">Toko</th>'+
+        '<th style="text-align:left;padding:5px 8px">Arco</th>'+
+        '<th style="text-align:center;padding:5px 8px">Freq</th>'+
+        '<th style="text-align:right;padding:5px 8px">Total</th>'+
+        '<th style="text-align:left;padding:5px 8px">Status</th>'+
+      '</tr></thead><tbody>';
+    for(var i=0;i<repeat.length;i++){
+      var k=repeat[i];
+      var freq=k.monthly.filter(function(v){return v>0;}).length;
+      var rowCol=freq>=5?'rgba(255,71,87,.07)':freq>=4?'rgba(255,179,0,.05)':'transparent';
+      var freqBg=freq>=5?'var(--red)':freq>=4?'var(--ylw)':'var(--muted)';
+      repHtml+='<tr style="border-bottom:1px solid var(--bdr);background:'+rowCol+'">'+
+        '<td style="padding:5px 8px;font-weight:600;color:var(--txt)">'+k.nama+(k.ket==='RESIGN'?' <span style="color:var(--red);font-size:.6rem">RESIGN</span>':'')+'</td>'+
+        '<td style="padding:5px 8px"><span style="background:rgba(79,156,249,.15);color:#4f9cf9;padding:1px 5px;border-radius:4px">'+k.kode+'</span></td>'+
+        '<td style="padding:5px 8px">'+apill(k.arco)+'</td>'+
+        '<td style="text-align:center;padding:5px 8px"><span style="background:'+freqBg+'22;color:'+freqBg+';font-weight:700;padding:1px 7px;border-radius:4px">'+freq+'/'+k.monthly.length+'</span></td>'+
+        '<td style="text-align:right;padding:5px 8px;color:var(--red);font-weight:600">'+fRp(k.total,true)+'</td>'+
+        '<td style="padding:5px 8px">'+delta(k.monthly)+'</td>'+
+        '</tr>';
+    }
+    repHtml+='</tbody></table>';
+  }
+  document.getElementById('ov-repeat').innerHTML='<div style="padding:4px">'+
+    '<div style="font-size:.7rem;color:var(--muted);margin-bottom:8px">Total: <strong style="color:var(--red)">'+repeat.length+'</strong> kasir muncul &ge;3 bulan</div>'+
+    repHtml+'</div>';
+
+  /* MONTHLY SUMMARY CARDS */
+  var monHtml='<div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 0">';
+  var totKasirArr=D.monthly_kasir;
+  var totSetArr=D.monthly_setoran;
+  for(var i=0;i<D.months.length;i++){
+    var mk=totKasirArr[i]||0;
+    var ms=totSetArr[i]||0;
+    var mt=mk+ms;
+    var prev=i>0?(totKasirArr[i-1]||0)+(totSetArr[i-1]||0):null;
+    var trendStr='';
+    if(prev!==null){
+      var diff=mt-prev;
+      trendStr='<div style="font-size:.65rem;margin-top:3px;color:'+(diff>0?'var(--red)':'var(--grn)')+'">'+
+        (diff>0?'&#9650;':'&#9660;')+' '+fRp(Math.abs(diff),true)+
+        ' ('+(diff>0?'+':'')+Math.round(diff/prev*100)+'%)</div>';
+    }
+    var isWorst=i===worstMi;
+    monHtml+='<div style="flex:1;min-width:100px;background:'+(isWorst?'rgba(255,71,87,.08)':'var(--bg2)')+';border:1px solid '+(isWorst?'rgba(255,71,87,.3)':'var(--bdr)')+';border-radius:9px;padding:10px 12px">'+
+      '<div style="font-size:.7rem;color:var(--muted);margin-bottom:4px">'+D.months[i]+' 2026'+(isWorst?' <span style="color:var(--red);font-size:.6rem">TERBURUK</span>':'')+'</div>'+
+      '<div style="font-size:.82rem;font-weight:700;color:var(--red)">'+fRp(mt,true)+'</div>'+
+      '<div style="font-size:.65rem;color:var(--muted);margin-top:2px">Kasir: '+fRp(mk,true)+' &middot; Setoran: '+fRp(ms,true)+'</div>'+
+      trendStr+
+      '</div>';
+  }
+  monHtml+='</div>';
+  document.getElementById('ov-monthly-sum').innerHTML=monHtml;
+}
+
+/* === ARCO === */
+function renderArco(){
+  var topA=D.arco_kasir[0],topS=D.arco_setoran[0];
+  document.getElementById('arco-insight').innerHTML=
+    '<strong style="color:var(--gold)">&#127919; Insight ARCO:</strong> '+
+    'Arco <strong style="color:'+AP[topA.arco]+'">'+topA.arco+'</strong> mencatat minus kasir terbesar '+
+    '<strong style="color:var(--red)">'+fRp(topA.total)+'</strong> dari '+topA.n_kasir+' kasir di '+topA.n_toko+' toko.'+
+    (topA.resign?' <span style="color:var(--red)">'+topA.resign+' kasir resign</span> dengan saldo belum lunas.':'')+
+    ' &nbsp;&middot;&nbsp; Total '+D.arco_kasir.length+' Arco terlibat.'+
+    ' &nbsp;&middot;&nbsp; Arco '+(topS?topS.arco:'&mdash;')+' dominasi minus setoran ('+(topS?fRp(topS.total,true):'&mdash;')+').';
+
+  /* ARCO MINI CARDS */
+  var sMap2={};for(var i=0;i<D.arco_setoran.length;i++)sMap2[D.arco_setoran[i].arco]=D.arco_setoran[i].total;
+  var totAll=0;for(var i=0;i<D.arco_kasir.length;i++)totAll+=D.arco_kasir[i].total;
+  var cards=D.arco_kasir.map(function(a,i){
+    var col=AP[a.arco]||'#94a3b8';
+    var pct=totAll>0?Math.round(a.total/totAll*100):0;
+    var mom=a.monthly.length>=2?a.monthly[a.monthly.length-1]-a.monthly[a.monthly.length-2]:0;
+    var momStr=mom>0?'<span style="color:var(--red);font-size:.7rem">&#9650;'+fRp(mom,true)+'</span>':mom<0?'<span style="color:var(--grn);font-size:.7rem">&#9660;'+fRp(Math.abs(mom),true)+'</span>':'<span style="color:var(--dim);font-size:.7rem">&#8212;</span>';
+    var setoranStr=sMap2[a.arco]?'<div style="font-size:.65rem;color:var(--muted);margin-top:2px">Setoran: '+fRp(sMap2[a.arco],true)+'</div>':'';
+    var rSign=a.resign?'<span style="background:#ff475722;color:var(--red);font-size:.6rem;padding:1px 5px;border-radius:4px;margin-left:4px">'+a.resign+' resign</span>':'';
+    return '<div style="background:'+col+'14;border:1px solid '+col+'55;border-radius:10px;padding:10px 14px;min-width:130px;flex:1">'+
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'+
+        '<span style="background:'+col+'33;color:'+col+';font-weight:700;font-size:.75rem;padding:2px 8px;border-radius:5px">'+a.arco+'</span>'+
+        rSign+
+        '<span style="margin-left:auto;font-size:.65rem;color:var(--dim)">#'+(i+1)+'</span>'+
+      '</div>'+
+      '<div style="font-size:.85rem;font-weight:700;color:var(--red)">'+fRp(a.total,true)+'</div>'+
+      '<div style="font-size:.65rem;color:var(--muted);margin-top:2px">'+a.n_kasir+' kasir &middot; '+a.n_toko+' toko &middot; '+pct+'%</div>'+
+      setoranStr+
+      '<div style="margin-top:4px">'+momStr+'</div>'+
+    '</div>';
+  });
+  document.getElementById('arco-cards').innerHTML='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">'+cards.join('')+'</div>';
+
+  mkChart('ch-arco-bar',{type:'bar',data:{labels:D.arco_kasir.map(function(a){return a.arco;}),datasets:[{label:'Total Minus Kasir',data:D.arco_kasir.map(function(a){return a.total;}),backgroundColor:D.arco_kasir.map(function(a){return(AP[a.arco]||'#94a3b8')+'CC';}),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:28}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return fRp(c.parsed.y);}}},datalabels:{anchor:'end',align:'top',color:'#ede9df',font:{size:9,weight:'bold'},formatter:function(v){return fRp(v,true);}}},scales:{x:{ticks:{color:'var(--muted)'},grid:{color:'var(--bdr)'}},y:{ticks:{color:'var(--muted)',callback:function(v){return fRp(v,true).replace('Rp ','');}},grid:{color:'var(--bdr)'}}}}});
+
+  var datasets=D.arco_kasir.map(function(a){return{label:a.arco,data:a.monthly,borderColor:AP[a.arco]||'#94a3b8',backgroundColor:(AP[a.arco]||'#94a3b8')+'18',tension:0.4,pointRadius:4,fill:false};});
+  mkChart('ch-arco-trend',{type:'line',data:{labels:D.months,datasets:datasets},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{right:60,top:10}},plugins:{legend:{position:'right',labels:{color:'var(--muted)',font:{size:10}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+fRp(c.parsed.y);}}},datalabels:{display:function(context){return context.dataIndex===context.dataset.data.length-1;},anchor:'end',align:'right',color:function(context){return context.dataset.borderColor||'#ede9df';},font:{size:8,weight:'bold'},formatter:function(v){return fRp(v,true);}}},scales:{x:{ticks:{color:'var(--muted)'},grid:{color:'var(--bdr)'}},y:{ticks:{color:'var(--muted)',callback:function(v){return fRp(v,true).replace('Rp ','');}},grid:{color:'var(--bdr)'}}}}});
+
+  mkChart('ch-arco-set',{type:'bar',data:{labels:D.arco_setoran.map(function(a){return a.arco;}),datasets:[{label:'Minus Setoran',data:D.arco_setoran.map(function(a){return a.total;}),backgroundColor:D.arco_setoran.map(function(a){return(AP[a.arco]||'#94a3b8')+'AA';}),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:28}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return fRp(c.parsed.y);}}},datalabels:{anchor:'end',align:'top',color:'#ede9df',font:{size:9,weight:'bold'},formatter:function(v){return fRp(v,true);}}},scales:{x:{ticks:{color:'var(--muted)'},grid:{color:'var(--bdr)'}},y:{ticks:{color:'var(--muted)',callback:function(v){return fRp(v,true).replace('Rp ','');}},grid:{color:'var(--bdr)'}}}}});
+
+  var gK=0; for(var i=0;i<D.arco_kasir.length;i++)gK+=D.arco_kasir[i].total;
+  var sMap={};for(var i=0;i<D.arco_setoran.length;i++)sMap[D.arco_setoran[i].arco]=D.arco_setoran[i];
+  var rows=D.arco_kasir.map(function(a,i){
+    var s=sMap[a.arco];
+    return '<tr>'+
+      '<td>'+medal(i+1)+' '+apill(a.arco)+'</td>'+
+      '<td class="nr">'+fRp(a.total,true)+'</td>'+
+      '<td style="min-width:100px">'+pbar(a.total/gK*100,AP[a.arco]||'#94a3b8')+'</td>'+
+      '<td class="ng">'+(s?fRp(s.total,true):'—')+'</td>'+
+      '<td class="nn">'+a.n_kasir+'</td>'+
+      '<td class="nn">'+a.n_toko+'</td>'+
+      '<td>'+(a.resign?'<span class="resign-tag">'+a.resign+'</span>':'—')+'</td>'+
+      '<td class="nn">'+fRp(a.total/a.n_kasir,true)+'</td>'+
+      '<td><div class="spark" style="display:flex;gap:2px;align-items:flex-end;height:28px">'+spark(a.monthly)+'</div></td>'+
+      '</tr>';
+  });
+  document.getElementById('tbl-arco-cfo').innerHTML=
+    '<thead><tr><th>Arco</th><th>Total Kasir</th><th>% Share</th><th>Total Setoran</th><th>Kasir</th><th>Toko</th><th>Resign</th><th>Avg/Kasir</th><th>Tren</th></tr></thead><tbody>'+rows.join('')+'</tbody>';
+
+  var mrows=D.arco_kasir.map(function(a){
+    var mx=Math.max.apply(null,a.monthly);
+    return '<tr><td>'+apill(a.arco)+'</td>'+
+      a.monthly.map(function(v){return '<td class="'+(v===mx&&v>0?'nr':'nn')+'">'+fRp(v,true)+'</td>';}).join('')+
+      '<td class="nr">'+fRp(a.total,true)+'</td>'+
+      '<td>'+delta(a.monthly)+'</td></tr>';
+  });
+  document.getElementById('tbl-arco-month').innerHTML=
+    '<thead><tr><th>Arco</th>'+D.months.map(function(m){return '<th>'+m+'</th>';}).join('')+'<th>Total</th><th>MoM</th></tr></thead><tbody>'+mrows.join('')+'</tbody>';
+}
+
+/* === KASIR === */
+var kSort={col:'total',asc:false};
+function kRender(){
+  var fa=document.getElementById('k-arco').value;
+  var ft=document.getElementById('k-toko').value;
+  var fk=document.getElementById('k-ket').value;
+  var fq=(document.getElementById('k-q').value||'').toLowerCase();
+  var rows=D.kasir_list.filter(function(r){
+    if(fa&&r.arco!==fa)return false;
+    if(ft&&r.kode!==ft)return false;
+    if(fk==='RESIGN'&&r.ket!=='RESIGN')return false;
+    if(fk==='AKTIF'&&r.ket==='RESIGN')return false;
+    if(fq&&r.nama.toLowerCase().indexOf(fq)<0&&r.nrp.toLowerCase().indexOf(fq)<0)return false;
+    return true;
+  });
+  rows=sortArr(rows,kSort);
+  var tot=0; for(var i=0;i<rows.length;i++)tot+=rows[i].total;
+  document.getElementById('k-cnt').textContent=rows.length+' kasir · Total: '+fRp(tot,true);
+  var KEYS=[null,'nrp','nama','kode','arco'].concat(D.months.map(function(_,i){return 'm'+i;})).concat(['total',null,'freq',null]);
+  var HDRS=['#','NRP','Nama Kasir','Toko','Arco'].concat(D.months).concat(['Total','MoM','Freq','Ket']);
+  var thead='<thead><tr>'+HDRS.map(function(h,i){
+    var k=KEYS[i];
+    var cls=k&&kSort.col===k?(kSort.asc?'asc':'desc'):'';
+    var onclick=k?'onclick="kSortBy(&#39;'+k+'&#39;)"':'';
+    return '<th class="'+cls+'" '+onclick+'>'+h+'<span class="si"></span></th>';
+  }).join('')+'</tr></thead>';
+  var tbody='<tbody>'+rows.map(function(r,i){
+    var mxIdx=0;for(var j=1;j<r.monthly.length;j++){if(r.monthly[j]>r.monthly[mxIdx])mxIdx=j;}
+    return '<tr>'+
+      '<td style="color:var(--dim)">'+(i+1)+'</td>'+
+      '<td style="font-family:monospace;font-size:.68rem;color:var(--muted)">'+r.nrp+'</td>'+
+      '<td><a href="#" onclick="showKasir(&#39;'+r.nrp+'&#39;);return false;" style="color:var(--gold);text-decoration:none;font-weight:600">'+r.nama+'</a></td>'+
+      '<td><span class="pill pb">'+r.kode+'</span></td>'+
+      '<td>'+apill(r.arco)+'</td>'+
+      r.monthly.map(function(v,mi){return '<td class="'+(mi===mxIdx&&v>0?'nr':'nn')+'">'+fRp(v,true)+'</td>';}).join('')+
+      '<td class="nr">'+fRp(r.total,true)+'</td>'+
+      '<td>'+delta(r.monthly)+'</td>'+
+      (function(){var cnt=r.monthly.filter(function(v){return v>0;}).length;return '<td><span style="background:'+(cnt>=4?'rgba(255,71,87,.18)':cnt>=2?'rgba(255,179,0,.15)':'rgba(30,200,106,.1)')+';color:'+(cnt>=4?'var(--red)':cnt>=2?'var(--ylw)':'var(--grn)')+';font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:5px">'+cnt+'/'+r.monthly.length+'</span></td>';})()+
+      '<td>'+(r.ket==='RESIGN'?'<span class="resign-tag">RESIGN</span>':'—')+'</td>'+
+      '</tr>';
+  }).join('')+'</tbody>';
+  /* TOTALS FOOTER */
+  var mTot=D.months.map(function(_,mi){var s=0;for(var i=0;i<rows.length;i++)s+=rows[i].monthly[mi];return s;});
+  var gTot=0;for(var i=0;i<rows.length;i++)gTot+=rows[i].total;
+  var tfoot='<tfoot><tr>'+
+    '<td style="font-size:.7rem;color:var(--gold);font-weight:700;text-align:center">&#931;</td>'+
+    '<td style="font-size:.72rem;color:var(--gold);font-weight:700">TOTAL</td>'+
+    '<td style="font-size:.72rem;color:var(--muted)">('+rows.length+' kasir)</td>'+
+    '<td></td><td></td>'+
+    mTot.map(function(v){return '<td style="text-align:right;font-weight:700;color:var(--red)">'+fRp(v,true)+'</td>';}).join('')+
+    '<td style="text-align:right;font-weight:700;color:var(--red);font-size:.88rem">'+fRp(gTot,true)+'</td>'+
+    '<td></td><td></td><td></td>'+
+    '</tr></tfoot>';
+  document.getElementById('tbl-kasir-wrap').innerHTML='<table>'+thead+tbody+tfoot+'</table>';
+}
+function renderKasir(){kRender();}
+function kSortBy(col){kSort.asc=(kSort.col===col)?!kSort.asc:false;kSort.col=col;kRender();}
+
+/* === SETORAN === */
+function renderSetoran(){
+  mkChart('ch-set-rank',{type:'bar',indexAxis:'y',data:{labels:D.setoran_list.map(function(t){return t.kode+' '+t.nama;}),datasets:[{label:'Total',data:D.setoran_list.map(function(t){return t.total;}),backgroundColor:D.setoran_list.map(function(t){return(AP[t.arco]||'#94a3b8')+'99';}),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{right:75}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return fRp(c.dataset.data[c.dataIndex]);}}},datalabels:{anchor:'end',align:'right',clamp:false,color:'#ede9df',font:{size:9,weight:'bold'},formatter:function(v){return fRp(v,true);}}},scales:{x:{ticks:{color:'var(--muted)',callback:function(v){return fRp(v,true).replace('Rp ','');}},grid:{color:'var(--bdr)'}},y:{ticks:{color:'var(--muted)',font:{size:10}},grid:{display:false}}}}});
+  var gS=0; for(var i=0;i<D.arco_setoran.length;i++)gS+=D.arco_setoran[i].total;
+  var html='';
+  for(var i=0;i<D.arco_setoran.length;i++){
+    var a=D.arco_setoran[i],c=AP[a.arco]||'#94a3b8';
+    html+='<div class="arco-row">'+
+      '<div class="ar-name">'+medal(i+1)+' '+apill(a.arco)+'</div>'+
+      '<div class="ar-bar"><div style="width:'+(a.total/gS*100).toFixed(1)+'%;background:'+c+'"></div></div>'+
+      '<div class="ar-val" style="color:'+c+'">'+fRp(a.total,true)+'</div>'+
+      '<div class="ar-meta">'+a.n_toko+' toko</div>'+
+      '</div>';
+  }
+  document.getElementById('set-arco-wrap').innerHTML=html;
+  sRender();
+}
+var sSort={col:'total',asc:false};
+function sSortBy(col){sSort.asc=(sSort.col===col)?!sSort.asc:false;sSort.col=col;sRender();}
+function sRender(){
+  var fa=document.getElementById('s-arco').value;
+  var rows=D.setoran_list.filter(function(r){return !fa||r.arco===fa;});
+  /* sort */
+  rows=rows.slice().sort(function(a,b){
+    var va,vb;
+    if(sSort.col==='kode'){va=a.kode;vb=b.kode;}
+    else if(sSort.col==='nama'){va=a.nama;vb=b.nama;}
+    else if(sSort.col==='arco'){va=a.arco;vb=b.arco;}
+    else if(sSort.col==='total'){va=a.total;vb=b.total;}
+    else if(sSort.col&&sSort.col[0]==='m'){var mi=parseInt(sSort.col.slice(1));va=a.monthly[mi]||0;vb=b.monthly[mi]||0;}
+    else{va=a.total;vb=b.total;}
+    if(typeof va==='string')return sSort.asc?va.localeCompare(vb):vb.localeCompare(va);
+    return sSort.asc?va-vb:vb-va;
+  });
+  var SKEYS=[null,'kode','nama','arco'].concat(D.months.map(function(_,i){return 'm'+i;})).concat(['total',null]);
+  var SHDRS=['#','Kode','Nama Toko','Arco'].concat(D.months).concat(['Total','Tren']);
+  var thead='<thead><tr>'+SHDRS.map(function(h,i){
+    var k=SKEYS[i];
+    var cls=k&&sSort.col===k?(sSort.asc?'asc':'desc'):'';
+    var oc=k?'onclick="sSortBy(&#39;'+k+'&#39;)"':'';
+    return '<th class="'+cls+'" '+oc+'>'+h+'<span class="si"></span></th>';
+  }).join('')+'</tr></thead>';
+  var tbody='<tbody>'+rows.map(function(t,i){
+    var mxIdx=0;for(var j=1;j<t.monthly.length;j++){if(t.monthly[j]>t.monthly[mxIdx])mxIdx=j;}
+    return '<tr>'+
+      '<td style="color:var(--dim)">'+(i+1)+'</td>'+
+      '<td><span class="pill pg">'+t.kode+'</span></td>'+
+      '<td style="font-weight:600">'+t.nama+'</td>'+
+      '<td>'+apill(t.arco)+'</td>'+
+      t.monthly.map(function(v,mi){return '<td class="'+(mi===mxIdx&&v>0?'ng nr':'ng')+'">'+fRp(v,true)+'</td>';}).join('')+
+      '<td class="ng" style="font-weight:700">'+fRp(t.total,true)+'</td>'+
+      '<td><div style="display:flex;gap:2px;align-items:flex-end;height:28px">'+spark(t.monthly)+'</div></td>'+
+      '</tr>';
+  }).join('')+'</tbody>';
+  /* totals footer — one <td> per column for exact alignment */
+  var sMot=D.months.map(function(_,mi){var s=0;for(var i=0;i<rows.length;i++)s+=rows[i].monthly[mi]||0;return s;});
+  var sGot=0;for(var i=0;i<rows.length;i++)sGot+=rows[i].total;
+  var tfoot='<tfoot><tr>'+
+    '<td style="font-size:.7rem;color:var(--gold);font-weight:700">&#931;</td>'+
+    '<td style="font-size:.72rem;color:var(--gold);font-weight:700;white-space:nowrap">TOTAL</td>'+
+    '<td style="font-size:.72rem;color:var(--muted)">('+rows.length+' toko)</td>'+
+    '<td></td>'+
+    sMot.map(function(v){return '<td style="text-align:right;color:var(--grn);font-weight:700">'+fRp(v,true)+'</td>';}).join('')+
+    '<td style="text-align:right;color:var(--grn);font-weight:700;font-size:.88rem">'+fRp(sGot,true)+'</td>'+
+    '<td></td></tr></tfoot>';
+  document.getElementById('tbl-set-wrap').innerHTML='<table>'+thead+tbody+tfoot+'</table>';
+}
+
+/* === TOKO === */
+var tSort={col:'total',asc:false};
+function renderToko(){tRender();}
+function tRender(){
+  var fa=document.getElementById('t-arco').value;
+  var fs=document.getElementById('t-st').value;
+  var fq=(document.getElementById('t-q').value||'').toLowerCase();
+  var rows=D.toko_list.filter(function(r){
+    if(fa&&r.arco!==fa)return false;
+    if(fs&&r.status.indexOf(fs)<0)return false;
+    if(fq&&r.nama.toLowerCase().indexOf(fq)<0&&r.kode.toLowerCase().indexOf(fq)<0)return false;
+    return true;
+  });
+  rows=sortArr(rows,tSort);
+  document.getElementById('t-cnt').textContent=rows.length+' toko';
+  var TKEYS=['rank','kode','nama','arco'].concat(D.months.map(function(_,i){return 'm'+i;})).concat(['total','status',null,null]);
+  var THDRS=['Rank','Kode','Nama Toko','Arco'].concat(D.months).concat(['Total','Status','Tren','MoM']);
+  var thead='<thead><tr>'+THDRS.map(function(h,i){
+    var k=TKEYS[i];
+    var cls=k&&tSort.col===k?(tSort.asc?'asc':'desc'):'';
+    var onclick=k?'onclick="tSortBy(&#39;'+k+'&#39;)"':'';
+    return '<th class="'+cls+'" '+onclick+'>'+h+'<span class="si"></span></th>';
+  }).join('')+'</tr></thead>';
+  var tbody='<tbody>'+rows.map(function(t){
+    var mxIdx=0;for(var j=1;j<t.monthly.length;j++){if(t.monthly[j]>t.monthly[mxIdx])mxIdx=j;}
+    return '<tr>'+
+      '<td style="text-align:center">'+medal(t.rank)+'</td>'+
+      '<td><span class="pill pb">'+t.kode+'</span></td>'+
+      '<td style="font-weight:600">'+t.nama.replace('MAKMUR ','')+'</td>'+
+      '<td>'+apill(t.arco)+'</td>'+
+      t.monthly.map(function(v,mi){return '<td class="'+(mi===mxIdx&&v>0?'nr':'nn')+'">'+fRp(v,true)+'</td>';}).join('')+
+      '<td class="nr">'+fRp(t.total,true)+'</td>'+
+      '<td>'+stBadge(t.status)+'</td>'+
+      '<td><div style="display:flex;gap:2px;align-items:flex-end;height:28px">'+spark(t.monthly)+'</div></td>'+
+      '<td>'+delta(t.monthly)+'</td>'+
+      '</tr>';
+  }).join('')+'</tbody>';
+  /* TOKO TOTALS FOOTER */
+  var tMot=D.months.map(function(_,mi){var s=0;for(var i=0;i<rows.length;i++)s+=rows[i].monthly[mi]||0;return s;});
+  var tGot=0;for(var i=0;i<rows.length;i++)tGot+=rows[i].total;
+  /* find worst month overall */
+  var tWMi=0;for(var i=1;i<tMot.length;i++){if(tMot[i]>tMot[tWMi])tWMi=i;}
+  var ttfoot='<tfoot><tr>'+
+    '<td style="font-size:.7rem;color:var(--gold);font-weight:700;text-align:center">&#931;</td>'+
+    '<td style="font-size:.72rem;color:var(--gold);font-weight:700">TOTAL</td>'+
+    '<td style="font-size:.72rem;color:var(--muted)">('+rows.length+' toko)</td>'+
+    '<td></td>'+
+    tMot.map(function(v,mi){return '<td style="text-align:right;font-weight:700;color:'+(mi===tWMi&&v>0?'var(--red)':'var(--txt)')+'">'+fRp(v,true)+'</td>';}).join('')+
+    '<td style="text-align:right;font-weight:700;color:var(--red);font-size:.88rem">'+fRp(tGot,true)+'</td>'+
+    '<td></td><td></td><td></td>'+
+    '</tr></tfoot>';
+  document.getElementById('tbl-toko-wrap').innerHTML='<table>'+thead+tbody+ttfoot+'</table>';
+}
+function tSortBy(col){tSort.asc=(tSort.col===col)?!tSort.asc:false;tSort.col=col;tRender();}
+
+/* === SORT === */
+var STATUS_RANK={'SANGAT TINGGI':3,'TINGGI':2,'NORMAL':1};
+function sortArr(arr,s){
+  if(!s.col)return arr;
+  return arr.slice().sort(function(a,b){
+    var va,vb;
+    if(s.col.match(/^m\d+$/)){var idx=parseInt(s.col.slice(1));va=a.monthly[idx]||0;vb=b.monthly[idx]||0;}
+    else if(s.col==='status'){
+      va=STATUS_RANK[a.status]||0;
+      vb=STATUS_RANK[b.status]||0;
+      return s.asc?va-vb:vb-va;
+    }
+    else{va=a[s.col];vb=b[s.col];}
+    if(typeof va==='number')return s.asc?va-vb:vb-va;
+    return s.asc?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
+  });
+}
+
+/* === KASIR MODAL === */
+var kMC=null;
+function showKasir(nrp){
+  var k=null;
+  for(var i=0;i<D.kasir_list.length;i++){if(D.kasir_list[i].nrp===nrp){k=D.kasir_list[i];break;}}
+  if(!k)return;
+  var pctChg=null;
+  var nm=k.monthly.length;if(nm>=2&&k.monthly[nm-1]&&k.monthly[nm-2])pctChg=((k.monthly[nm-1]-k.monthly[nm-2])/k.monthly[nm-2]*100).toFixed(1);
+  var activeM=0; for(var i=0;i<k.monthly.length;i++){if(k.monthly[i]>0)activeM++;}
+  document.getElementById('k-mcontent').innerHTML=
+    '<h3 style="color:var(--gold);font-size:1rem;font-weight:800;margin-bottom:6px">'+k.nama+'</h3>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;font-size:.75rem;color:var(--muted)">'+
+      '<span>&#128282; '+k.nrp+'</span>'+
+      '<span>&#127978; '+k.kode+' &ndash; '+k.nama_toko+'</span>'+
+      '<span>'+apill(k.arco)+'</span>'+
+      (k.ket==='RESIGN'?'<span class="resign-tag">RESIGN</span>':'')+
+    '</div>'+
+    '<div class="kgrid" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px">'+
+      '<div class="kpi kr"><div class="kv" style="font-size:1.2rem">'+fRp(k.total,true)+'</div><div class="kl">Total '+D.months[0]+'–'+D.months[D.months.length-1]+'</div></div>'+
+      '<div class="kpi ky"><div class="kv" style="font-size:1.2rem">'+activeM+'</div><div class="kl">Bulan Bermasalah</div></div>'+
+      '<div class="kpi '+(pctChg&&pctChg>0?'kr':'kg')+'"><div class="kv" style="font-size:1.2rem">'+(pctChg?pctChg+'%':'—')+'</div><div class="kl">Delta '+D.months[D.months.length-2]+'→'+D.months[D.months.length-1]+'</div></div>'+
+    '</div>'+
+    '<div style="margin-bottom:10px;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--gold);letter-spacing:.06em">Tren Minus Bulanan</div>'+
+    '<div style="position:relative;height:200px"><canvas id="k-modal-chart"></canvas></div>'+
+    '<div style="margin-top:16px">'+
+      '<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--gold);letter-spacing:.06em;margin-bottom:8px">Breakdown per Bulan</div>'+
+      '<table style="width:100%;font-size:.76rem"><thead><tr>'+
+        D.months.map(function(m){return '<th style="background:var(--bg3);color:var(--gold);padding:6px;text-align:right;border-radius:3px">'+m+'</th>';}).join('')+
+        '<th style="background:var(--bg3);color:var(--gold);padding:6px;text-align:right;border-radius:3px">TOTAL</th>'+
+      '</tr></thead><tbody><tr>'+
+        k.monthly.map(function(v){return '<td style="padding:6px;text-align:right;color:'+(v?'var(--red)':'var(--dim)')+';font-weight:'+(v?700:400)+'">'+fRp(v,true)+'</td>';}).join('')+
+        '<td style="padding:6px;text-align:right;color:var(--red);font-weight:800">'+fRp(k.total,true)+'</td>'+
+      '</tr></tbody></table>'+
+    '</div>';
+  document.getElementById('k-modal').classList.add('open');
+  if(kMC){kMC.destroy();kMC=null;}
+  kMC=new Chart(document.getElementById('k-modal-chart'),{
+    type:'bar',
+    data:{labels:D.months,datasets:[{label:'Minus (Rp)',data:k.monthly,backgroundColor:k.monthly.map(function(v){return v?'rgba(255,71,87,.75)':'rgba(255,71,87,.15)';}),borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return fRp(c.parsed.y);}}}},scales:{x:{ticks:{color:'var(--muted)'},grid:{display:false}},y:{ticks:{color:'var(--muted)',callback:function(v){return fRp(v,true).replace('Rp ','');}},grid:{color:'var(--bdr)'}}}}
+  });
+}
+function closeMod(){
+  document.getElementById('k-modal').classList.remove('open');
+  if(kMC){kMC.destroy();kMC=null;}
+}
+document.getElementById('k-modal').addEventListener('click',function(e){if(e.target===document.getElementById('k-modal'))closeMod();});
+</script>
+</body>
+</html>
