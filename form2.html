@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Form 2 — Audit ARCO · Toko Makmur</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { background:#f0f4f8; font-family: system-ui, -apple-system, sans-serif; }
+
+    .step { display:none; }
+    .step.active { display:block; }
+
+    .form-header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%);
+      padding: 14px 16px 12px;
+      position: sticky; top:0; z-index:40;
+    }
+    .step-progress { background:rgba(255,255,255,0.12); height:4px; border-radius:99px; margin-top:10px; }
+    .step-progress-fill { height:4px; border-radius:99px; background:linear-gradient(90deg,#34d399,#60a5fa); transition:width .4s; }
+
+    .card { background:white; border-radius:16px; box-shadow:0 1px 4px rgba(0,0,0,.08); margin-bottom:12px; overflow:hidden; }
+    .card-header { padding:14px 16px 10px; border-bottom:1px solid #f1f5f9; }
+
+    .pilar-header { padding:14px 16px 10px; background:linear-gradient(135deg,#eff6ff,#dbeafe); border-bottom:1px solid #bfdbfe; }
+
+    .rating-btn {
+      flex:1; height:40px; border-radius:10px; border:2px solid #e5e7eb;
+      font-weight:800; font-size:15px; cursor:pointer; transition:all .12s;
+      display:flex; align-items:center; justify-content:center;
+      background:white; color:#9ca3af;
+      -webkit-user-select:none; user-select:none;
+    }
+    .rating-btn:active { transform:scale(.92); }
+    .rating-btn.active-1 { background:#fef2f2; border-color:#ef4444; color:#dc2626; }
+    .rating-btn.active-2 { background:#fff7ed; border-color:#f97316; color:#ea580c; }
+    .rating-btn.active-3 { background:#fefce8; border-color:#eab308; color:#ca8a04; }
+    .rating-btn.active-4 { background:#f0fdf4; border-color:#22c55e; color:#16a34a; }
+    .rating-btn.active-5 { background:#eff6ff; border-color:#3b82f6; color:#2563eb; }
+
+    .item-row { padding:12px 16px; border-bottom:1px solid #f8fafc; }
+    .item-row:last-child { border-bottom:none; }
+    .item-label { font-size:13px; color:#1e293b; font-weight:500; line-height:1.45; }
+    .item-anchor { font-size:11px; color:#94a3b8; margin-top:3px; line-height:1.4; }
+
+    .badge-critical { background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:3px; }
+    .badge-major    { background:#fff7ed; color:#ea580c; border:1px solid #fdba74; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:3px; }
+    .autofill-badge { background:#ede9fe; color:#7c3aed; border:1px solid #c4b5fd; padding:2px 7px; border-radius:99px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:3px; }
+
+    .photo-area { background:#f8fafc; border:1.5px dashed #cbd5e1; border-radius:10px; padding:12px; margin-top:8px; cursor:pointer; text-align:center; }
+    .photo-area:active { background:#f1f5f9; }
+    .photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:8px; }
+    .photo-thumb { position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; background:#e2e8f0; }
+    .photo-thumb img { width:100%; height:100%; object-fit:cover; }
+    .photo-del { position:absolute; top:3px; right:3px; background:rgba(0,0,0,.55); color:white; border:none; border-radius:50%; width:20px; height:20px; font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+    .notes-input { width:100%; border:1.5px solid #e2e8f0; border-radius:10px; padding:10px 12px; font-size:13px; resize:none; min-height:72px; background:#fafbfc; transition:border-color .15s; }
+    .notes-input:focus { outline:none; border-color:#3b82f6; background:white; }
+
+    .store-andalan   { background:linear-gradient(135deg,#fefce8,#fef08a); border:2px solid #eab308; }
+    .store-baik      { background:linear-gradient(135deg,#f0fdf4,#bbf7d0); border:2px solid #22c55e; }
+    .store-cukup     { background:linear-gradient(135deg,#fffbeb,#fde68a); border:2px solid #f59e0b; }
+    .store-perhatian { background:linear-gradient(135deg,#fff7ed,#fed7aa); border:2px solid #fb923c; }
+    .store-kritis    { background:linear-gradient(135deg,#fef2f2,#fecaca); border:2px solid #ef4444; }
+
+    .btn-next { background:linear-gradient(135deg,#1d4ed8,#3b82f6); color:white; border:none; border-radius:14px; padding:14px 24px; font-size:15px; font-weight:700; width:100%; cursor:pointer; transition:all .15s; }
+    .btn-next:active { transform:scale(.97); opacity:.9; }
+    .btn-back { background:#f1f5f9; color:#475569; border:none; border-radius:14px; padding:14px 20px; font-size:14px; font-weight:600; cursor:pointer; }
+    .btn-submit { background:linear-gradient(135deg,#059669,#10b981); color:white; border:none; border-radius:14px; padding:14px 24px; font-size:15px; font-weight:700; width:100%; cursor:pointer; }
+
+    .pilar-bar-wrap { background:#e2e8f0; border-radius:99px; height:8px; }
+    .pilar-bar { height:8px; border-radius:99px; transition:width .6s; }
+
+    .summary-pilar-row { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid #f1f5f9; gap:12px; }
+    .summary-pilar-row:last-child { border-bottom:none; }
+
+    .critical-warning { background:#fef2f2; border:1.5px solid #fca5a5; border-radius:12px; padding:12px 14px; margin-top:8px; }
+    .critical-warning p { color:#dc2626; font-size:12px; }
+
+    .kpi-arco-card { background:white; border-radius:14px; padding:14px; border:1.5px solid #e5e7eb; margin-bottom:10px; }
+
+    .result-header { background:linear-gradient(135deg,#1e3a5f,#1d4ed8); padding:24px 20px; border-radius:0 0 24px 24px; color:white; text-align:center; }
+
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1e293b; color:white; padding:12px 20px; border-radius:12px; font-size:13px; font-weight:600; z-index:999; opacity:0; transition:opacity .25s; pointer-events:none; white-space:nowrap; }
+    .toast.show { opacity:1; }
+
+    .group-header { padding:8px 16px; background:#f8fafc; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.05em; border-top:1px solid #f1f5f9; }
+
+    .req { color:#ef4444; }
+    .delta-pos { color:#16a34a; font-weight:700; }
+    .delta-neg { color:#dc2626; font-weight:700; }
+    .delta-neu { color:#6b7280; font-weight:700; }
+
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:#f1f5f9; }
+    ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:99px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="form-header">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <a href="index.html" class="text-white/60 hover:text-white text-xl leading-none font-bold">‹</a>
+      <div>
+        <div class="text-white font-black text-sm tracking-wide leading-tight">AUDIT ARCO — TOKO MAKMUR</div>
+        <div class="text-blue-200 text-xs" id="hdr-subtitle">Penilaian Kunjungan</div>
+      </div>
+    </div>
+    <div class="text-right">
+      <div class="text-white/70 text-xs" id="hdr-step">Langkah 1 / 13</div>
+      <div class="text-blue-300 text-xs font-mono" id="hdr-time"></div>
+    </div>
+  </div>
+  <div class="step-progress mt-2.5">
+    <div class="step-progress-fill" id="progress-bar" style="width:7.7%"></div>
+  </div>
+</div>
+
+<!-- ═══ STEP 1 — IDENTITAS ═══ -->
+<div class="step active" id="step-1">
+<div class="p-4 pb-24">
+  <div class="card">
+    <div class="card-header">
+      <div class="text-base font-bold text-gray-800">⭐ Identitas Kunjungan</div>
+      <div class="text-xs text-gray-500 mt-0.5">Isi lengkap sebelum mulai audit</div>
+    </div>
+    <div class="p-4 space-y-4">
+      <div>
+        <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">ARCO <span class="req">*</span></label>
+        <select id="f-arco" onchange="populateToko()" class="mt-1.5 w-full border-2 border-gray-100 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:border-blue-400 focus:bg-white focus:outline-none">
+          <option value="">— Pilih ARCO —</option>
+          <option>ALI</option><option>ARI</option><option>AYU</option>
+          <option>CIPTO</option><option>DEWI</option><option>HARTONO</option>
+          <option>NIA</option><option>NORA</option><option>TONI</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Toko <span class="req">*</span></label>
+        <select id="f-toko" onchange="autoSave()" class="mt-1.5 w-full border-2 border-gray-100 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:border-blue-400 focus:bg-white focus:outline-none">
+          <option value="">— Pilih Toko —</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Tanggal <span class="req">*</span></label>
+          <input id="f-tanggal" type="date" onchange="autoSave()" class="mt-1.5 w-full border-2 border-gray-100 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:border-blue-400 focus:bg-white focus:outline-none">
+        </div>
+        <div>
+          <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Jam Tiba</label>
+          <input id="f-jam" type="time" onchange="autoSave()" class="mt-1.5 w-full border-2 border-gray-100 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:border-blue-400 focus:bg-white focus:outline-none">
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Store Leader Ditemui</label>
+        <input id="f-sl" type="text" placeholder="Nama SL saat kunjungan" oninput="autoSave()" class="mt-1.5 w-full border-2 border-gray-100 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:border-blue-400 focus:bg-white focus:outline-none">
+      </div>
+    </div>
+  </div>
+  <div class="text-center text-xs text-gray-400 mt-1 mb-4">💾 Data tersimpan otomatis di perangkat ini</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30">
+  <button onclick="goStep(2)" class="btn-next">Mulai Audit →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 2 — PILAR A ═══ -->
+<div class="step" id="step-2">
+<div class="p-4 pb-24" id="pilar-A-container"></div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(1)" class="btn-back">‹ Kembali</button>
+  <button onclick="goStep(3)" class="btn-next flex-1">Pilar B →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 3 — PILAR B ═══ -->
+<div class="step" id="step-3">
+<div class="p-4 pb-24" id="pilar-B-container"></div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(2)" class="btn-back">‹ Kembali</button>
+  <button onclick="goStep(4)" class="btn-next flex-1">Pilar C →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 4 — PILAR C ═══ -->
+<div class="step" id="step-4">
+<div class="p-4 pb-24" id="pilar-C-container"></div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(3)" class="btn-back">‹ Kembali</button>
+  <button onclick="goStep(5)" class="btn-next flex-1">Pilar D →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 5 — PILAR D ═══ -->
+<div class="step" id="step-5">
+<div class="p-4 pb-24" id="pilar-D-container"></div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(4)" class="btn-back">‹ Kembali</button>
+  <button onclick="goStep(6)" class="btn-next flex-1">Pilar E →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 6 — PILAR E ═══ -->
+<div class="step" id="step-6">
+<div class="p-4 pb-24" id="pilar-E-container"></div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(5)" class="btn-back">‹ Kembali</button>
+  <button onclick="goStep(7)" class="btn-next flex-1">Catatan →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 7 — CATATAN ═══ -->
+<div class="step" id="step-7">
+<div class="p-4 pb-24">
+  <div class="card">
+    <div class="card-header">
+      <div class="text-base font-bold text-gray-800">📝 Catatan &amp; Temuan Kunci</div>
+      <div class="text-xs text-gray-500 mt-0.5">Ringkas temuan utama kunjungan ini</div>
+    </div>
+    <div class="p-4 space-y-4">
+      <div>
+        <label class="text-xs font-bold text-green-700 uppercase tracking-wide">Kekuatan / Yang Sudah Baik</label>
+        <textarea id="n-kekuatan" class="notes-input mt-2" placeholder="Tuliskan hal-hal yang sudah berjalan baik..."></textarea>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-orange-700 uppercase tracking-wide">Kelemahan / Yang Perlu Diperbaiki</label>
+        <textarea id="n-kelemahan" class="notes-input mt-2" placeholder="Tuliskan temuan yang perlu ditindaklanjuti..."></textarea>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-blue-700 uppercase tracking-wide">Action Items (Tenggat)</label>
+        <textarea id="n-action" class="notes-input mt-2" placeholder="1. [Nama PIC] — [Tindakan] — [Tenggat]&#10;2. ..."></textarea>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Catatan Tambahan ARCO</label>
+        <textarea id="n-catatan" class="notes-input mt-2" placeholder="Catatan bebas, konteks khusus, dll..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(6)" class="btn-back">‹ Kembali</button>
+  <button onclick="goStep(8)" class="btn-next flex-1">Foto Kunjungan →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 8 — FOTO ═══ -->
+<div class="step" id="step-8">
+<div class="p-4 pb-24">
+  <div class="card">
+    <div class="card-header">
+      <div class="text-base font-bold text-gray-800">📸 Foto Kunjungan</div>
+      <div class="text-xs text-gray-500 mt-0.5">Dokumentasi kondisi toko secara umum</div>
+    </div>
+    <div class="p-4 space-y-4">
+      <div class="text-xs text-gray-500 bg-blue-50 rounded-xl p-3 border border-blue-100">
+        Foto bukti item critical/major sudah ditambahkan di tiap item. Bagian ini untuk dokumentasi umum kondisi toko.
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Foto Kondisi Umum Toko</label>
+        <div class="photo-area" onclick="triggerPhoto('general-photos')">
+          <div class="text-2xl mb-1">📷</div>
+          <div class="text-sm font-semibold text-gray-600">Tap untuk tambah foto</div>
+          <div class="text-xs text-gray-400 mt-0.5">Depan toko, area jual, dll</div>
+        </div>
+        <input type="file" id="general-photos-input" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload('general-photos', event)">
+        <div class="photo-grid" id="general-photos-grid"></div>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Tanda Tangan / Konfirmasi SL</label>
+        <div class="text-xs text-gray-400 mt-0.5 mb-1">Minta Store Leader tanda tangan langsung di kotak (pakai jari)</div>
+        <div style="border:1.5px dashed #cbd5e1;border-radius:10px;background:#fff;position:relative">
+          <canvas id="sl-sign-canvas" style="width:100%;height:180px;display:block;touch-action:none;border-radius:10px"></canvas>
+          <div id="sl-sign-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:13px;pointer-events:none">✍️ Tanda tangan di sini</div>
+        </div>
+        <div class="flex gap-2 mt-2 items-center">
+          <button type="button" onclick="clearSignature()" class="py-2 px-4 text-xs font-bold text-gray-600 border-2 border-gray-200 rounded-xl bg-white">🗑️ Hapus</button>
+          <span id="sl-sign-status" class="flex-1 text-center py-2 text-xs font-bold text-gray-400">Belum ditandatangani</span>
+        </div>
+        <label class="flex items-center gap-2 mt-2 text-xs text-gray-600">
+          <input type="checkbox" id="sl-absent" onchange="toggleSlAbsent()" class="w-4 h-4"> SL tidak hadir saat kunjungan
+        </label>
+        <input type="text" id="sl-absent-by" class="hidden mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="Dikonfirmasi oleh (nama & jabatan, mis. Kasir senior)" oninput="autoSave()">
+      </div>
+    </div>
+  </div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(7)" class="btn-back">‹ Kembali</button>
+  <button onclick="goStep(9)" class="btn-next flex-1">Verifikasi Closure →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 9 — CLOSURE ═══ -->
+<div class="step" id="step-9">
+<div class="p-4 pb-24">
+  <div class="card">
+    <div class="card-header">
+      <div class="text-base font-bold text-gray-800">✅ Perbaikan dari Kunjungan Sebelumnya</div>
+      <div class="text-xs text-gray-500 mt-0.5">Cek apakah temuan kunjungan terakhir sudah diperbaiki</div>
+    </div>
+    <div class="p-4 space-y-4">
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
+        ⚠️ <strong>KPI ARCO utama = Temuan yang sudah diperbaiki (terverifikasi ARCO).</strong> Pastikan setiap perbaikan dikonfirmasi langsung di lapangan — bukan diklaim sendiri oleh SL.
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Tanggal Kunjungan Sebelumnya</label>
+        <input id="prev-visit-date" type="date" onchange="autoSave()" class="mt-1.5 w-full border-2 border-gray-100 rounded-xl px-3 py-3 text-sm bg-gray-50 focus:border-blue-400 focus:bg-white focus:outline-none">
+        <div class="text-xs text-gray-400 mt-1">Kosongkan jika kunjungan pertama</div>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Status Action Items</label>
+        <div class="mt-2 space-y-2" id="closure-list">
+          <div class="text-xs text-gray-400 italic py-3 text-center">Belum ada action item tercatat</div>
+        </div>
+        <button onclick="addClosureItem()" class="mt-3 w-full py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-xs font-semibold text-gray-400 hover:border-blue-300 hover:text-blue-500 transition">
+          + Tambah Action Item Manual
+        </button>
+      </div>
+      <div class="bg-gray-50 rounded-xl p-3">
+        <div class="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Ringkasan Closure Rate</div>
+        <div class="flex items-center gap-3">
+          <div class="text-3xl font-black text-blue-600" id="closure-rate-display">—%</div>
+          <div class="flex-1">
+            <div class="text-xs text-gray-500" id="closure-rate-detail">Isi action items untuk menghitung</div>
+            <div class="bg-gray-200 rounded-full h-2 mt-1.5">
+              <div class="bg-blue-500 h-2 rounded-full transition-all" id="closure-rate-bar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(8)" class="btn-back">‹ Kembali</button>
+  <button onclick="goStep(10)" class="btn-next flex-1">KPI ARCO →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 10 — KPI ARCO ═══ -->
+<div class="step" id="step-10">
+<div class="p-4 pb-24">
+  <div class="card">
+    <div class="card-header">
+      <div class="text-base font-bold text-gray-800">📊 KPI ARCO — Rekap Performa</div>
+      <div class="text-xs text-gray-500 mt-0.5">Indikator kinerja area koordinator</div>
+    </div>
+    <div class="p-4 space-y-4">
+
+      <!-- Closure Rate — PRIMARY KPI (Change #15) -->
+      <div class="kpi-arco-card border-blue-200">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-bold text-blue-700">✅ Temuan Diperbaiki (Tingkat Perbaikan)</h3>
+          <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">KPI UTAMA</span>
+        </div>
+        <div class="flex items-end gap-2">
+          <div class="text-3xl font-black text-blue-600" id="kpi-closure-rate">—%</div>
+          <div class="text-xs text-gray-500 mb-1">dari temuan kunjungan ini</div>
+        </div>
+        <div class="bg-gray-100 rounded-full h-2 mt-2">
+          <div class="bg-blue-500 h-2 rounded-full transition-all" id="kpi-closure-bar" style="width:0%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Target: ≥ 80% temuan dari kunjungan sebelumnya sudah diperbaiki</p>
+      </div>
+
+      <!-- Delta Skor (Change #15) -->
+      <div class="kpi-arco-card">
+        <h3 class="text-sm font-bold text-gray-700">📈 Delta Skor vs Kunjungan Sebelumnya</h3>
+        <p class="text-xs text-amber-600 mt-1">⚠️ KPI ARCO utama = Closure Rate (bukan improvement rate yang dihitung ARCO sendiri)</p>
+        <div class="mt-3 space-y-1" id="kpi-delta-container">
+          <div class="text-xs text-gray-400 italic">Isi skor kunjungan sebelumnya di bawah untuk melihat delta</div>
+        </div>
+        <div class="mt-3 border-t pt-3">
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wide">Skor Kunjungan Sebelumnya (otomatis dari data)</label>
+          <div id="prev-status" class="text-xs text-gray-400 mt-1">Akan dimuat otomatis saat halaman ini dibuka…</div>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            <div><label class="text-xs text-gray-400">Pilar A</label><input id="prev-A" type="number" min="1" max="5" step="0.1" class="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="—" oninput="updateDelta()"></div>
+            <div><label class="text-xs text-gray-400">Pilar B</label><input id="prev-B" type="number" min="1" max="5" step="0.1" class="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="—" oninput="updateDelta()"></div>
+            <div><label class="text-xs text-gray-400">Pilar C</label><input id="prev-C" type="number" min="1" max="5" step="0.1" class="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="—" oninput="updateDelta()"></div>
+            <div><label class="text-xs text-gray-400">Pilar D</label><input id="prev-D" type="number" min="1" max="5" step="0.1" class="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="—" oninput="updateDelta()"></div>
+            <div><label class="text-xs text-gray-400">Pilar E</label><input id="prev-E" type="number" min="1" max="5" step="0.1" class="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="—" oninput="updateDelta()"></div>
+            <div><label class="text-xs text-gray-400">Total</label><input id="prev-total" type="number" min="1" max="5" step="0.1" class="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="—" oninput="updateDelta()"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 text-xs text-indigo-700">
+        🔀 <strong>Kalibrasi Cross-Audit:</strong> COO/QA akan audit ulang 1–2 toko per ARCO per bulan untuk inter-rater reliability.
+      </div>
+    </div>
+  </div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(9)" class="btn-back">‹ Kembali</button>
+  <button onclick="goStep(11)" class="btn-next flex-1">Preview Hasil →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 11 — PREVIEW (Change #12: pv-gate-box added) ═══ -->
+<div class="step" id="step-11">
+<div class="p-4 pb-24">
+
+  <div id="pv-store-card" class="rounded-2xl p-5 mb-4 text-center store-cukup">
+    <div class="text-4xl mb-2" id="pv-icon">—</div>
+    <div class="text-2xl font-black mb-1" id="pv-label">—</div>
+    <div class="text-sm font-semibold mb-1" id="pv-skor-display">—</div>
+    <div class="text-xs opacity-70" id="pv-desc">—</div>
+  </div>
+
+  <!-- Critical Gate box (Change #12) -->
+  <div id="pv-gate-box" class="hidden mb-4 bg-orange-50 border border-orange-300 rounded-xl p-3"></div>
+
+  <!-- Critical items warning -->
+  <div id="pv-critical-box" class="hidden mb-4 bg-red-50 border border-red-200 rounded-xl p-3">
+    <div class="font-bold text-red-700 text-xs mb-1">🚨 ITEM CRITICAL / MAJOR BERNILAI RENDAH</div>
+    <div id="pv-critical-list"></div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header"><div class="text-sm font-bold text-gray-700">📊 Skor Per Pilar</div></div>
+    <div class="p-4" id="pv-pilars"></div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="p-4 space-y-2 text-sm">
+      <div class="flex justify-between"><span class="text-gray-500">ARCO</span><span class="font-semibold" id="pv-arco">—</span></div>
+      <div class="flex justify-between"><span class="text-gray-500">Toko</span><span class="font-semibold" id="pv-toko">—</span></div>
+      <div class="flex justify-between"><span class="text-gray-500">Tanggal</span><span class="font-semibold" id="pv-tanggal">—</span></div>
+      <div class="flex justify-between"><span class="text-gray-500">Jenis</span><span class="font-semibold" id="pv-jenis">—</span></div>
+      <div class="flex justify-between"><span class="text-gray-500">Item dinilai</span><span class="font-semibold" id="pv-item-count">—</span></div>
+    </div>
+  </div>
+
+  <div class="text-xs text-gray-400 text-center mb-3">Periksa kembali sebelum submit. Data tidak dapat diubah setelah dikirim.</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(10)" class="btn-back">‹ Kembali</button>
+  <button onclick="goStep(12)" class="btn-next flex-1">Konfirmasi &amp; Lanjut →</button>
+</div>
+</div>
+
+<!-- ═══ STEP 12 — SUBMIT ═══ -->
+<div class="step" id="step-12">
+<div class="p-4 pb-24">
+  <div class="card">
+    <div class="card-header">
+      <div class="text-base font-bold text-gray-800">📤 Konfirmasi &amp; Kirim</div>
+      <div class="text-xs text-gray-500 mt-0.5">Data akan dikirim ke sistem setelah konfirmasi</div>
+    </div>
+    <div class="p-4 space-y-4">
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+        <div class="text-3xl mb-2" id="confirm-icon">⭐</div>
+        <div class="text-lg font-black text-gray-800" id="confirm-toko">—</div>
+        <div class="text-sm text-gray-500 mt-1" id="confirm-arco">—</div>
+        <div class="text-2xl font-black text-blue-600 mt-2" id="confirm-skor">—</div>
+        <div class="text-sm font-bold mt-1" id="confirm-label">—</div>
+      </div>
+      <div class="bg-gray-50 rounded-xl p-4">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" id="declaration-check" class="mt-0.5 w-5 h-5 rounded border-2 border-gray-300 text-blue-600">
+          <span class="text-xs text-gray-600 leading-relaxed">Saya menyatakan bahwa hasil audit ini adalah penilaian objektif berdasarkan kondisi aktual yang saya saksikan langsung. Data yang dikirim tidak dapat diubah.</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-30 flex gap-3">
+  <button onclick="goStep(11)" class="btn-back">‹ Kembali</button>
+  <button onclick="submitForm()" class="btn-submit flex-1" id="submit-btn">📤 Kirim Audit</button>
+</div>
+</div>
+
+<!-- ═══ STEP 13 — HASIL FINAL ═══ -->
+<div class="step" id="step-13">
+<div class="pb-8">
+  <div class="result-header">
+    <div class="text-5xl mb-3" id="res-icon">⭐</div>
+    <div class="text-white text-sm font-bold opacity-80 mb-1" id="res-toko">—</div>
+    <div class="text-3xl font-black text-white" id="res-grade">—</div>
+    <div class="text-white/80 text-base mt-1" id="res-skor">—</div>
+    <div class="text-white/60 text-sm mt-1" id="res-tanggal">—</div>
+  </div>
+  <div class="p-4 space-y-4">
+    <div class="card">
+      <div class="card-header"><div class="text-sm font-bold text-gray-700">📊 Skor Per Pilar</div></div>
+      <div class="p-4 space-y-3" id="res-pilars"></div>
+    </div>
+    <div id="res-gate-banner" class="hidden bg-orange-50 border border-orange-300 rounded-xl p-4">
+      <div class="font-bold text-orange-700 text-sm mb-2">⛔ Critical Gate Aktif</div>
+      <div id="res-gate-reasons" class="text-xs text-orange-600 space-y-1"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="text-sm font-bold text-gray-700">📝 Catatan ARCO</div></div>
+      <div class="p-4 space-y-3 text-sm text-gray-600">
+        <div><span class="font-semibold text-green-700">Kekuatan:</span> <span id="res-kekuatan">—</span></div>
+        <div><span class="font-semibold text-orange-700">Perlu Perbaikan:</span> <span id="res-kelemahan">—</span></div>
+        <div><span class="font-semibold text-blue-700">Action Items:</span> <span id="res-action">—</span></div>
+      </div>
+    </div>
+    <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+      <div class="text-2xl mb-2">✅</div>
+      <div class="font-bold text-green-700 text-sm">Data berhasil dikirim!</div>
+      <div class="text-xs text-green-600 mt-1" id="res-submit-time">—</div>
+    </div>
+    <div class="space-y-3">
+      <button onclick="resetForm()" class="w-full py-3.5 bg-blue-600 text-white rounded-2xl font-bold text-sm">+ Audit Toko Lain</button>
+      <a href="index.html" class="block w-full py-3.5 bg-gray-100 text-gray-700 rounded-2xl font-bold text-sm text-center">← Kembali ke Menu</a>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+const SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzO5oRiqWMBda0bM0MDjz6B9pA9cBYTQNwNEBi-I-Qy4DDv3evuTH_Kzx5ZcO5cUSZIoA/exec';
+// ════════ ALOKASI KAS IDEAL PER TOKO (kelipatan Rp500.000) ════════
+// EDIT angka di bawah sesuai alokasi kas nyata tiap toko.
+// Nilai otomatis dibulatkan ke kelipatan 500.000 demi konsistensi.
+const IDEAL_KAS = {
+  'M01': 3000000,
+  'M02': 3000000,
+  'M03': 3000000,
+  'M04': 3000000,
+  'M05': 3000000,
+  'M06': 3000000,
+  'M07': 3000000,
+  'M08': 3000000,
+  'M09': 3000000,
+  'M10': 3000000,
+  'M11': 3000000,
+  'M12': 3000000,
+  'M13': 3000000,
+  'M14': 3000000,
+  'M15': 3000000,
+  'M16': 3000000,
+  'M17': 3000000,
+  'M18': 3000000,
+  'M19': 3000000,
+  'M20': 3000000,
+  'M21': 3000000,
+  'M22': 3000000,
+  'M23': 3000000,
+  'M24': 3000000,
+  'M25': 3000000,
+  'M26': 3000000,
+  'M27': 3000000,
+  'M28': 3000000,
+  'M29': 3000000,
+  'M30': 3000000,
+  'M31': 3000000,
+  'M32': 3000000,
+  'M33': 3000000
+};
+function isPhotoable(key){
+  // Bukti FOTO hanya untuk PRODUK / KEBERSIHAN (Pilar A & B).
+  // Perilaku/pelayanan/manajemen cukup CATATAN pengamatan ARCO.
+  return /^(A_|B_)/.test(key);
+}
+
+const HIGH_RISK_PHOTO = ['B_oos','B_kadaluarsa','B_fefo','B_planogram','B_harga','B_price_tag'];
+const PHOTO_LOW = ['D_cctv'];
+
+function getIdealKas(kode){
+  const v = IDEAL_KAS[kode];
+  const base = (typeof v === 'number' && v > 0) ? v : 3000000;
+  return Math.round(base / 500000) * 500000;   // paksa kelipatan 500rb
+}
+
+const TOTAL_STEPS = 13;
+
+const ARCO_TOKO = {
+  NIA:     [
+    {kode:'M01', nama:'MAKMUR TAMBAHREJO (1)'},
+    {kode:'M02', nama:'MAKMUR KAPAS KRAMPUNG 75E'},
+    {kode:'M05', nama:'MAKMUR TAMBAHREJO (2)'},
+    {kode:'M17', nama:'MAKMUR KARANG ASEM'},
+  ],
+  ARI:     [
+    {kode:'M03', nama:'MAKMUR USMAN SADAR'},
+    {kode:'M04', nama:'MAKMUR KALIMANTAN GRS'},
+    {kode:'M16', nama:'MAKMUR RUNGKUT MENANGGAL'},
+  ],
+  HARTONO: [
+    {kode:'M06', nama:'MAKMUR PUCANG ANOM'},
+    {kode:'M08', nama:'MAKMUR KAPAS KRAMPUNG 138A'},
+    {kode:'M09', nama:'MAKMUR BRATANG GEDE'},
+    {kode:'M13', nama:'MAKMUR WIGUNA TENGAH'},
+  ],
+  ALI:     [
+    {kode:'M07', nama:'MAKMUR PACUAN KUDA'},
+    {kode:'M15', nama:'MAKMUR DUKUH KUPANG'},
+    {kode:'M24', nama:'MAKMUR SEMOLOWARU'},
+    {kode:'M28', nama:'MAKMUR ARYO BEBANGAH'},
+    {kode:'M29', nama:'MAKMUR RAYA SUKODONO'},
+  ],
+  TONI:    [
+    {kode:'M10', nama:'MAKMUR PANDEGILING'},
+    {kode:'M18', nama:'MAKMUR GARUDA BETRO'},
+    {kode:'M20', nama:'MAKMUR RAYA TENGGILIS'},
+  ],
+  CIPTO:   [
+    {kode:'M11', nama:'MAKMUR RAYA LONTAR'},
+    {kode:'M12', nama:'MAKMUR SIDOMULYO'},
+    {kode:'M25', nama:'MAKMUR MANUKAN TENGAH'},
+    {kode:'M27', nama:'MAKMUR LIDAH WETAN'},
+    {kode:'M33', nama:'MAKMUR CITRALAND'},
+  ],
+  AYU:     [
+    {kode:'M14', nama:'MAKMUR RAYA MULYOSARI'},
+    {kode:'M26', nama:'MAKMUR KEPUTIH TEGAL'},
+    {kode:'M31', nama:'MAKMUR RAYA TROPODO'},
+  ],
+  NORA:    [
+    {kode:'M19', nama:'MAKMUR RAYA KETINTANG'},
+    {kode:'M21', nama:'MAKMUR DELTA SARI'},
+  ],
+  DEWI:    [
+    {kode:'M22', nama:'MAKMUR PONDOK JATI'},
+    {kode:'M23', nama:'MAKMUR TAMAN PINANG'},
+    {kode:'M30', nama:'MAKMUR KEMENDUNG'},
+    {kode:'M32', nama:'MAKMUR GRAHA KOTA'},
+  ],
+};
+
+// ── PRIORITY MAP (Change #5) ──
+const PRIORITY = {
+  B_oos:          'critical',
+  B_fefo:         'critical',
+  B_akurasi_stok: 'critical',
+  B_kadaluarsa:   'critical',
+  B_harga:        'major',
+  B_planogram:    'major',
+  B_pop:          'major',
+  C_jam_buka:     'major',
+  C_seragam:      'major',
+  C_pelayanan:    'major',
+  C_kasir:        'major',
+  D_selisih:      'critical',
+  D_setoran:      'critical',
+  D_cctv:         'major',
+  D_admin_kas:    'major',
+  E_tl_lama:      'critical',
+  E_closure_tl:   'major',
+};
+
+// ── PILARS (Changes #6, #7, #8, #9) ──
+const PILARS = {
+  A: {
+    label:'Kebersihan', icon:'🧹', bobot:0.20,
+    items:[
+      // ── 🏠 Area Depan & Halaman ──────────────────────────
+      {key:'A_depan',     section:'🏠 Area Depan & Halaman',   label:'Kebersihan area luar, parkir & trotoar depan toko',           anchor:'5=sangat rapi & bersih | 4=rapi | 3=cukup | 2=kurang | 1=kumuh'},
+      {key:'A_kaca',      section:'🏠 Area Depan & Halaman',   label:'Kebersihan kaca depan, etalase & pintu masuk (bebas noda)',   anchor:'5=jernih bebas sidik jari | 4=bersih | 3=ada noda | 2=banyak noda | 1=sangat kotor'},
+
+      // ── 💳 Area Kasir ─────────────────────────────────────
+      {key:'A_kasir',     section:'💳 Area Kasir',             label:'Kebersihan & kerapian meja kasir dan counter',               anchor:'5=sangat rapi | 4=rapi | 3=cukup | 2=berantakan | 1=sangat kotor'},
+      {key:'A_pos',       section:'💳 Area Kasir',             label:'Kebersihan perangkat POS (monitor, printer, scanner, kabel)', anchor:'5=bersih & tertata | 3=cukup | 1=kotor/berdebu/semrawut'},
+      {key:'A_keranjang', section:'🏠 Area Depan & Halaman',   label:'Kebersihan keranjang belanja & trolly pelanggan',            anchor:'5=bersih semua, tidak ada yang rusak | 4=baik | 3=1–2 kotor/rusak | 2=beberapa rusak | 1=banyak rusak/kotor'},
+
+      // ── 🛒 Area Jual & Display ────────────────────────────
+      {key:'A_lantai',    section:'🛒 Area Jual & Display',    label:'Kebersihan lantai area jual (tidak ada sampah, debu, noda)', anchor:'5=sangat bersih | 4=bersih | 3=ada kotoran kecil | 2=kotor | 1=sangat kotor'},
+      {key:'A_gondola',   section:'🛒 Area Jual & Display',    label:'Kebersihan gondola & rak (bebas debu, noda produk)',         anchor:'5=bersih semua | 4=bersih | 3=ada debu | 2=kotor | 1=sangat kotor'},
+
+      // ── 📦 Area Gudang & Back Area ────────────────────────
+      {key:'A_gudang',    section:'📦 Area Gudang & Back Area', label:'Kebersihan & kerapian gudang: penataan stok, lorong bebas', anchor:'5=rapi & bersih | 4=baik | 3=cukup | 2=berantakan | 1=sangat kotor'},
+      {key:'A_kardus',    section:'📦 Area Gudang & Back Area', label:'Pengelolaan kardus bekas: dilipat, rapi, tidak menghalangi', anchor:'5=tidak ada kardus berlebih, area bersih | 4=sedikit tapi tertata | 3=cukup banyak tapi tidak menghalangi | 2=menumpuk | 1=menghalangi lorong'},
+      {key:'A_retur',     section:'📦 Area Gudang & Back Area', label:'Area retur: rapi, terpisah jelas dari stok aktif & berlabel', anchor:'5=rapi & terpisah sempurna | 3=ada pemisahan tapi kurang konsisten | 1=bercampur stok aktif'},
+      {key:'A_grouping',  section:'📦 Area Gudang & Back Area', label:'Grouping food / non-food terpisah sesuai standar',          anchor:'5=terpisah rapi & berlabel | 3=sebagian terpisah | 1=campur aduk'},
+      {key:'A_loker',     section:'📦 Area Gudang & Back Area', label:'Kebersihan loker karyawan (rotasi mingguan)',              anchor:'5=rapi bersih, semua tertutup | 3=cukup | 1=berantakan/kotor'},
+
+      // ── 🚿 Toilet & Janitor ───────────────────────────────
+      {key:'A_toilet',    section:'🚿 Toilet & Fasilitas',     label:'Kebersihan toilet & fasilitas karyawan',                    anchor:'5=sangat bersih, tidak berbau, sabun & tisu tersedia | 4=bersih | 3=cukup | 2=kotor | 1=sangat kotor/bau'},
+      {key:'A_janitor',   section:'🚿 Toilet & Fasilitas',     label:'Area janitor: alat kebersihan bersih, lengkap & tertata',   anchor:'5=sangat rapi, semua alat bersih | 4=rapi | 3=cukup rapi | 2=kurang | 1=berantakan'},
+
+      // ── 🧊 Kulkas & Pendingin ─────────────────────────────
+      {key:'A_kulkas',    section:'🧊 Kulkas & Pendingin',     label:'Kebersihan kulkas & lemari pendingin (dalam & luar)',       anchor:'5=sangat bersih | 3=ada noda/bau | 1=kotor'},
+      {key:'A_suhu',      section:'🧊 Kulkas & Pendingin',     label:'Suhu AC terjaga 22–24°C (cek termometer atau panel AC)',              anchor:'5=22-24°C sesuai standar | 4=25-26°C sedikit di atas | 3=27-28°C perlu perhatian | 2=>28°C tidak nyaman | 1=AC mati / tidak berfungsi'},
+
+      // ── 🔄 Overhead & Sarana (Rotasi Mingguan) ────────────
+      {key:'A_plafon',    section:'🔄 Overhead & Sarana',      label:'Langit-langit & plafon: bebas sarang laba-laba & kotoran', anchor:'5=bersih total | 3=ada sarang laba-laba | 1=sangat kotor'},
+      {key:'A_kipas_ac',  section:'🔄 Overhead & Sarana',      label:'Kipas & AC: bebas debu, filter bersih, berfungsi normal',  anchor:'5=bersih & berfungsi baik | 3=ada debu | 1=kotor/tersumbat/berisik'},
+    ]
+  },
+
+  B: {
+    label:'Display & Barang', icon:'🏪', bobot:0.25,
+    items:[
+      {key:'B_planogram',    section:'Planogram & Display',          label:'Display gondola & rak: rapi, facing baik, tidak ada space kosong (Cluster A: sesuai planogram)',  anchor:'5=sempurna — planogram/rapi tanpa space kosong | 4=1-2 area minor menyimpang | 3=beberapa area tidak rapi/ada space kosong | 2=banyak area tidak rapi | 1=display berantakan, tidak ada upaya penataan'},
+      {key:'B_pop',          section:'Planogram & Display',          label:'POP promo terpasang lengkap, benar & tidak kadaluarsa',        anchor:'5=lengkap & benar | 4=>=90% | 3=>=75% | 2=>=50% | 1=<50% atau promo expired'},
+      {key:'B_price_tag',    section:'Planogram & Display',          label:'Price tag / label harga terpasang & akurat di semua produk',   anchor:'5=100% | 4=>=95% | 3=>=85% | 2=>=70% | 1=<70%'},
+      {key:'B_facing',       section:'Planogram & Display',          label:'Facing produk rapi, teks menghadap pembeli, produk di-front',  anchor:'5=sangat rapi | 4=rapi | 3=cukup | 2=kurang | 1=tidak dilakukan'},
+      {key:'B_harga',        section:'Planogram & Display',          label:'Kesesuaian harga di rak vs POS vs promosi aktif',              anchor:'5=100% sesuai | 4=1 selisih kecil | 3=2 selisih | 2=3-4 selisih | 1=>=5 atau besar'},
+      {key:'B_oos',          section:'Stok & Ketersediaan',          label:'OOS (Out of Stock) SKU utama — jumlah SKU-A yang kosong',      anchor:'5=0 OOS | 4=1 SKU | 3=2 SKU | 2=3-4 SKU | 1=>=5 SKU kosong'},
+      {key:'B_ketersediaan', section:'Stok & Ketersediaan',          label:'Ketersediaan stok umum & pengisian rak tepat waktu',           anchor:'5=penuh terjaga | 4=baik | 3=ada kekosongan minor | 2=ada kekosongan signifikan | 1=banyak kosong'},
+      {key:'B_order',        section:'Stok & Ketersediaan',          label:'Proses order ke WLM/DC berjalan sesuai SOP & on-time',         anchor:'5=tepat waktu & lengkap | 4=tepat | 3=terlambat 1x | 2=terlambat >1x | 1=tidak diorder'},
+      {key:'B_slow_fast',    section:'Stok & Ketersediaan',          label:'Manajemen slow/fast moving: slow-mover mendekati ED ditindaklanjuti (promo/retur/rotasi), fast-mover di-reorder tepat waktu',  anchor:'5=slow & fast mover dikelola aktif & terdokumentasi | 4=mayoritas dikelola | 3=sebagian dikelola | 2=minim tindakan | 1=tidak dikelola sama sekali'},
+      {key:'B_fefo',         section:'Kualitas & Keamanan Produk',   label:'FEFO diterapkan: barang lama di depan, barang baru di belakang',anchor:'5=100% benar | 4=>=95% | 3=>=80% | 2=>=60% | 1=<60% atau tidak diterapkan'},
+      {key:'B_kadaluarsa',   section:'Kualitas & Keamanan Produk',   label:'Tidak ada produk kadaluarsa di rak (ED < 1 bulan ditarik)',    anchor:'5=0 produk expired | 4=ada 1 (segera ditarik) | 3=2-3 | 2=4-5 | 1=>5 atau sudah expired'},
+      {key:'B_kondisi',      section:'Kualitas & Keamanan Produk',   label:'Kondisi fisik produk baik (tidak rusak, penyok, bocor)',       anchor:'5=semua baik | 4=>=99% | 3=ada 1-2 rusak | 2=ada 3-5 rusak | 1=>5 rusak'},
+      {key:'B_penerimaan',   section:'Kualitas & Keamanan Produk',   label:'Penerimaan barang sesuai SOP: verifikasi Surat Jalan, jumlah, kondisi', anchor:'5=selalu sesuai SOP | 4=hampir selalu | 3=kadang ada selisih | 2=sering ada selisih | 1=tidak mengikuti SOP'},
+      {key:'B_spg',          section:'Kualitas & Keamanan Produk',   label:'SPG eksternal hadir & di posisi area brand (jika ada)',        anchor:'5=hadir & aktif | 3=hadir tapi pasif | 1=tidak hadir / N/A'},
+      // Change #6 — new item
+      {key:'B_akurasi_stok', section:'Kualitas Stok',                label:'Akurasi stok: sampling fisik vs POS (min. 5 SKU-A) — selisih wajar', anchor:'5=0 selisih | 4=1 SKU selisih kecil | 3=2 SKU | 2=3-4 SKU | 1=>=5 SKU atau selisih besar', skuSampling:true},
+    ]
+  },
+
+  C: {
+    label:'Pelayanan & SDM', icon:'👥', bobot:0.20,
+    items:[
+      {key:'C_pelayanan',         section:'Pelayanan',       label:'Kualitas pelayanan 3S (Senyum-Salam-Sapa) kepada pelanggan',              anchor:'5=konsisten semua staf | 4=hampir semua | 3=sebagian | 2=jarang | 1=tidak ada'},
+      {key:'C_kasir',             section:'Pelayanan',       label:'Kasir menawarkan membership & promosi aktif kepada pembeli',               anchor:'5=selalu | 4=hampir selalu | 3=kadang | 2=jarang | 1=tidak pernah'},
+      {key:'C_product_knowledge', section:'Pelayanan',       label:'Product knowledge staf untuk kategori utama (susu/MPASI/kebutuhan bayi)',  anchor:'5=sangat baik | 4=baik | 3=cukup | 2=kurang | 1=sangat kurang'},
+      {key:'C_seragam',           section:'Pelayanan',       label:'Karyawan berseragam lengkap sesuai standar saat jam operasional',          anchor:'5=100% sesuai | 4=1 tidak sesuai | 3=2 tidak sesuai | 2=3 tidak sesuai | 1=>3 atau tidak ada seragam', seragamAudit:true},
+      {key:'C_briefing',          section:'Manajemen SDM',   label:'Briefing pagi terlaksana termasuk update promo berjalan',                  anchor:'5=selalu terlaksana | 4=hampir selalu | 3=kadang-kadang | 2=jarang | 1=tidak pernah'},
+      {key:'C_jam_kerja',         section:'Manajemen SDM',   label:'Kehadiran karyawan sesuai jadwal & tidak ada pos kosong',                  anchor:'5=semua hadir sesuai jadwal | 4=1 absent terkover | 3=1 absent tidak terkover | 2=2 absent | 1=>=3 atau shift kosong'},
+      // Change #8 — new item
+      {key:'C_jam_buka',          section:'Manajemen SDM',   label:'Ketepatan jam buka & tutup toko sesuai standar',                          anchor:'5=tepat waktu selalu | 4=terlambat 1x | 3=terlambat 2x | 2=terlambat 3x | 1=>3x atau tidak tercatat'},
+      {key:'C_spg',              section:'Manajemen SDM',   label:'SPG eksternal hadir sesuai jadwal & aktif di posisi area brand',          anchor:'5=semua hadir & aktif | 4=hadir tapi kurang aktif | 3=1 tidak hadir tapi terkover | 2=>1 tidak hadir | 1=tidak ada SPG/semua mangkir | N/A=tidak ada jadwal SPG'},
+    ]
+  },
+
+  D: {
+    label:'Kas & Uang Aman', icon:'💰', bobot:0.20,
+    items:[
+      {key:'D_kas_audit',  section:'Audit Kas Mandiri',        label:'Audit Kas: Selisih Setoran & Minus Kasir Hari Ini',     anchor:'5=tidak ada selisih/minus | 4=≤Rp50rb | 3=≤Rp150rb | 2=≤Rp300rb | 1=>Rp300rb', kasAudit:true},
+      {key:'D_setoran',    section:'Kas Harian',              label:'Ketepatan setoran (batas setor: pk 14.30 — bank tutup pk 15.00)',        anchor:'5=setor ≤pk 14.30, jumlah sesuai | 4=setor pk 14.30-15.00, jumlah sesuai | 3=carry-over dengan persetujuan tertulis OM | 2=carry-over tanpa persetujuan atau jumlah tidak sesuai | 1=tidak setor tanpa alasan jelas'},
+      {key:'D_selisih',    section:'Kas Harian',              label:'Selisih kas hari ini (actual vs POS)',                     anchor:'5=Rp0 | 4=<Rp10rb | 3=Rp10-50rb | 2=Rp50-100rb | 1=>Rp100rb'},
+      {key:'D_admin_kas',  section:'Kas Harian',              label:'Administrasi kas tertib: rekap & tanda tangan SL',         anchor:'5=lengkap & tertib | 4=lengkap | 3=ada yang terlewat | 2=banyak yang terlewat | 1=tidak ada'},
+      // Change #7 — new items
+      {key:'D_cctv',       section:'Keamanan Toko',           label:'CCTV berfungsi & merekam (spot-check aktif)',              anchor:'5=semua berfungsi | 3=sebagian | 1=tidak berfungsi/tidak ada rekaman'},
+      {key:'D_setoran_7d', section:'Data 7 Hari [AUTO Form 1]', label:'Setoran on-time 7 hari (referensi AUTO dari Form 1)',  anchor:'Data diambil otomatis dari Form 1 — tampil sebagai referensi untuk ARCO, tidak masuk skor', auto:true, displayOnly:true},
+      {key:'D_selisih_7d', section:'Data 7 Hari [AUTO Form 1]', label:'Selisih kas akumulasi 7 hari (referensi AUTO dari Form 1)', anchor:'Data diambil otomatis dari Form 1 — tampil sebagai referensi untuk ARCO, tidak masuk skor', auto:true, displayOnly:true},
+    ]
+  },
+
+  E: {
+    label:'Kepemimpinan', icon:'🌟', bobot:0.15,
+    items:[
+      {key:'E_tl_lama',    section:'Kepemimpinan',         label:'Temuan kunjungan sebelumnya: sudah diperbaiki & diverifikasi ARCO?',   anchor:'5=semua diperbaiki & terverifikasi | 4=>=75% | 3=>=50% | 2=>=25% | 1=<25% atau tidak ada perbaikan sama sekali'},
+      // Change #9 — updated labels with AUTO source
+      {key:'E_daily',      section:'Performa SL (isi berdasarkan observasi & data tersedia)', label:'Completion tugas harian SL rata-rata (estimasi dari Form 1 & observasi)',  anchor:'5=>=95% task selesai konsisten | 4=90-94% | 3=80-89% | 2=70-79% | 1=<70% atau tidak terpantau'},
+      {key:'E_omzet',      section:'Performa SL (isi berdasarkan observasi & data tersedia)', label:'Pencapaian omzet vs target bulan berjalan (tanyakan ke SL atau cek POS)',   anchor:'5=>=100% target | 4=95-99% | 3=85-94% | 2=70-84% | 1=<70% target'},
+      {key:'E_keluhan',    section:'Performa SL (isi berdasarkan observasi & data tersedia)', label:'Penanganan keluhan/insiden terdokumentasi (review Log Kejadian Form 1)',    anchor:'5=semua terdokumentasi & ada tindakan | 4=hampir semua | 3=sebagian terdokumentasi | 2=ada yang terabaikan | 1=tidak ada log sama sekali'},
+      // Change #9 — new item
+      {key:'E_closure_tl', section:'Kepemimpinan',         label:'Closure rate temuan kunjungan ini yang diselesaikan langsung',         anchor:'5=semua solved | 4=>=75% | 3=50-74% | 2=25-49% | 1=<25%'},
+    ]
+  }
+};
+
+// ── STATE ──
+let currentStep   = 1;
+let ratings       = {};
+let photos        = {};
+let kunjunganType = '';   // dipakai autoSave/restore/submit (fitur jenis kunjungan dinonaktifkan)
+let closureItems  = [];
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('f-tanggal').value = now.toISOString().slice(0,10);
+  document.getElementById('f-jam').value     = now.toTimeString().slice(0,5);
+
+  updateClock();
+  setInterval(updateClock, 15000);
+
+  buildPilarUI('A','pilar-A-container');
+  buildPilarUI('B','pilar-B-container');
+  buildPilarUI('C','pilar-C-container');
+  buildPilarUI('D','pilar-D-container');
+  buildPilarUI('E','pilar-E-container');
+
+  restoreState();
+});
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('hdr-time').textContent =
+    now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── ARCO -> TOKO ──
+function populateToko() {
+  const arco   = document.getElementById('f-arco').value;
+  const select = document.getElementById('f-toko');
+  select.innerHTML = '<option value="">— Pilih Toko —</option>';
+  (ARCO_TOKO[arco] || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value       = t.kode;
+    o.textContent = t.kode + ' — ' + t.nama;
+    select.appendChild(o);
+  });
+  autoSave();
+}
+
+// Jenis Kunjungan dihapus — belum ada definisi fungsi yang berbeda per jenis
+
+// ── BUILD PILAR UI ──
+function buildPilarUI(pKey, containerId) {
+  const pilar     = PILARS[pKey];
+  const container = document.getElementById(containerId);
+
+  const sections = {};
+  pilar.items.forEach(item => {
+    const sec = item.section || 'Umum';
+    if (!sections[sec]) sections[sec] = [];
+    sections[sec].push(item);
+  });
+
+  let html = `
+    <div class="card mb-3">
+      <div class="pilar-header">
+        <div class="flex items-center gap-3">
+          <span style="font-size:1.4rem">${pilar.icon}</span>
+          <div>
+            <div class="font-black text-gray-800">Pilar ${pKey} — ${pilar.label}</div>
+            <div class="text-xs text-blue-600 font-semibold">Bobot ${Math.round(pilar.bobot*100)}% &middot; ${pilar.items.length} item</div>
+          </div>
+        </div>
+      </div>`;
+
+  Object.entries(sections).forEach(([sec, items]) => {
+    html += `<div class="group-header">${sec}</div>`;
+    items.forEach(item => { html += buildRatingBlock(item); });
+  });
+  html += `</div>`;
+
+  html += `
+    <div class="card">
+      <div class="card-header"><div class="text-sm font-bold text-gray-700">📝 Catatan Pilar ${pKey}</div></div>
+      <div class="p-4">
+        <textarea id="note-pilar-${pKey}" class="notes-input" placeholder="Catatan khusus untuk pilar ini (opsional)..." oninput="autoSave()"></textarea>
+      </div>
+    </div>`;
+
+  container.innerHTML = html;
+}
+
+// Change #10 — AUTO badge in buildRatingBlock
+function buildRatingBlock(item) {
+  const priority = PRIORITY[item.key] || null;
+  let badgeHtml  = '';
+  if (priority === 'critical') badgeHtml += '<span class="badge-critical">🔴 CRITICAL</span>';
+  if (priority === 'major')    badgeHtml += '<span class="badge-major">🟠 MAJOR</span>';
+  if (item.auto) badgeHtml += '<span class="autofill-badge" style="margin-left:4px">🤖 AUTO</span>';
+
+  // Kas Audit item — custom input UI
+  if (item.kasAudit) {
+    return `
+      <div class="item-row" id="row-${item.key}">
+        <div class="item-label mb-2">${item.label}</div>
+        <div class="text-xs text-gray-400 mb-3">${item.anchor}</div>
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-3 space-y-2">
+          <div class="text-xs font-bold text-emerald-800 mb-2">💰 Selisih Setoran & Minus Kasir Hari Ini</div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">Selisih Setoran (Rp)</label>
+              <input type="number" id="d-selisih-setoran" placeholder="0" oninput="hitungKasAudit()" onchange="autoSave()" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-white">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">Minus Kasir (Rp)</label>
+              <input type="number" id="d-minus-kasir" placeholder="0" oninput="hitungKasAudit()" onchange="autoSave()" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-white">
+            </div>
+          </div>
+          <div class="bg-white rounded-xl px-3 py-2 border border-emerald-200">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-gray-600">Total Selisih + Minus</span>
+              <span id="d-kas-total" class="text-base font-black text-emerald-700">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center mt-1">
+              <span class="text-xs text-gray-500">Ideal: Rp 0 (tanpa selisih/minus)</span>
+              <span id="d-kas-status" class="text-xs font-bold text-gray-400">—</span>
+            </div>
+            <div id="d-kas-bar-wrap" class="mt-2 bg-gray-100 rounded-full h-2">
+              <div id="d-kas-bar" class="h-2 rounded-full bg-emerald-400 transition-all" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-1.5">
+          ${[1,2,3,4,5].map(v=>`<button class="rating-btn" id="btn-${item.key}-${v}" onclick="setRating('${item.key}',${v})">${v}</button>`).join('')}
+        </div>
+        <div id="warn-${item.key}" class="hidden critical-warning mt-2">
+          <p class="font-semibold">⚠️ Ada selisih setoran / minus kasir — wajib foto bukti & catatan</p>
+        </div>
+        <div id="photo-${item.key}-wrap" class="hidden mt-2">
+          <div class="text-xs font-bold text-red-600 mb-1">📷 Foto bukti (slip setoran / hitungan kas) — WAJIB bila ada selisih/minus</div>
+          <div class="photo-area" onclick="triggerPhoto('item-${item.key}')">
+            <div style="font-size:1.2rem">📷</div>
+            <div class="text-xs font-semibold text-gray-500 mt-1">Foto slip setoran / kas</div>
+          </div>
+          <input type="file" id="item-${item.key}-input" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload('item-${item.key}',event)">
+          <div class="photo-grid" id="item-${item.key}-grid"></div>
+          <textarea id="note-${item.key}" class="notes-input mt-2" placeholder="Penyebab selisih setoran / minus kasir & tindak lanjut..." oninput="autoSave()"></textarea>
+        </div>
+      </div>`;
+  }
+
+  // Seragam Audit item — count input
+  if (item.seragamAudit) {
+    const needsEvS = true;
+    return `
+      <div class="item-row" id="row-${item.key}">
+        <div class="item-label mb-1">${item.label}</div>
+        ${badgeHtml ? `<div class="flex flex-wrap gap-1 mt-1 mb-2">${badgeHtml}</div>` : ''}
+        <div class="text-xs text-gray-400 mb-3">${item.anchor}</div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3">
+          <div class="text-xs font-bold text-blue-800 mb-2">👔 Audit Kepatuhan Seragam</div>
+          <div class="grid grid-cols-3 gap-2 mb-2">
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">Karyawan Hadir</label>
+              <input type="number" id="ser-hadir" min="0" placeholder="0"
+                oninput="hitungSeragam()" onchange="autoSave()"
+                class="w-full border border-gray-200 rounded-xl px-2 py-2 text-sm font-bold text-center focus:ring-2 focus:ring-blue-400 focus:outline-none bg-white">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">✅ Sesuai SOP</label>
+              <input type="number" id="ser-sesuai" min="0" placeholder="0"
+                oninput="hitungSeragam()" onchange="autoSave()"
+                class="w-full border border-gray-200 rounded-xl px-2 py-2 text-sm font-bold text-center text-emerald-700 focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-white">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">❌ Tidak Sesuai</label>
+              <div id="ser-tidak" class="w-full border border-gray-200 bg-gray-50 rounded-xl px-2 py-2 text-sm font-black text-center text-red-600">—</div>
+            </div>
+          </div>
+          <div id="ser-result" class="text-xs font-bold text-gray-500 text-center py-1 hidden"></div>
+        </div>
+        <div class="flex gap-1.5 mb-2">
+          ${[1,2,3,4,5].map(v=>`<button class="rating-btn" id="btn-${item.key}-${v}" onclick="setRating('${item.key}',${v})">${v}</button>`).join('')}
+        </div>
+        <div id="warn-${item.key}" class="hidden critical-warning mt-2">
+          <p class="font-semibold">⚠️ Ada karyawan tidak sesuai SOP — wajib catatan pengamatan</p>
+        </div>
+        <div id="photo-${item.key}-wrap" class="hidden mt-2">
+          <div class="text-xs text-gray-400 mb-1">📝 Pengamatan ARCO — tidak perlu foto</div>
+          <textarea id="note-${item.key}" class="notes-input mt-2" placeholder="Nama karyawan & keterangan pelanggaran seragam..." oninput="autoSave()"></textarea>
+        </div>
+      </div>`;
+  }
+
+  // SKU Sampling item — interactive table
+  if (item.skuSampling) {
+    const isCrit = PRIORITY[item.key] === 'critical';
+    return `
+      <div class="item-row" id="row-${item.key}">
+        <div class="item-label mb-1">${item.label}</div>
+        ${badgeHtml ? `<div class="flex flex-wrap gap-1 mt-1 mb-2">${badgeHtml}</div>` : ''}
+        <div class="text-xs text-gray-400 mb-3">${item.anchor}</div>
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-3">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-indigo-800">📦 Tabel Sampling SKU (min. 5 SKU-A)</div>
+            <span id="f2-sku-counter" class="text-xs font-bold text-indigo-600">0 SKU</span>
+          </div>
+          <div id="f2-sku-list" class="space-y-2 mb-2"></div>
+          <button onclick="addF2Sku()" class="w-full py-2 text-xs font-bold text-indigo-600 border-2 border-dashed border-indigo-300 rounded-xl bg-white">+ Tambah SKU</button>
+          <div id="f2-sku-summary" class="hidden mt-2 bg-white rounded-xl p-2 text-xs space-y-1">
+            <div class="flex justify-between"><span class="text-gray-500">Total SKU diperiksa</span><span id="f2-sku-total" class="font-bold">0</span></div>
+            <div class="flex justify-between"><span class="text-red-600">SKU ada selisih</span><span id="f2-sku-selisih" class="font-bold text-red-600">0</span></div>
+          </div>
+        </div>
+        <div class="flex gap-1.5 mb-2">
+          ${[1,2,3,4,5].map(v=>`<button class="rating-btn" id="btn-${item.key}-${v}" onclick="setRating('${item.key}',${v})">${v}</button>`).join('')}
+        </div>
+        <div id="warn-${item.key}" class="hidden critical-warning mt-2">
+          <p class="font-semibold">⚠️ Item CRITICAL — wajib foto & catatan jika skor ≤ 2</p>
+        </div>
+        <div id="photo-${item.key}-wrap" class="hidden mt-2">
+          <div class="photo-area" onclick="triggerPhoto('item-${item.key}')">
+            <div style="font-size:1.2rem">📷</div>
+            <div class="text-xs font-semibold text-gray-500 mt-1">Foto bukti selisih stok</div>
+          </div>
+          <input type="file" id="item-${item.key}-input" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload('item-${item.key}',event)">
+          <div class="photo-grid" id="item-${item.key}-grid"></div>
+          <textarea id="note-${item.key}" class="notes-input mt-2" placeholder="Keterangan selisih stok..." oninput="autoSave()"></textarea>
+        </div>
+      </div>`;
+  }
+
+  // Display-only items (AUTO, no rating)
+  if (item.displayOnly) {
+    return `
+      <div class="item-row" id="row-${item.key}" style="background:#f8fafc">
+        <div class="flex-1 mb-1">
+          <div class="item-label text-gray-500">${item.label}</div>
+          ${badgeHtml ? `<div class="flex flex-wrap gap-1 mt-1">${badgeHtml}</div>` : ''}
+          <div class="item-anchor mt-1">${item.anchor}</div>
+        </div>
+        <div class="bg-purple-50 border border-purple-200 rounded-xl px-3 py-2 text-xs text-purple-700 font-semibold">
+          🔗 Data ditarik otomatis dari Form 1 SL — tersedia di dashboard COO
+        </div>
+      </div>`;
+  }
+
+  const needsEvidence = priority === 'critical' || priority === 'major' || isPhotoable(item.key) || PHOTO_LOW.includes(item.key);
+
+  return `
+    <div class="item-row" id="row-${item.key}">
+      <div class="flex-1 mb-2">
+        <div class="item-label">${item.label}</div>
+        ${badgeHtml ? `<div class="flex flex-wrap gap-1 mt-1">${badgeHtml}</div>` : ''}
+        ${item.anchor ? `<div class="item-anchor">${item.anchor}</div>` : ''}
+      </div>
+      <div class="flex gap-1.5">
+        ${[1,2,3,4,5].map(v=>`<button class="rating-btn" id="btn-${item.key}-${v}" onclick="setRating('${item.key}',${v})">${v}</button>`).join('')}
+      </div>
+      ${needsEvidence ? `
+        <div id="warn-${item.key}" class="hidden critical-warning mt-2">
+          <p class="font-semibold">⚠️ ${isPhotoable(item.key)
+              ? ('WAJIB foto BEFORE (skor 1-3). Skor 4-5: ' + (HIGH_RISK_PHOTO.includes(item.key) ? 'WAJIB foto kondisi' : 'foto disarankan'))
+              : (PHOTO_LOW.includes(item.key) ? 'WAJIB foto bukti jika skor ≤ 3' : 'catatan pengamatan ARCO WAJIB jika skor &le; 3')}</p>
+        </div>
+        <div id="photo-${item.key}-wrap" class="hidden mt-2">
+          ${isPhotoable(item.key) ? `
+          <div id="ph-single-${item.key}">
+            <div class="text-xs font-bold text-emerald-700 mb-1">📷 Foto kondisi (skor 4—5) — ${HIGH_RISK_PHOTO.includes(item.key) ? 'WAJIB' : 'disarankan'}</div>
+            <div class="photo-area" onclick="triggerPhoto('item-${item.key}')">
+              <div style="font-size:1.2rem">📷</div>
+              <div class="text-xs font-semibold text-gray-500 mt-1">Tambah foto kondisi</div>
+            </div>
+            <input type="file" id="item-${item.key}-input" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload('item-${item.key}',event)">
+            <div class="photo-grid" id="item-${item.key}-grid"></div>
+          </div>
+          <div id="ph-ba-${item.key}" class="hidden">
+            <div class="text-xs font-bold text-red-600 mb-1">📷 Skor 1—3 — WAJIB foto BEFORE (AFTER bila sudah diperbaiki)</div>
+            <div class="text-xs text-gray-400 mb-1">Jika belum sempat diperbaiki, catat sebagai tindak lanjut di langkah Perbaikan.</div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <div class="text-xs font-semibold text-gray-500 mb-1">BEFORE (temuan)</div>
+                <div class="photo-area" onclick="triggerPhoto('item-${item.key}-before')">
+                  <div style="font-size:1.1rem">📷</div><div class="text-xs text-gray-500 mt-0.5">Foto BEFORE</div>
+                </div>
+                <input type="file" id="item-${item.key}-before-input" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload('item-${item.key}-before',event)">
+                <div class="photo-grid" id="item-${item.key}-before-grid"></div>
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-gray-500 mb-1">AFTER (perbaikan)</div>
+                <div class="photo-area" onclick="triggerPhoto('item-${item.key}-after')">
+                  <div style="font-size:1.1rem">📷</div><div class="text-xs text-gray-500 mt-0.5">Foto AFTER</div>
+                </div>
+                <input type="file" id="item-${item.key}-after-input" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload('item-${item.key}-after',event)">
+                <div class="photo-grid" id="item-${item.key}-after-grid"></div>
+              </div>
+            </div>
+          </div>` : (PHOTO_LOW.includes(item.key) ? `
+          <div class="text-xs font-bold text-red-600 mb-1">📷 Foto bukti (skor ≤3) — WAJIB</div>
+          <div class="photo-area" onclick="triggerPhoto('item-${item.key}')">
+            <div style="font-size:1.2rem">📷</div>
+            <div class="text-xs font-semibold text-gray-500 mt-1">Tambah foto bukti</div>
+          </div>
+          <input type="file" id="item-${item.key}-input" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload('item-${item.key}',event)">
+          <div class="photo-grid" id="item-${item.key}-grid"></div>` : `
+          <div class="text-xs text-gray-400 mb-1">📝 Pengamatan ARCO — tidak perlu foto</div>`)}
+          <textarea id="note-${item.key}" class="notes-input mt-2" placeholder="${isPhotoable(item.key) ? 'Catatan / keterangan temuan...' : 'Catatan pengamatan ARCO (mis. kasir tidak menyampaikan promo)...'}" oninput="autoSave()"></textarea>
+        </div>` : ''}
+    </div>`;
+}
+
+// ── RATING ──
+function setRating(key, val) {
+  ratings[key] = val;
+  for (let v = 1; v <= 5; v++) {
+    const btn = document.getElementById(`btn-${key}-${v}`);
+    if (!btn) continue;
+    btn.className = 'rating-btn';
+    if (v === val) btn.classList.add(`active-${v}`);
+  }
+  const warnEl  = document.getElementById(`warn-${key}`);
+  const photoEl = document.getElementById(`photo-${key}-wrap`);
+  const singleEl = document.getElementById(`ph-single-${key}`);
+  if (singleEl) {
+    if (warnEl) warnEl.classList.remove('hidden');
+    if (photoEl) photoEl.classList.remove('hidden');
+    const baEl = document.getElementById(`ph-ba-${key}`);
+    if (val >= 4) { singleEl.classList.remove('hidden'); if (baEl) baEl.classList.add('hidden'); }
+    else          { singleEl.classList.add('hidden');    if (baEl) baEl.classList.remove('hidden'); }
+  } else if (warnEl && photoEl) {
+    if (val <= 3) { warnEl.classList.remove('hidden'); photoEl.classList.remove('hidden'); }
+    else          { warnEl.classList.add('hidden');    photoEl.classList.add('hidden'); }
+  }
+  autoSave();
+}
+
+function hitungKasAudit() {
+  const setoran = parseFloat(document.getElementById('d-selisih-setoran')?.value) || 0;
+  const minus   = parseFloat(document.getElementById('d-minus-kasir')?.value) || 0;
+  const totalMasalah = Math.abs(setoran) + Math.abs(minus);
+
+  const totalEl  = document.getElementById('d-kas-total');
+  const statusEl = document.getElementById('d-kas-status');
+  const barEl    = document.getElementById('d-kas-bar');
+  if (totalEl) totalEl.textContent = 'Rp ' + totalMasalah.toLocaleString('id-ID');
+
+  let statusText, statusColor, barColor, pct;
+  if (totalMasalah === 0)        { statusText = '✅ Tidak ada selisih/minus'; statusColor = '#059669'; barColor = '#34d399'; pct = 0; }
+  else if (totalMasalah <= 50000)  { statusText = '⚠️ Rp ' + totalMasalah.toLocaleString('id-ID'); statusColor = '#d97706'; barColor = '#fbbf24'; pct = 25; }
+  else if (totalMasalah <= 150000) { statusText = '⚠️ Rp ' + totalMasalah.toLocaleString('id-ID'); statusColor = '#d97706'; barColor = '#fbbf24'; pct = 50; }
+  else if (totalMasalah <= 300000) { statusText = '🔴 Rp ' + totalMasalah.toLocaleString('id-ID'); statusColor = '#dc2626'; barColor = '#f87171'; pct = 75; }
+  else                             { statusText = '🔴 Besar Rp ' + totalMasalah.toLocaleString('id-ID'); statusColor = '#991b1b'; barColor = '#ef4444'; pct = 100; }
+
+  if (statusEl) { statusEl.textContent = statusText; statusEl.style.color = statusColor; }
+  if (barEl)    { barEl.style.width = pct + '%'; barEl.style.background = barColor; }
+
+  let suggested = 5;
+  if (totalMasalah > 300000)      suggested = 1;
+  else if (totalMasalah > 150000) suggested = 2;
+  else if (totalMasalah > 50000)  suggested = 3;
+  else if (totalMasalah > 0)      suggested = 4;
+  if (totalMasalah > 0 && !ratings['D_kas_audit']) setRating('D_kas_audit', suggested);
+  const _kw=document.getElementById('photo-D_kas_audit-wrap'), _kwn=document.getElementById('warn-D_kas_audit');
+  if(_kw){ if(totalMasalah>0){ _kw.classList.remove('hidden'); if(_kwn) _kwn.classList.remove('hidden'); } else { _kw.classList.add('hidden'); if(_kwn) _kwn.classList.add('hidden'); } }
+}
+
+function hitungSeragam() {
+  const hadir  = parseInt(document.getElementById('ser-hadir')?.value) || 0;
+  const sesuai = parseInt(document.getElementById('ser-sesuai')?.value) || 0;
+  const tidak  = Math.max(0, hadir - sesuai);
+  const tidakEl   = document.getElementById('ser-tidak');
+  const resultEl  = document.getElementById('ser-result');
+  const warnEl    = document.getElementById('warn-C_seragam');
+  const photoWrap = document.getElementById('photo-C_seragam-wrap');
+
+  if (tidakEl) { tidakEl.textContent = tidak; tidakEl.style.color = tidak > 0 ? '#dc2626' : '#6b7280'; }
+
+  if (hadir > 0) {
+    const pct = Math.round((sesuai / hadir) * 100);
+    if (resultEl) {
+      resultEl.textContent = sesuai+'/'+hadir+' karyawan sesuai SOP ('+pct+'%)';
+      resultEl.style.color = pct === 100 ? '#059669' : pct >= 75 ? '#d97706' : '#dc2626';
+      resultEl.classList.remove('hidden');
+    }
+    // Auto-suggest rating
+    let rating = 5;
+    if (tidak >= 4)      rating = 1;
+    else if (tidak === 3) rating = 2;
+    else if (tidak === 2) rating = 3;
+    else if (tidak === 1) rating = 4;
+    setRating('C_seragam', rating);
+
+    // Show photo if tidak > 0
+    if (warnEl && photoWrap) {
+      if (tidak > 0) { warnEl.classList.remove('hidden'); photoWrap.classList.remove('hidden'); }
+      else            { warnEl.classList.add('hidden');    photoWrap.classList.add('hidden'); }
+    }
+  }
+}
+
+let f2SkuData = [];
+let f2SkuCounter = 0;
+
+function addF2Sku() {
+  f2SkuCounter++;
+  const idx = f2SkuData.length;
+  f2SkuData.push({ kode:'', nama:'', fisik:0, pos:0 });
+  const list = document.getElementById('f2-sku-list');
+  if (!list) return;
+  const div = document.createElement('div');
+  div.id = 'f2sku-'+idx;
+  div.className = 'bg-white rounded-xl p-2 border border-indigo-100';
+  div.innerHTML =
+    '<div class="flex items-center gap-1 mb-1">'
+    +'<span class="text-xs font-bold text-indigo-500 w-5">'+f2SkuCounter+'</span>'
+    +'<input id="f2sku-kode-'+idx+'" type="text" inputmode="numeric" placeholder="Kode / Barcode SKU" oninput="f2SkuData['+idx+'].kode=this.value; updateF2SkuSummary()"'
+    +' class="flex-1 border border-gray-200 rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-indigo-300 focus:outline-none">'
+    +'<button type="button" onclick="scanBarcode('+idx+')" title="Scan barcode" class="ml-1 px-2 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold">📷</button>'
+    +'<button type="button" onclick="removeF2Sku('+idx+')" class="text-gray-400 text-xs ml-1 w-5 h-5 flex items-center justify-center">✕</button>'
+    +'</div>'
+    +'<div class="mb-1"><input id="f2sku-nama-'+idx+'" type="text" placeholder="Nama Item / Produk" oninput="f2SkuData['+idx+'].nama=this.value; updateF2SkuSummary()"'
+    +' class="w-full border border-gray-200 rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-indigo-300 focus:outline-none"></div>'
+    +'<div class="grid grid-cols-3 gap-1">'
+    +'<div><label class="text-xs text-gray-400">Fisik</label>'
+    +'<input type="number" min="0" placeholder="0" oninput="f2SkuData['+idx+'].fisik=parseInt(this.value)||0;calcF2Selisih('+idx+')"'
+    +' class="w-full border border-gray-200 rounded-lg px-1 py-1 text-sm text-center focus:ring-1 focus:ring-indigo-300 focus:outline-none bg-white"></div>'
+    +'<div><label class="text-xs text-gray-400">POS/Sistem</label>'
+    +'<input type="number" min="0" placeholder="0" oninput="f2SkuData['+idx+'].pos=parseInt(this.value)||0;calcF2Selisih('+idx+')"'
+    +' class="w-full border border-gray-200 rounded-lg px-1 py-1 text-sm text-center focus:ring-1 focus:ring-indigo-300 focus:outline-none bg-white"></div>'
+    +'<div><label class="text-xs text-gray-400">Selisih</label>'
+    +'<div id="f2sku-sel-'+idx+'" class="text-xs font-black text-center py-1 text-gray-400">—</div></div>'
+    +'</div>';
+  list.appendChild(div);
+  updateF2SkuSummary();
+  autoSave();
+}
+
+function removeF2Sku(idx) {
+  const el = document.getElementById('f2sku-'+idx);
+  if (el) el.remove();
+  f2SkuData[idx] = null;
+  updateF2SkuSummary();
+}
+
+function calcF2Selisih(idx) {
+  const s = f2SkuData[idx];
+  if (!s) return;
+  const sel = s.fisik - s.pos;
+  const el = document.getElementById('f2sku-sel-'+idx);
+  if (!el) return;
+  if (sel === 0) { el.textContent='✓'; el.style.color='#059669'; }
+  else { el.textContent=(sel>0?'+':'')+sel; el.style.color=Math.abs(sel)>2?'#dc2626':'#d97706'; }
+  updateF2SkuSummary();
+}
+
+function updateF2SkuSummary() {
+  const valid = f2SkuData.filter(function(s){return s&&(s.kode||s.nama);});
+  const withSel = valid.filter(function(s){return (s.fisik-s.pos)!==0;});
+  const ctr = document.getElementById('f2-sku-counter');
+  const tot = document.getElementById('f2-sku-total');
+  const sel = document.getElementById('f2-sku-selisih');
+  const sum = document.getElementById('f2-sku-summary');
+  if (ctr) ctr.textContent = valid.length+' SKU';
+  if (valid.length > 0) {
+    if (sum) sum.classList.remove('hidden');
+    if (tot) tot.textContent = valid.length;
+    if (sel) sel.textContent = withSel.length;
+    // Auto-suggest rating based on selisih count
+    let rating = 5;
+    if (withSel.length >= 5) rating = 1;
+    else if (withSel.length >= 3) rating = 2;
+    else if (withSel.length === 2) rating = 3;
+    else if (withSel.length === 1) rating = 4;
+    if (!ratings['B_akurasi_stok'] || ratings['B_akurasi_stok'] === 5) {
+      setRating('B_akurasi_stok', rating);
+    }
+  } else {
+    if (sum) sum.classList.add('hidden');
+  }
+}
+
+// ── PHOTOS ──
+let _photoTargetId = null;
+function triggerPhoto(id) {
+  _photoTargetId = id;
+  const m = document.getElementById('photo-choice-modal');
+  if (m) m.style.display = 'flex';
+  else choosePhoto('gallery');           // fallback bila modal belum ada
+}
+function choosePhoto(mode) {
+  const m = document.getElementById('photo-choice-modal');
+  if (m) m.style.display = 'none';
+  const id = _photoTargetId;
+  if (!id) return;
+  const inp = document.getElementById(id + '-input');
+  if (!inp) return;
+  if (mode === 'camera') inp.setAttribute('capture', 'environment');
+  else inp.removeAttribute('capture');
+  inp.click();
+}
+
+function compressImage(file){
+  return new Promise(resolve=>{
+    let done=false;
+    const finish=v=>{ if(!done){done=true;resolve(v);} };
+    const guard=setTimeout(()=>finish(null),15000);   // anti-hang
+    const reader=new FileReader();
+    reader.onerror=()=>{ clearTimeout(guard); finish(null); };
+    reader.onload=e=>{
+      const img=new Image();
+      img.onerror=()=>{ clearTimeout(guard); finish(null); };
+      img.onload=()=>{
+        try{
+          const MAX_PX=1600, ratio=Math.min(MAX_PX/img.width,MAX_PX/img.height,1);
+          const c=document.createElement('canvas');
+          c.width=Math.round(img.width*ratio); c.height=Math.round(img.height*ratio);
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+          let q=0.82,res,MAX=700*1024;
+          do{ res=c.toDataURL('image/jpeg',q); if(res.length*0.75<=MAX) break; q=Math.round((q-0.06)*100)/100; } while(q>=0.10);
+          clearTimeout(guard); finish(res);
+        }catch(err){ clearTimeout(guard); finish(null); }
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function getAuditMeta(){
+  const t=document.getElementById('f-toko'), d=document.getElementById('f-tanggal');
+  return { kode: t?t.value:'', tgl: d?d.value:'' };
+}
+
+// Unggah 1 foto SAAT DIPILIH (opsi 1 ala Google Forms). Sukses -> base64 diganti URL (ringan).
+// Gagal -> base64 dibiarkan sebagai fallback, tetap terkirim saat submit.
+async function uploadPhotoNow(id, b64){
+  if(!b64 || typeof b64!=='string' || b64.indexOf('data:image')!==0) return;
+  try{
+    const meta=getAuditMeta();
+    const res=await fetch(SCRIPT_URL, { method:'POST', body: JSON.stringify({ action:'upload_photo', kode_toko:meta.kode, tanggal:meta.tgl, slot:id, photo:b64 }) });
+    const out=await res.json();
+    if(out && out.status==='ok' && out.url && photos[id]){
+      const i=photos[id].indexOf(b64);
+      if(i>=0) photos[id][i]=out.url;
+    }
+  }catch(e){ /* fallback: base64 terkirim saat submit */ }
+  updatePhotoArea(id);
+  try{ autoSave(); }catch(e){}
+}
+
+async function handlePhotoUpload(id, event) {
+  const files = Array.from(event.target.files);
+  event.target.value = '';                 // reset agar file sama bisa dipilih ulang
+  if (!files.length) return;
+  if (!photos[id]) photos[id] = [];
+  for (const file of files) {
+    if (file.size > 15 * 1024 * 1024) {
+      showToast('⚠️ Foto terlalu besar (maks 15MB): ' + file.name);
+      continue;
+    }
+    let b64 = null;
+    try { b64 = await compressImage(file); } catch(e){ b64 = null; }
+    if (!b64) { showToast('⚠️ Foto gagal diproses: ' + file.name + ' (hindari HEIC)'); continue; }
+    photos[id].push(b64);
+    renderPhotoGrid(id);
+    updatePhotoArea(id);
+    uploadPhotoNow(id, b64);
+  }
+  autoSave();
+}
+
+function updatePhotoArea(id) {
+  const arr = photos[id] || [];
+  const total = arr.length;
+  const done = arr.filter(s => typeof s === 'string' && s.indexOf('http') === 0).length;
+  const pending = total - done;
+  const area = document.getElementById(id + '-area');
+  if (area) {
+    const lbl = area.querySelector('.text-xs');
+    if (lbl) {
+      if (total === 0) lbl.textContent = (id === 'general-photos' ? 'Depan toko, area jual, dll' : 'Opsional — untuk dokumentasi');
+      else if (pending > 0) lbl.textContent = "📤 Mengunggah… (" + done + "/" + total + " tersimpan)";
+      else lbl.textContent = total + ' foto tersimpan ✓ (tap untuk tambah)';
+    }
+  }
+  if (id === 'sl-sign') {
+    const st = document.getElementById('sl-sign-status');
+    if (st) {
+      if (total === 0) { st.textContent = 'Belum ditandatangani'; st.style.color = '#9ca3af'; }
+      else if (pending > 0) { st.textContent = "📤 Menyimpan tanda tangan…"; st.style.color = '#d97706'; }
+      else { st.textContent = '✓ Tersimpan'; st.style.color = '#059669'; }
+    }
+  }
+}
+
+function renderPhotoGrid(id) {
+  const grid = document.getElementById(`${id}-grid`);
+  if (!grid) return;
+  const arr = photos[id] || [];
+  if (!arr.length) {
+    grid.innerHTML = '';
+    return;
+  }
+  grid.innerHTML = arr.map((src,idx)=>`
+    <div class="photo-thumb">
+      <img src="${src}" alt="foto" onerror="this.parentElement.style.background='#f1f5f9'">
+      <button class="photo-del" onclick="deletePhoto('${id}',${idx})">&#x2715;</button>
+    </div>`).join('');
+}
+
+function deletePhoto(id, idx) {
+  if (!photos[id]) return;
+  photos[id].splice(idx,1);
+  renderPhotoGrid(id);
+  autoSave();
+}
+
+// ── SCORING (Change #3) ──
+function calcSkor() {
+  const out = {};
+  let total = 0;
+  Object.entries(PILARS).forEach(([pKey, pilar]) => {
+    const scoredItems = pilar.items.filter(i => !i.displayOnly);
+    const vals = scoredItems.map(i => ratings[i.key] || 0).filter(v => v > 0);
+    const avg  = vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+    out[pKey]  = Math.round(avg * 100) / 100;
+    total     += avg * pilar.bobot;
+  });
+  out.total = Math.round(total * 100) / 100;
+  out.pct   = Math.round((out.total / 5) * 100);
+  // 5-level classification
+  if      (out.pct >= 90) out.grade = 'ANDALAN';
+  else if (out.pct >= 80) out.grade = 'BAIK';
+  else if (out.pct >= 65) out.grade = 'CUKUP';
+  else if (out.pct >= 45) out.grade = 'PERLU PERHATIAN';
+  else                    out.grade = 'KRITIS';
+  return out;
+}
+
+// ── GET STORE CLASS (Change #1) ──
+function getStoreClass(skor) {
+  const pct = (skor / 5) * 100;
+  if (pct >= 90) return {icon:'🏆', label:'ANDALAN',         desc:'Benchmark area — pertahankan & jadikan contoh',       css:'store-andalan',  color:'#78350f', pctLabel:`${Math.round(pct)}%`};
+  if (pct >= 80) return {icon:'🟢', label:'BAIK',            desc:'Operasional prima — fokus perbaiki titik lemah minor', css:'store-baik',     color:'#14532d', pctLabel:`${Math.round(pct)}%`};
+  if (pct >= 65) return {icon:'🟡', label:'CUKUP',           desc:'Normal, ada isu — perbaikan terjadwal',               css:'store-cukup',    color:'#78350f', pctLabel:`${Math.round(pct)}%`};
+  if (pct >= 45) return {icon:'🟠', label:'PERLU PERHATIAN', desc:'Perlu perbaikan segera — action item + tenggat',      css:'store-perhatian',color:'#9a3412', pctLabel:`${Math.round(pct)}%`};
+  return               {icon:'🔴', label:'KRITIS',           desc:'Intervensi segera — eskalasi ke OM & COO',            css:'store-kritis',   color:'#7f1d1d', pctLabel:`${Math.round(pct)}%`};
+}
+
+// ── CRITICAL GATE (Change #4) ──
+function checkCriticalGate(s) {
+  const CRITICAL_KEYS = ['B_oos','B_fefo','B_akurasi_stok','B_kadaluarsa','D_selisih','D_setoran','E_tl_lama'];
+  const triggered = [];
+  CRITICAL_KEYS.forEach(k => {
+    if ((ratings[k]||0) > 0 && ratings[k] <= 2) {
+      const item = Object.values(PILARS).flatMap(p=>p.items).find(i=>i.key===k);
+      triggered.push(`${item ? item.label : k} — Skor ${ratings[k]}`);
+    }
+  });
+  let cappedGrade = s.grade;
+  if (triggered.length > 0 && (s.grade==='ANDALAN' || s.grade==='BAIK' || s.grade==='CUKUP')) {
+    cappedGrade = 'PERLU PERHATIAN';
+  }
+  return {triggered: triggered.length > 0, reasons: triggered, cappedGrade};
+}
+
+// ── GRADE COLOR (Change #14) ──
+function gradeColor(g) {
+  const m = {
+    A:'#16a34a', B:'#2563eb', C:'#d97706', D:'#dc2626',
+    ANDALAN:'#78350f', BAIK:'#14532d', CUKUP:'#78350f',
+    'PERLU PERHATIAN':'#9a3412', KRITIS:'#7f1d1d'
+  };
+  return m[g] || '#374151';
+}
+
+// ── SHOW PREVIEW (Changes #11, #16) ──
+function showPreview() {
+  const s  = calcSkor();
+  const sc = getStoreClass(s.total);
+
+  // Change #11 — Critical Gate integration
+  const gate = checkCriticalGate(s);
+  const effectiveSc = gate.triggered
+    ? {...sc, label: gate.cappedGrade,
+       icon: gate.cappedGrade === 'PERLU PERHATIAN' ? '🟠' : '🔴',
+       color: '#9a3412', css: 'store-perhatian',
+       desc: '⛔ Critical Gate Aktif — skor di-cap'}
+    : sc;
+
+  const storeCard = document.getElementById('pv-store-card');
+  storeCard.className = `rounded-2xl p-5 mb-4 text-center ${effectiveSc.css}`;
+  document.getElementById('pv-icon').textContent         = effectiveSc.icon;
+  document.getElementById('pv-label').textContent        = effectiveSc.label;
+  document.getElementById('pv-label').style.color        = effectiveSc.color;
+  document.getElementById('pv-skor-display').textContent = `${s.total} / 5  (${s.pct}%)`;
+  document.getElementById('pv-desc').textContent         = effectiveSc.desc;
+
+  // Change #11 — populate gate box (div added via Change #12)
+  const gateBox = document.getElementById('pv-gate-box');
+  if (gateBox) {
+    if (gate.triggered) {
+      gateBox.innerHTML = `<div class="font-bold text-orange-700 text-xs mb-1">⛔ CRITICAL GATE AKTIF — Klasifikasi di-cap "PERLU PERHATIAN"</div>` +
+        gate.reasons.map(r=>`<p class="text-xs text-orange-600">• ${r}</p>`).join('');
+      gateBox.classList.remove('hidden');
+    } else {
+      gateBox.classList.add('hidden');
+    }
+  }
+
+  // Critical/Major warning
+  const criticals = [];
+  Object.entries(PRIORITY).forEach(([key, prio]) => {
+    if ((ratings[key]||0) > 0 && ratings[key] <= 2) {
+      const item = Object.values(PILARS).flatMap(p=>p.items).find(i=>i.key===key);
+      criticals.push({label: item ? item.label : key, prio, skor: ratings[key]});
+    }
+  });
+  const critBox  = document.getElementById('pv-critical-box');
+  const critList = document.getElementById('pv-critical-list');
+  if (criticals.length > 0) {
+    critList.innerHTML = criticals.map(c =>
+      `<p class="text-xs ${c.prio==='critical'?'text-red-600':'text-orange-600'}">
+        ${c.prio==='critical'?'🔴':'🟠'} ${c.label} — Skor <strong>${c.skor}</strong></p>`
+    ).join('');
+    critBox.classList.remove('hidden');
+  } else {
+    critBox.classList.add('hidden');
+  }
+
+  // Change #16 — pilar scores with percentage
+  const PCOLORS = {A:'#8b5cf6',B:'#3b82f6',C:'#10b981',D:'#f59e0b',E:'#ef4444'};
+  let pilarHtml = '';
+  Object.entries(PILARS).forEach(([pKey, pilar]) => {
+    const pct = Math.round(((s[pKey]||0)/5)*100);
+    pilarHtml += `
+      <div class="summary-pilar-row">
+        <div style="font-size:1.1rem">${pilar.icon}</div>
+        <div class="flex-1">
+          <div class="text-xs font-bold text-gray-700">${pKey} — ${pilar.label}</div>
+          <div class="pilar-bar-wrap mt-1">
+            <div class="pilar-bar" style="width:${pct}%;background:${PCOLORS[pKey]||'#6b7280'}"></div>
+          </div>
+        </div>
+        <div class="text-sm font-black text-gray-700 text-right" style="min-width:82px">
+          ${s[pKey] || '—'} <span class="text-xs text-gray-400">(${pct}%)</span>
+        </div>
+      </div>`;
+  });
+  document.getElementById('pv-pilars').innerHTML = pilarHtml;
+
+  document.getElementById('pv-arco').textContent    = document.getElementById('f-arco').value    || '—';
+  const tokoSel = document.getElementById('f-toko');
+  const tokoText = tokoSel.options[tokoSel.selectedIndex]?.text || '—';
+  document.getElementById('pv-toko').textContent = tokoText;
+  document.getElementById('pv-tanggal').textContent = document.getElementById('f-tanggal').value || '—';
+  document.getElementById('pv-jenis').textContent   = kunjunganType || '—';
+
+  const totalRated = Object.values(ratings).filter(v=>v>0).length;
+  const totalItems = Object.values(PILARS).reduce((a,p)=>a+p.items.length,0);
+  document.getElementById('pv-item-count').textContent = `${totalRated} / ${totalItems} item dinilai`;
+
+  // Populate confirm step
+  document.getElementById('confirm-toko').textContent  = document.getElementById('f-toko').value  || '—';
+  document.getElementById('confirm-arco').textContent  = `ARCO: ${document.getElementById('f-arco').value || '—'}`;
+  document.getElementById('confirm-skor').textContent  = `${s.total} / 5 (${s.pct}%)`;
+  document.getElementById('confirm-label').textContent = effectiveSc.label;
+  document.getElementById('confirm-label').style.color = effectiveSc.color;
+  document.getElementById('confirm-icon').textContent  = effectiveSc.icon;
+}
+
+// ── SHOW RESULT (Change #13) ──
+function showResult() {
+  const s    = calcSkor();
+  const skor = s.total;
+  const sc   = getStoreClass(skor);
+  const gate = checkCriticalGate(s);
+  const effectiveSc = gate.triggered
+    ? {...sc, label: gate.cappedGrade,
+       icon: gate.cappedGrade === 'PERLU PERHATIAN' ? '🟠' : '🔴',
+       color: '#9a3412'}
+    : sc;
+
+  document.getElementById('res-icon').textContent    = effectiveSc.icon;
+  document.getElementById('res-toko').textContent    = document.getElementById('f-toko').value    || '—';
+  document.getElementById('res-grade').textContent   = effectiveSc.label;          // Change #13: label not A/B/C/D
+  document.getElementById('res-grade').style.color   = effectiveSc.color;          // Change #13: sc.color
+  document.getElementById('res-skor').textContent    = `${skor} / 5  (${Math.round((skor/5)*100)}%)`;  // Change #13
+  document.getElementById('res-tanggal').textContent = document.getElementById('f-tanggal').value || '—';
+
+  const gateBanner  = document.getElementById('res-gate-banner');
+  const gateReasons = document.getElementById('res-gate-reasons');
+  if (gate.triggered) {
+    gateReasons.innerHTML = gate.reasons.map(r=>`<p>• ${r}</p>`).join('');
+    gateBanner.classList.remove('hidden');
+  } else {
+    gateBanner.classList.add('hidden');
+  }
+
+  const PCOLORS = {A:'#8b5cf6',B:'#3b82f6',C:'#10b981',D:'#f59e0b',E:'#ef4444'};
+  let pilarHtml = '';
+  Object.entries(PILARS).forEach(([pKey, pilar]) => {
+    const pct = Math.round(((s[pKey]||0)/5)*100);
+    pilarHtml += `
+      <div class="summary-pilar-row">
+        <div style="font-size:1.1rem">${pilar.icon}</div>
+        <div class="flex-1">
+          <div class="text-xs font-bold text-gray-700">${pKey} — ${pilar.label}</div>
+          <div class="pilar-bar-wrap mt-1">
+            <div class="pilar-bar" style="width:${pct}%;background:${PCOLORS[pKey]||'#6b7280'}"></div>
+          </div>
+        </div>
+        <div class="text-sm font-black text-gray-700 text-right" style="min-width:82px">
+          ${s[pKey] || '—'} <span class="text-xs text-gray-400">(${pct}%)</span>
+        </div>
+      </div>`;
+  });
+  document.getElementById('res-pilars').innerHTML = pilarHtml;
+
+  document.getElementById('res-kekuatan').textContent  = document.getElementById('n-kekuatan').value  || '—';
+  document.getElementById('res-kelemahan').textContent = document.getElementById('n-kelemahan').value || '—';
+  document.getElementById('res-action').textContent    = document.getElementById('n-action').value    || '—';
+  document.getElementById('res-submit-time').textContent = `Dikirim: ${new Date().toLocaleString('id-ID')}`;
+}
+
+// ── STEP NAVIGATION ──
+const STEP_PILAR = {2:'A',3:'B',4:'C',5:'D',6:'E'};
+
+function validateStep(step){
+  // Step 1 — identitas
+  if(step===1){
+    if(!document.getElementById('f-arco').value){ showToast('⚠️ Pilih ARCO terlebih dahulu'); return false; }
+    if(!document.getElementById('f-toko').value){ showToast('⚠️ Pilih Toko terlebih dahulu'); return false; }
+    return true;
+  }
+  // Step 7 — Rencana Tindak Lanjut WAJIB bila ada temuan (skor <= 3)
+  if(step===7){
+    const adaTemuan = Object.keys(ratings).some(k=>ratings[k]>0 && ratings[k]<=3);
+    const act = (document.getElementById('n-action')||{}).value || '';
+    if(adaTemuan && !act.trim()){
+      const el=document.getElementById('n-action'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.focus(); }
+      showToast('⚠️ Ada temuan (skor ≤3) — Rencana Tindak Lanjut wajib diisi');
+      return false;
+    }
+    return true;
+  }
+  // Step 8 — Foto kondisi umum + Tanda Tangan SL WAJIB
+  if(step===8){
+    if(!((photos['general-photos']||[]).length)){
+      const el=document.getElementById('general-photos-area'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+      showToast('⚠️ Minimal 1 foto kondisi umum toko wajib');
+      return false;
+    }
+    const absent = (document.getElementById('sl-absent')||{}).checked;
+    if(absent){
+      const by=(document.getElementById('sl-absent-by')||{}).value||'';
+      if(!by.trim()){
+        const el=document.getElementById('sl-absent-by'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.focus(); }
+        showToast('⚠️ Sebutkan siapa yang mengonfirmasi (SL tidak hadir)');
+        return false;
+      }
+    } else if(!((photos['sl-sign']||[]).length)){
+      const el=document.getElementById('sl-sign-canvas'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+      showToast('⚠️ Tanda tangan SL wajib (atau centang "SL tidak hadir")');
+      return false;
+    }
+    return true;
+  }
+  // Step pilar (2-6) — semua penilaian wajib terisi
+  const pk = STEP_PILAR[step];
+  if(pk && typeof PILARS!=='undefined' && PILARS[pk]){
+    const items = PILARS[pk].items.filter(i=>!i.displayOnly);
+    const missing = items.filter(i=>!(ratings[i.key]>0));
+    if(missing.length){
+      const first = missing[0];
+      const el = document.getElementById('btn-'+first.key+'-1') || document.getElementById('row-'+first.key);
+      if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+      showToast('⚠️ Masih ada '+missing.length+' penilaian belum diisi di halaman ini');
+      return false;
+    }
+    if(pk==='A' || pk==='B'){
+      for(const it of items){
+        const r = ratings[it.key];
+        if(!(r>0)) continue;
+        if(!document.getElementById('ph-single-'+it.key)) continue;
+        let need=null;
+        if(r<=3) need='item-'+it.key+'-before';                              // 1-3: BEFORE wajib semua A/B
+        else if(HIGH_RISK_PHOTO.includes(it.key)) need='item-'+it.key;       // 4-5: wajib hanya item rawan
+        if(need && !((photos[need]||[]).length)){
+          const el = document.getElementById('row-'+it.key) || document.getElementById('btn-'+it.key+'-1');
+          if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+          showToast(r<=3 ? '⚠️ Foto BEFORE WAJIB untuk item nilai 1-3' : '⚠️ Foto kondisi WAJIB untuk item rawan (nilai 4-5)');
+          return false;
+        }
+      }
+    }
+    if(pk==='D'){
+      const _ss=Math.abs(parseFloat((document.getElementById('d-selisih-setoran')||{}).value)||0);
+      const _mk=Math.abs(parseFloat((document.getElementById('d-minus-kasir')||{}).value)||0);
+      if((_ss+_mk)>0 && !((photos['item-D_kas_audit']||[]).length)){
+        const el=document.getElementById('row-D_kas_audit'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+        showToast('⚠️ Ada selisih/minus kas — foto bukti (slip/hitungan kas) WAJIB'); return false;
+      }
+      if((ratings['D_cctv']||0)>0 && ratings['D_cctv']<=3 && !((photos['item-D_cctv']||[]).length)){
+        const el=document.getElementById('row-D_cctv')||document.getElementById('btn-D_cctv-1'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+        showToast('⚠️ CCTV bermasalah — foto bukti WAJIB'); return false;
+      }
+    }
+  }
+  return true;
+}
+
+function goStep(n) {
+  // CEGATAN: kalau maju, halaman saat ini wajib lengkap dulu
+  if (n > currentStep) {
+    if (!validateStep(currentStep)) return;
+  }
+  // Gate khusus konfirmasi sebelum submit
+  if (n > 12 && currentStep === 12) {
+    if (!document.getElementById('declaration-check').checked) {
+      showToast('⚠️ Centang pernyataan konfirmasi'); return;
+    }
+  }
+
+  // ANTI-BLANK: sembunyikan SEMUA step, lalu tampilkan target
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('step-' + n);
+  if (target) target.classList.add('active');
+  currentStep = n;
+  window.scrollTo(0, 0);
+
+  const hs = document.getElementById('hdr-step');
+  if (hs) hs.textContent = 'Langkah ' + currentStep + ' / ' + TOTAL_STEPS;
+  const pb = document.getElementById('progress-bar');
+  if (pb) pb.style.width = ((currentStep / TOTAL_STEPS) * 100) + '%';
+
+  // Hook per-step — dibungkus try agar TIDAK PERNAH bikin halaman kosong
+  try { if (n === 10) { updateClosureDisplays(); updateDelta(); loadPrevAudit(); } } catch(e){ console.warn('hook step10', e); }
+  try { if (n === 11) { showPreview(); } } catch(e){ console.warn('hook preview', e); }
+  try { if (n === 12) { fillConfirm(); } } catch(e){ console.warn('hook confirm', e); }
+  try { if (n === 8) { initSignature(); } } catch(e){ console.warn('hook sign', e); }
+  try { autoSave(); } catch(e){}
+}
+
+// ── CLOSURE ──
+function addClosureItem() {
+  closureItems.push({id:`ci-${Date.now()}`, text:'', status:'open'});
+  renderClosureList();
+  updateClosureDisplays();
+}
+
+function updateClosureDisplays() {
+  const total  = closureItems.length;
+  const done   = closureItems.filter(c => c.status === 'done').length;
+  const pct    = total > 0 ? Math.round((done / total) * 100) : 0;
+  const color  = pct >= 80 ? '#16a34a' : pct >= 60 ? '#d97706' : '#dc2626';
+  const barColor = pct >= 80 ? 'bg-green-500' : pct >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+
+  // Step 9 display
+  const dispEl   = document.getElementById('closure-rate-display');
+  const barEl    = document.getElementById('closure-rate-bar');
+  const detailEl = document.getElementById('closure-rate-detail');
+  if (dispEl)   { dispEl.textContent = pct + '%'; dispEl.style.color = color; }
+  if (barEl)    { barEl.style.width = pct + '%'; barEl.className = 'h-2 rounded-full transition-all ' + barColor; }
+  if (detailEl) detailEl.textContent = total > 0
+    ? done + ' dari ' + total + ' action item selesai'
+    : 'Tambah action item untuk menghitung';
+
+  // Step 10 KPI display
+  const kpiEl  = document.getElementById('kpi-closure-rate');
+  const kpiBar = document.getElementById('kpi-closure-bar');
+  if (kpiEl)  { kpiEl.textContent = total > 0 ? pct + '%' : '—%'; kpiEl.style.color = color; }
+  if (kpiBar) { kpiBar.style.width = (total > 0 ? pct : 0) + '%'; kpiBar.className = 'h-2 rounded-full transition-all ' + barColor; }
+}
+
+function renderClosureList() {
+  const list = document.getElementById('closure-list');
+  if (!closureItems.length) {
+    list.innerHTML = '<div class="text-xs text-gray-400 italic py-3 text-center">Belum ada action item</div>';
+    updateClosureRate();
+    return;
+  }
+  const statusLabels = {open:'Belum', progress:'Proses', done:'Selesai'};
+  const statusColors = {open:'bg-red-100 text-red-700', progress:'bg-amber-100 text-amber-700', done:'bg-green-100 text-green-700'};
+  list.innerHTML = closureItems.map(ci=>`
+    <div class="flex items-start gap-2 bg-gray-50 rounded-xl p-3">
+      <div class="flex-1">
+        <input type="text" value="${ci.text.replace(/"/g,'&quot;')}" placeholder="Deskripsi action item..."
+          class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white"
+          onchange="updateClosureItem('${ci.id}','text',this.value)">
+        <div class="flex gap-1.5 mt-1.5 flex-wrap">
+          ${['open','progress','done'].map(s=>`
+            <button onclick="updateClosureItem('${ci.id}','status','${s}')"
+              class="text-xs px-2.5 py-1 rounded-lg font-semibold transition ${ci.status===s ? statusColors[s] : 'bg-gray-200 text-gray-500'}">
+              ${statusLabels[s]}
+            </button>`).join('')}
+        </div>
+      </div>
+      <button onclick="removeClosureItem('${ci.id}')" class="text-gray-300 hover:text-red-400 text-xl leading-none">x</button>
+    </div>`).join('');
+  updateClosureRate();
+}
+
+function updateClosureItem(id, field, value) {
+  const ci = closureItems.find(c=>c.id===id);
+  if (ci) { ci[field] = value; updateClosureDisplays(); autoSave(); }
+}
+
+function removeClosureItem(id) {
+  closureItems = closureItems.filter(c=>c.id!==id);
+  renderClosureList();
+  updateClosureDisplays();
+}
+
+function updateClosureRate() {
+  updateClosureDisplays();
+}
+
+// ── DELTA ──
+function updateDelta() {
+  const s = calcSkor();
+  let html = '';
+  const prevTotal = parseFloat(document.getElementById('prev-total')?.value);
+  if (!isNaN(prevTotal) && prevTotal > 0) {
+    const delta = s.total - prevTotal;
+    const sign  = delta >= 0 ? '+' : '';
+    const cls   = delta > 0.05 ? 'delta-pos' : delta < -0.05 ? 'delta-neg' : 'delta-neu';
+    html += `<div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+      <span class="text-xs font-bold text-gray-700">Total</span>
+      <div><span class="text-sm font-bold text-gray-600">${s.total}</span>
+      <span class="text-xs ${cls} ml-2">${sign}${delta.toFixed(2)}</span></div></div>`;
+    ['A','B','C','D','E'].forEach(pk => {
+      const prev = parseFloat(document.getElementById(`prev-${pk}`)?.value);
+      if (!isNaN(prev) && prev > 0) {
+        const d = (s[pk]||0) - prev;
+        const sg = d >= 0 ? '+' : '';
+        const cl = d > 0.05 ? 'delta-pos' : d < -0.05 ? 'delta-neg' : 'delta-neu';
+        html += `<div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+          <span class="text-xs text-gray-600">${PILARS[pk].icon} Pilar ${pk}</span>
+          <div><span class="text-xs text-gray-600">${s[pk]||'—'}</span>
+          <span class="text-xs ${cl} ml-2">${sg}${d.toFixed(2)}</span></div></div>`;
+      }
+    });
+  } else {
+    html = '<div class="text-xs text-gray-400 italic">Isi skor kunjungan sebelumnya untuk melihat delta</div>';
+  }
+  document.getElementById('kpi-delta-container').innerHTML = html;
+}
+
+// ── SUBMIT ──
+function fillConfirm(){
+  try{
+    const s = calcSkor();
+    const sc = getStoreClass(s.total);
+    const gate = checkCriticalGate(s);
+    const eff = gate.triggered ? {...sc, label: gate.cappedGrade, icon:(gate.cappedGrade==='PERLU PERHATIAN'?'🟠':'🔴')} : sc;
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+    set('confirm-icon',  eff.icon || '⭐');
+    set('confirm-toko',  document.getElementById('f-toko').value || '—');
+    set('confirm-arco',  'ARCO: ' + (document.getElementById('f-arco').value || '—'));
+    set('confirm-skor',  s.total + ' / 5  (' + Math.round((s.total/5)*100) + '%)');
+    set('confirm-label', eff.label || '—');
+  }catch(e){ console.warn('fillConfirm', e); }
+}
+
+function submitForm() {
+  const submitBtn = document.getElementById('submit-btn');
+  const decl = document.getElementById('declaration-check');
+  if (!decl || !decl.checked) { showToast('⚠️ Centang pernyataan konfirmasi'); return; }
+  if (!submitBtn) return;
+
+  submitBtn.textContent = '⏳ Mengirim...';
+  submitBtn.disabled = true;
+
+  let _finished = false;
+  const _reset = () => { submitBtn.textContent = '📤 Kirim Audit'; submitBtn.disabled = false; };
+  // WATCHDOG: apapun yang terjadi, tombol TIDAK boleh macet selamanya
+  const _watchdog = setTimeout(() => {
+    if (_finished) return; _finished = true;
+    hideProgress(); _reset();
+    showToast('⚠️ Pengiriman lama/gagal. Data mungkin sudah masuk — cek dashboard sebelum kirim ulang.');
+  }, 130000);
+
+  try {
+    const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const s    = calcSkor();
+    const gate = checkCriticalGate(s);
+    const sc   = getStoreClass(s.total);
+    const effectiveSc = gate.triggered ? {...sc, label: gate.cappedGrade} : sc;
+    const _lowItems = Object.values(PILARS).flatMap(p=>p.items).filter(i=>!i.displayOnly && (ratings[i.key]||0)>0 && ratings[i.key]<=2).map(i=>i.label).join('; ');
+    const _clTotal = closureItems.length, _clDone = closureItems.filter(c=>c.status==='done').length;
+    const _closureRate = _clTotal ? Math.round(_clDone/_clTotal*100) : '';
+    const _kode = val('f-toko'), _tgl = val('f-tanggal'), _arco = val('f-arco');
+
+    const payload = {
+      type: 'form2_audit',
+      sheet_row: {
+        timestamp: _tgl + ' ' + val('f-jam'),
+        kode_toko: _kode, tanggal: _tgl, arco: _arco,
+        skor_A: s.A, skor_B: s.B, skor_C: s.C, skor_D: s.D, skor_E: s.E,
+        total: s.total, pct: s.pct, grade: effectiveSc.label,
+        critical_gate: gate.triggered?'Ya':'Tidak', critical_reasons: gate.reasons.join('; '),
+        lowscore_items: _lowItems, closure_rate: _closureRate, foto_link: ''
+      },
+      action_rows: closureItems.filter(c=>c.text).map((c,i)=>({
+        id: 'A-'+_tgl.replace(/-/g,'')+'-'+(i+1), tanggal_dibuka: _tgl, kode_toko: _kode, sumber: 'F2',
+        deskripsi: c.text, pic: val('f-sl'), tenggat: '',
+        status: c.status==='done'?'Selesai':'Open', tanggal_tutup: c.status==='done'?_tgl:'', diverifikasi_arco: 'Tidak'
+      })),
+      arco: _arco, toko: _kode, tanggal: _tgl, jam: val('f-jam'), jenis: kunjunganType, sl: val('f-sl'),
+      ratings, skor_total: s.total, skor_pct: s.pct,
+      skor_A: s.A, skor_B: s.B, skor_C: s.C, skor_D: s.D, skor_E: s.E,
+      grade: effectiveSc.label,
+      critical_gate_triggered: gate.triggered, critical_gate_reasons: gate.reasons,
+      notes_kekuatan: val('n-kekuatan'), notes_kelemahan: val('n-kelemahan'),
+      notes_action: val('n-action'), notes_catatan: val('n-catatan'),
+      closure_items: closureItems, photos: photos,
+      sku_sampling: f2SkuData.filter(x=>x&&(x.kode||x.nama)),
+      kas_selisih_setoran: parseFloat(val('d-selisih-setoran'))||0,
+      kas_minus_kasir: parseFloat(val('d-minus-kasir'))||0,
+      sl_hadir: !((document.getElementById('sl-absent')||{}).checked),
+      sl_konfirmasi_oleh: (document.getElementById('sl-absent-by')||{}).value||'',
+      timestamp: new Date().toISOString()
+    };
+
+    const _finish = (msg) => {
+      if (_finished) return; _finished = true;
+      clearTimeout(_watchdog); hideProgress();
+      try { showResult(); } catch(e){ console.warn('showResult', e); }
+      try { goStep(13); } catch(e){ console.warn('goStep13', e); }
+      try { clearState(); } catch(e){}
+      showToast(msg);
+    };
+    const _failNet = (msg) => {
+      if (_finished) return; _finished = true;
+      clearTimeout(_watchdog); hideProgress(); _reset(); showToast(msg);
+    };
+
+    showProgress(0, 'Mengirim data & foto…');
+    let _uploaded = false;
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', SCRIPT_URL, true);
+    xhr.timeout = 120000;
+    xhr.upload.onprogress = (ev) => {
+      if (ev.lengthComputable) {
+        const pct = Math.round(ev.loaded / ev.total * 100);
+        showProgress(pct, pct < 100 ? ('Mengunggah… ' + pct + '%') : 'Memproses di server…');
+      }
+    };
+    xhr.upload.onload = () => { _uploaded = true; showProgress(100, 'Memproses di server…'); };
+    xhr.onload  = () => _finish('✅ Data audit berhasil dikirim!');
+    xhr.onerror = () => { _uploaded ? _finish('✅ Terkirim. Cek dashboard 1-2 menit.') : _failNet('❌ Gagal kirim. Cek koneksi & coba lagi.'); };
+    xhr.ontimeout = () => { _uploaded ? _finish('⏳ Pengiriman lama. Data sudah dikirim — cek dashboard.') : _failNet('❌ Timeout. Coba lagi.'); };
+    xhr.send(JSON.stringify(payload));
+  } catch (e) {
+    if (!_finished) { _finished = true; clearTimeout(_watchdog); _reset(); showToast('❌ Error menyiapkan data: ' + e.message); }
+    console.error('submitForm sync error', e);
+  }
+}
+
+// ── AUTO SAVE / RESTORE ──
+function autoSave() {
+  try {
+    const state = {
+      ratings, kunjunganType, closureItems,
+      fields: {
+        arco:    document.getElementById('f-arco')?.value,
+        toko:    document.getElementById('f-toko')?.value,
+        tanggal: document.getElementById('f-tanggal')?.value,
+        jam:     document.getElementById('f-jam')?.value,
+        sl:      document.getElementById('f-sl')?.value,
+      },
+      notes: {
+        kekuatan:  document.getElementById('n-kekuatan')?.value,
+        kelemahan: document.getElementById('n-kelemahan')?.value,
+        action:    document.getElementById('n-action')?.value,
+        catatan:   document.getElementById('n-catatan')?.value,
+      },
+      pilarNotes: Object.keys(PILARS).reduce((acc,pk) => {
+        acc[pk] = document.getElementById(`note-pilar-${pk}`)?.value || '';
+        return acc;
+      }, {}),
+      itemNotes: Object.keys(PRIORITY).reduce((acc,key) => {
+        const el = document.getElementById(`note-${key}`);
+        if (el) acc[key] = el.value;
+        return acc;
+      }, {}),
+    };
+    state.currentStep = currentStep;
+    localStorage.setItem('form2_draft', JSON.stringify(state));
+  } catch(e) { console.warn('AutoSave failed:', e); }
+}
+
+function restoreState() {
+  try {
+    const raw = localStorage.getItem('form2_draft');
+    if (!raw) return;
+    const state = JSON.parse(raw);
+
+    ratings       = state.ratings       || {};
+    kunjunganType = state.kunjunganType || '';
+    closureItems  = state.closureItems  || [];
+
+    const f = state.fields || {};
+    if (f.arco) {
+      document.getElementById('f-arco').value = f.arco;
+      populateToko();
+    }
+    if (f.toko)    setTimeout(()=>{ document.getElementById('f-toko').value = f.toko; }, 80);
+    if (f.tanggal) document.getElementById('f-tanggal').value = f.tanggal;
+    if (f.jam)     document.getElementById('f-jam').value     = f.jam;
+    if (f.sl)      document.getElementById('f-sl').value      = f.sl;
+
+    if (kunjunganType) {
+      document.querySelectorAll('.kunjungan-btn').forEach(btn => {
+        if (btn.textContent.trim().includes(kunjunganType)) setKunjungan(btn, kunjunganType);
+      });
+    }
+
+    setTimeout(() => {
+      Object.entries(ratings).forEach(([key,val]) => { if (val) setRating(key, val); });
+    }, 150);
+
+    const n = state.notes || {};
+    if (n.kekuatan)  { const el = document.getElementById('n-kekuatan');  if (el) el.value = n.kekuatan; }
+    if (n.kelemahan) { const el = document.getElementById('n-kelemahan'); if (el) el.value = n.kelemahan; }
+    if (n.action)    { const el = document.getElementById('n-action');    if (el) el.value = n.action; }
+    if (n.catatan)   { const el = document.getElementById('n-catatan');   if (el) el.value = n.catatan; }
+
+    if (state.pilarNotes) {
+      Object.entries(state.pilarNotes).forEach(([pk,val]) => {
+        const el = document.getElementById(`note-pilar-${pk}`);
+        if (el) el.value = val;
+      });
+    }
+    if (state.itemNotes) {
+      Object.entries(state.itemNotes).forEach(([key,val]) => {
+        const el = document.getElementById(`note-${key}`);
+        if (el) el.value = val;
+      });
+    }
+    if (closureItems.length) renderClosureList();
+    if (state.currentStep && state.currentStep > 1) {
+      setTimeout(() => {
+        currentStep = 1; // reset dulu agar goStep bisa jalan
+        goStep(state.currentStep);
+      }, 300);
+    }
+    showToast('📂 Draft sebelumnya dipulihkan');
+  } catch(e) { console.warn('RestoreState failed:', e); }
+}
+
+function clearState() {
+  try { localStorage.removeItem('form2_draft'); } catch(e) {}
+}
+
+function resetForm() {
+  ratings = {}; kunjunganType = ''; closureItems = []; photos = {};
+  clearState();
+  window.location.href = 'form2.html';
+}
+
+// ── TOAST ──
+function showToast(msg, duration) {
+  duration = duration || 2500;
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), duration);
+}
+</script>
+
+<!-- ═══ MODAL PILIHAN FOTO (Kamera / Galeri) ═══ -->
+<div id="photo-choice-modal" style="display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);align-items:flex-end;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px 18px 28px">
+    <div style="width:40px;height:4px;background:#e2e8f0;border-radius:99px;margin:0 auto 14px"></div>
+    <div style="font-weight:800;font-size:15px;color:#1f2937;text-align:center;margin-bottom:14px">Tambah Foto</div>
+    <button type="button" onclick="choosePhoto('camera')" style="width:100%;padding:14px;border:none;border-radius:14px;background:#2563eb;color:#fff;font-weight:800;font-size:15px;margin-bottom:10px">📷 Ambil Foto (Kamera)</button>
+    <button type="button" onclick="choosePhoto('gallery')" style="width:100%;padding:14px;border:2px solid #e2e8f0;border-radius:14px;background:#fff;color:#374151;font-weight:800;font-size:15px;margin-bottom:10px">🖼️ Pilih dari Galeri</button>
+    <button type="button" onclick="document.getElementById('photo-choice-modal').style.display='none'" style="width:100%;padding:12px;border:none;background:transparent;color:#9ca3af;font-weight:700;font-size:14px">Batal</button>
+  </div>
+</div>
+
+<!-- ═══ MODAL SCAN BARCODE ═══ -->
+<div id="scan-modal" style="display:none;position:fixed;inset:0;z-index:70;background:#000;flex-direction:column;align-items:center;justify-content:center">
+  <div style="position:absolute;top:0;left:0;right:0;padding:16px;color:#fff;font-weight:800;text-align:center;background:linear-gradient(#000,transparent)">Arahkan kamera ke barcode</div>
+  <video id="scan-video" playsinline style="width:100%;max-width:480px;max-height:70vh;object-fit:cover"></video>
+  <div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:2px;background:rgba(255,0,0,.7);max-width:480px;margin:0 auto"></div>
+  <button type="button" onclick="closeScan()" style="position:absolute;bottom:32px;padding:14px 32px;border:none;border-radius:14px;background:#fff;color:#111;font-weight:800;font-size:15px">Tutup</button>
+</div>
+
+<script>
+// ─── BARCODE SCANNER (pakai BarcodeDetector bawaan Chrome Android) ───
+let _scanStream=null, _scanTimer=null, _scanTarget=null, _scanDetector=null;
+async function scanBarcode(idx){
+  _scanTarget = idx;
+  if(!('BarcodeDetector' in window)){
+    showToast('⚠️ Browser ini tak mendukung scan otomatis — ketik kode manual');
+    const inp=document.getElementById('f2sku-kode-'+idx); if(inp) inp.focus();
+    return;
+  }
+  try{
+    _scanDetector = new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','codabar','itf']});
+  }catch(e){ showToast('⚠️ Scan tidak tersedia di perangkat ini'); return; }
+  const modal=document.getElementById('scan-modal');
+  const video=document.getElementById('scan-video');
+  if(modal) modal.style.display='flex';
+  try{
+    _scanStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
+    video.srcObject=_scanStream;
+    await video.play();
+    _tickScan(video);
+  }catch(e){
+    showToast('⚠️ Tidak bisa akses kamera. Izinkan kamera atau ketik manual.');
+    closeScan();
+  }
+}
+async function _tickScan(video){
+  if(!_scanStream) return;
+  try{
+    const codes = await _scanDetector.detect(video);
+    if(codes && codes.length){
+      const val = (codes[0].rawValue||'').trim();
+      if(val){ _fillSkuCode(_scanTarget, val); closeScan(); return; }
+    }
+  }catch(e){ /* abaikan frame gagal */ }
+  _scanTimer = setTimeout(()=>_tickScan(video), 250);
+}
+function _fillSkuCode(idx, val){
+  if(typeof f2SkuData!=='undefined' && f2SkuData[idx]) f2SkuData[idx].kode = val;
+  const inp=document.getElementById('f2sku-kode-'+idx);
+  if(inp) inp.value = val;
+  showToast('✅ Barcode terbaca: '+val);
+  try{ updateF2SkuSummary(); autoSave(); }catch(e){}
+}
+function closeScan(){
+  const modal=document.getElementById('scan-modal');
+  if(modal) modal.style.display='none';
+  if(_scanTimer){ clearTimeout(_scanTimer); _scanTimer=null; }
+  if(_scanStream){ _scanStream.getTracks().forEach(t=>t.stop()); _scanStream=null; }
+  const video=document.getElementById('scan-video'); if(video) video.srcObject=null;
+}
+</script>
+
+<script>
+// ─── TANDA TANGAN SL (canvas drawing) ───
+let _sigCtx=null,_sigDrawing=false,_sigHasInk=false,_sigInit=false;
+function initSignature(){
+  const cv=document.getElementById('sl-sign-canvas'); if(!cv) return;
+  const rect=cv.getBoundingClientRect();
+  if(rect.width>0 && cv.width!==Math.round(rect.width)){ cv.width=Math.round(rect.width); cv.height=180; }
+  _sigCtx=cv.getContext('2d');
+  _sigCtx.lineWidth=2.5; _sigCtx.lineCap='round'; _sigCtx.lineJoin='round'; _sigCtx.strokeStyle='#111';
+  if(_sigInit) return; _sigInit=true;
+  const pos=e=>{ const r=cv.getBoundingClientRect(); const t=(e.touches&&e.touches[0])?e.touches[0]:e; return {x:t.clientX-r.left, y:t.clientY-r.top}; };
+  const start=e=>{ e.preventDefault(); _sigDrawing=true; const p=pos(e); _sigCtx.beginPath(); _sigCtx.moveTo(p.x,p.y); };
+  const move=e=>{ if(!_sigDrawing) return; e.preventDefault(); const p=pos(e); _sigCtx.lineTo(p.x,p.y); _sigCtx.stroke(); _sigHasInk=true; const ph=document.getElementById('sl-sign-placeholder'); if(ph) ph.style.display='none'; };
+  const end=()=>{ if(!_sigDrawing) return; _sigDrawing=false; saveSignature(); };
+  cv.addEventListener('mousedown',start); cv.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
+  cv.addEventListener('touchstart',start,{passive:false}); cv.addEventListener('touchmove',move,{passive:false}); cv.addEventListener('touchend',end);
+}
+function saveSignature(){
+  const cv=document.getElementById('sl-sign-canvas'); if(!cv||!_sigHasInk) return;
+  if(typeof photos==='undefined') return;
+  let _sig=null;
+  try{ _sig=cv.toDataURL('image/png'); photos['sl-sign']=[_sig]; }catch(e){ return; }
+  updatePhotoArea('sl-sign');
+  uploadPhotoNow('sl-sign', _sig);
+  try{ autoSave(); }catch(e){}
+}
+function clearSignature(){
+  const cv=document.getElementById('sl-sign-canvas'); if(!cv) return;
+  const ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
+  _sigHasInk=false;
+  if(typeof photos!=='undefined') photos['sl-sign']=[];
+  const ph=document.getElementById('sl-sign-placeholder'); if(ph) ph.style.display='flex';
+  const st=document.getElementById('sl-sign-status'); if(st){ st.textContent='Belum ditandatangani'; st.style.color='#9ca3af'; }
+  try{ autoSave(); }catch(e){}
+}
+function toggleSlAbsent(){
+  const cb=document.getElementById('sl-absent');
+  const inp=document.getElementById('sl-absent-by');
+  if(!cb||!inp) return;
+  if(cb.checked){ inp.classList.remove('hidden'); } else { inp.classList.add('hidden'); }
+  try{ autoSave(); }catch(e){}
+}
+</script>
+
+<div id="submit-progress" style="display:none;position:fixed;inset:0;z-index:80;background:rgba(255,255,255,.94);flex-direction:column;align-items:center;justify-content:center;padding:30px">
+  <div id="sp-label" style="font-weight:800;color:#1f2937;margin-bottom:14px;text-align:center">Mengirim…</div>
+  <div style="width:100%;max-width:300px;height:14px;background:#e5e7eb;border-radius:99px;overflow:hidden">
+    <div id="sp-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#10b981,#059669);transition:width .2s"></div>
+  </div>
+  <div id="sp-pct" style="margin-top:10px;font-size:22px;font-weight:900;color:#059669">0%</div>
+  <div style="margin-top:8px;font-size:12px;color:#9ca3af;text-align:center">Mohon tunggu, jangan tutup halaman</div>
+</div>
+
+<script>
+function showProgress(pct, label){
+  const ov=document.getElementById('submit-progress'); if(!ov) return;
+  ov.style.display='flex';
+  const bar=document.getElementById('sp-bar'), p=document.getElementById('sp-pct'), l=document.getElementById('sp-label');
+  if(bar) bar.style.width=pct+'%';
+  if(p) p.textContent=pct+'%';
+  if(l && label) l.textContent=label;
+}
+function hideProgress(){ const ov=document.getElementById('submit-progress'); if(ov) ov.style.display='none'; }
+
+const _SHEET_ID='1UThEwKI6CSiNFJ-0H3bcVeLn1Ahl_MBkQqxg5uh0yNo';
+let _prevLoadedFor=null;
+function _csvParse(text){
+  const rows=[]; let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else { if(c==='"') q=true; else if(c===','){ row.push(cur); cur=''; } else if(c==='\n'){ row.push(cur); rows.push(row); row=[]; cur=''; } else if(c!=='\r') cur+=c; }
+  }
+  if(cur.length||row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+function _setPrev(id,val){
+  const el=document.getElementById(id); if(!el) return;
+  const n=parseFloat(val);
+  el.value = isNaN(n)?'':n;
+  el.readOnly=true; el.style.background='#f1f5f9';
+}
+async function loadPrevAudit(){
+  const kode=(document.getElementById('f-toko')||{}).value||'';
+  const curTgl=(document.getElementById('f-tanggal')||{}).value||'';
+  const statusEl=document.getElementById('prev-status');
+  if(!kode){ if(statusEl){ statusEl.textContent='Pilih toko dulu untuk memuat data sebelumnya.'; } return; }
+  if(_prevLoadedFor===kode) return;
+  if(statusEl){ statusEl.textContent='⏳ Memuat data kunjungan sebelumnya…'; statusEl.style.color='#6b7280'; }
+  try{
+    const url='https://docs.google.com/spreadsheets/d/'+_SHEET_ID+'/gviz/tq?tqx=out:csv&sheet=F2_AUDIT&_='+Date.now();
+    const res=await fetch(url);
+    const txt=await res.text();
+    const rows=_csvParse(txt);
+    const head=(rows[0]||[]).map(h=>String(h).trim());
+    const ix=n=>head.indexOf(n);
+    const ik=ix('kode_toko'), it=ix('tanggal'), iA=ix('skor_A'), iB=ix('skor_B'), iC=ix('skor_C'), iD=ix('skor_D'), iE=ix('skor_E'), iTot=ix('total');
+    let best=null;
+    for(let r=1;r<rows.length;r++){
+      const row=rows[r]; if(!row||row.length<2) continue;
+      if(String(row[ik]||'').trim()!==kode) continue;
+      const tgl=String(row[it]||'').trim();
+      if(curTgl && tgl>=curTgl) continue;
+      if(!best || tgl>best._tgl) best={_tgl:tgl, A:row[iA],B:row[iB],C:row[iC],D:row[iD],E:row[iE],total:row[iTot]};
+    }
+    _prevLoadedFor=kode;
+    if(best){
+      _setPrev('prev-A',best.A); _setPrev('prev-B',best.B); _setPrev('prev-C',best.C);
+      _setPrev('prev-D',best.D); _setPrev('prev-E',best.E); _setPrev('prev-total',best.total);
+      const pv=document.getElementById('prev-visit-date'); if(pv) pv.value=best._tgl;
+      if(statusEl){ statusEl.textContent='✓ Otomatis dari kunjungan terakhir: '+best._tgl; statusEl.style.color='#059669'; }
+      if(typeof updateDelta==='function') updateDelta();
+    } else {
+      if(statusEl){ statusEl.textContent='ℹ️ Belum ada kunjungan sebelumnya untuk toko ini — delta belum tersedia.'; statusEl.style.color='#6b7280'; }
+    }
+  }catch(e){
+    if(statusEl){ statusEl.textContent='⚠️ Gagal memuat data sebelumnya (cek koneksi / sheet di-share). Delta belum tersedia.'; statusEl.style.color='#d97706'; }
+  }
+}
+</script>
+</body>
+</html>
