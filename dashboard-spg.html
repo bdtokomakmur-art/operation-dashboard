@@ -228,7 +228,7 @@ tr:nth-child(even) td{background:#fafcfb}
    ============================================================ */
 const CONFIG = {
   nama_perusahaan: "Toko Makmur",
-  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzaUWK4qMxw7ppXvk8EIiimkMGNTAkWii5bdJZaORMPO_RBnQboGlw22hLWMpbe-4Mr/exec",   // ► tempel URL Web App Apps Script (sama dengan form). Kosong = MODE DEMO.
+  SCRIPT_URL: "",   // ► tempel URL Web App Apps Script (sama dengan form). Kosong = MODE DEMO.
   brands: ["Kalbe","Enfagrow","Nestle","Karihome","Nutricia","Vidoran","Pediasure","Frisian Flag","Anlene","Ace Kid","Makuku","Mamypoko","Sweety","Baby Happy","Sensi","Libby","Konicare","Probaby","Lain-lain"],
   toko: [],   // ← diisi dari sheet DataToko saat startup
   shift: { Pagi:{mulai:"07:00",selesai:"15:00"}, Siang:{mulai:"14:00",selesai:"22:00"} }
@@ -244,10 +244,27 @@ const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 const todayISO=()=>{const d=new Date();return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
 const nowHM=()=>{const d=new Date();return`${pad(d.getHours())}:${pad(d.getMinutes())}`;};
-const toMin=hm=>{if(!hm)return null;const[h,m]=hm.split(':').map(Number);return h*60+m;};
+const toMin=hm=>{
+  if(!hm) return null;
+  const s=String(hm);
+  // ISO timestamp: ambil HH:MM saja
+  const iso=s.match(/T(\d{2}):(\d{2})/);
+  if(iso) return Number(iso[1])*60+Number(iso[2]);
+  // HH:MM biasa
+  const plain=s.match(/^(\d{1,2}):(\d{2})/);
+  if(plain) return Number(plain[1])*60+Number(plain[2]);
+  return null;
+};
+const fmtJam=v=>{
+  if(!v) return null;
+  const s=String(v);
+  const iso=s.match(/T(\d{2}:\d{2})/); if(iso) return iso[1];
+  const plain=s.match(/^(\d{1,2}:\d{2})/); if(plain) return plain[1];
+  return null;
+};
 const fmtDur=min=>{if(min==null||min<0)return'<span class="miss">—</span>';const h=Math.floor(min/60),m=min%60;return`<span class="mono">${h?h+'j ':''}${m}m</span>`;};
 const NAMABLN=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
-const fmtTgl=iso=>{const d=new Date(iso);return isNaN(d)?iso:`${d.getDate()} ${NAMABLN[d.getMonth()]}`;};
+const fmtTgl=iso=>{const s=String(iso||'').substring(0,10);const d=new Date(s+'T00:00:00');return isNaN(d)?s:`${d.getDate()} ${NAMABLN[d.getMonth()]}`;};
 
 function tickClock(){const d=new Date();$('clockTime').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;const hari=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"][d.getDay()];$('clockDate').textContent=`${hari}, ${d.getDate()} ${NAMABLN[d.getMonth()]} ${d.getFullYear()}`;}
 setInterval(tickClock,1000);tickClock();
@@ -356,14 +373,17 @@ function getFiltered(){
 function buildDailyLog(rows){
   const map={};
   rows.forEach(r=>{
-    const k=`${r.tanggal}|${r.nama_spg}|${r.kode_toko}|${r.shift}`;
-    if(!map[k]) map[k]={tanggal:r.tanggal,nama:r.nama_spg,brand:r.brand,sub:r.sub_brand,toko:r.kode_toko,shift:r.shift,shMulai:r.jam_shift_mulai,shSelesai:r.jam_shift_selesai,status:r.status,foto:'',terlambat:'Tidak',menitTelat:0};
+    // normalise tanggal: ambil YYYY-MM-DD saja
+    const tgl=(String(r.tanggal||'')).substring(0,10);
+    const k=`${tgl}|${r.nama_spg}|${r.kode_toko}|${r.shift}`;
+    if(!map[k]) map[k]={tanggal:tgl,nama:r.nama_spg,brand:r.brand,sub:r.sub_brand,toko:r.kode_toko,shift:r.shift,shMulai:fmtJam(r.jam_shift_mulai)||r.jam_shift_mulai,shSelesai:fmtJam(r.jam_shift_selesai)||r.jam_shift_selesai,status:r.status,foto:'',terlambat:'Tidak',menitTelat:0};
     const o=map[k];
-    if(r.tipe==='Datang'){o.masuk=r.jam;o.terlambat=r.terlambat;o.menitTelat=r.menit_terlambat;if(r.foto_url)o.foto=r.foto_url;}
-    else if(r.tipe==='Istirahat Mulai')o.istMulai=r.jam;
-    else if(r.tipe==='Istirahat Selesai')o.istSelesai=r.jam;
-    else if(r.tipe==='Pulang')o.pulang=r.jam;
-    if((r.status!=='Hadir')&&!o.masuk)o.status=r.status; // status non-hadir
+    const jam=fmtJam(r.jam)||r.jam;  // normalise HH:MM
+    if(r.tipe==='Datang'){o.masuk=jam;o.terlambat=r.terlambat;o.menitTelat=r.menit_terlambat;if(r.foto_url)o.foto=r.foto_url;}
+    else if(r.tipe==='Istirahat Mulai')o.istMulai=jam;
+    else if(r.tipe==='Istirahat Selesai')o.istSelesai=jam;
+    else if(r.tipe==='Pulang')o.pulang=jam;
+    if((r.status!=='Hadir')&&!o.masuk)o.status=r.status;
     if(r.foto_url&&!o.foto)o.foto=r.foto_url;
     if(r.keterangan&&!o.ket)o.ket=r.keterangan;
   });
